@@ -114,7 +114,7 @@ export default function LandingPage() {
                 if (!displayPlan) return null;
 
                 return (
-                  <div key={name} className={\`relative flex flex-col p-8 rounded-3xl border \${isRecommended ? 'border-primary shadow-2xl shadow-primary/20 bg-gradient-to-b from-primary/[0.05] to-transparent scale-105 z-10' : 'border-border/50 bg-card hover:border-border'}\`}>
+                  <div key={name} className={`relative flex flex-col p-8 rounded-3xl border \${isRecommended ? 'border-primary shadow-2xl shadow-primary/20 bg-gradient-to-b from-primary/[0.05] to-transparent scale-105 z-10' : 'border-border/50 bg-card hover:border-border'}`}>
                     {isRecommended && (
                       <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-blue-600 text-white text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5" /> O Mais Escolhido
@@ -147,7 +147,7 @@ export default function LandingPage() {
                         const text = isObj ? f.name : f;
                         const included = isObj ? f.included : true;
                         return (
-                          <li key={i} className={\`flex items-start gap-3 \${!included ? 'opacity-40' : ''}\`}>
+                          <li key={i} className={`flex items-start gap-3 \${!included ? 'opacity-40' : ''}`}>
                             {included ? <CheckCircle2 className="w-5 h-5 text-primary shrink-0" /> : <XCircle className="w-5 h-5 text-muted-foreground shrink-0" />}
                             <span className={!included ? 'line-through' : ''}>{text}</span>
                           </li>
@@ -160,7 +160,7 @@ export default function LandingPage() {
                         setSelectedPlan(displayPlan);
                         setShowCheckout(true);
                       }}
-                      className={\`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all \${isRecommended ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5' : 'bg-muted text-foreground hover:bg-muted/80'}\`}
+                      className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all \${isRecommended ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5' : 'bg-muted text-foreground hover:bg-muted/80'}`}
                     >
                       Assinar {displayPlan.name} <ArrowRight className="w-4 h-4" />
                     </button>
@@ -213,10 +213,10 @@ export default function LandingPage() {
               <div className="pt-2">
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Forma de Pagamento</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={\`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}\`}>
+                  <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
                     <CreditCard className="w-4 h-4" /> Cartão
                   </button>
-                  <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={\`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}\`}>
+                  <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
                     <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-[10px]">P</div> PIX
                   </button>
                 </div>
