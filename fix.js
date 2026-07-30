@@ -1,11 +1,13 @@
 const fs = require('fs');
 
-let page = fs.readFileSync('front-end/src/app/settings/page.tsx', 'utf-8');
-page = page.split('\\`').join('`');
-fs.writeFileSync('front-end/src/app/settings/page.tsx', page);
+const files = [
+  'front-end/src/app/page.tsx',
+  'front-end/src/app/billing/page.tsx'
+];
 
-let serv = fs.readFileSync('front-end/src/components/ServicesSettings.tsx', 'utf-8');
-serv = serv.split('\\`').join('`');
-fs.writeFileSync('front-end/src/components/ServicesSettings.tsx', serv);
-
-console.log('Fixed backticks');
+files.forEach(f => {
+  let content = fs.readFileSync(f, 'utf8');
+  content = content.split('\\`').join('`');
+  fs.writeFileSync(f, content);
+  console.log('Fixed ' + f);
+});
