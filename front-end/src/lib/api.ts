@@ -15,13 +15,6 @@ export function getBackendUrl(path: string = ''): string {
     return `${internalBackend}${path}`;
   }
   
-  // Client-side: use the proxy
-  const base = env.NEXT_PUBLIC_BACKEND_URL;
-  if (!base) throw new Error("NEXT_PUBLIC_BACKEND_URL não definido.");
-  
-  if (base.startsWith('/')) {
-    return `${window.location.origin}${base}${path}`;
-  }
-  
-  return `${base}${path}`;
+  // Client-side: use the BFF proxy always
+  return `/api/backend${path}`;
 }

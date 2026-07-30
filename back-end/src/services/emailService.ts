@@ -1,7 +1,7 @@
-﻿import { Resend } from 'resend';
+import { Resend } from 'resend';
 import { env } from '@/config/env';
 
-const resend = new Resend(env.RESEND_API_KEY);
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : { emails: { send: async () => ({ data: null, error: 'No API Key' }) } } as unknown as Resend;
 const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 export async function sendEmail({

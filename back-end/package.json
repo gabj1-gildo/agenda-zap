@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.110.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "abacatepay-nodejs-sdk": "^1.6.0",
     "argon2": "^0.44.0",

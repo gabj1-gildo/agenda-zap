@@ -127,17 +127,20 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signOut({ token }) {
-      if (token?.refreshToken) {
+      if (token?.refreshToken || token?.accessToken) {
         try {
           const internalBackend = env.BACKEND_INTERNAL_URL;
           if (!internalBackend) throw new Error("BACKEND_INTERNAL_URL não definido.");
           await fetch(`${internalBackend}/api/auth/logout`, {
             method: 'POST',
-            body: JSON.stringify({ token: token.refreshToken }),
+            body: JSON.stringify({ 
+              token: token.refreshToken,
+              accessToken: token.accessToken
+            }),
             headers: { 'Content-Type': 'application/json' },
           });
         } catch (e) {
-          console.error('Failed to revoke refresh token', e);
+          console.error('Failed to revoke tokens', e);
         }
       }
     }
