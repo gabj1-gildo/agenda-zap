@@ -106,3 +106,54 @@ export async function createAsaasSaasCharge(customerId: string, amount: number, 
 
   return { chargeId: data.id, invoiceUrl: data.invoiceUrl };
 }
+
+export async function createAsaasSaasCreditCardPayment(
+  customerId: string, 
+  amount: number, 
+  externalReference: string, 
+  description: string, 
+  creditCard: any, 
+  creditCardHolderInfo: any,
+  interval: string
+) {
+  const token = env.ASAAS_API_KEY;
+  const baseUrl = env.ASAAS_API_URL;
+  if (!token) throw new Error('ASAAS_API_KEY não configurada');
+
+  const dueDate = new Date();
+  
+  let endpoint = `${baseUrl}/subscriptions`;
+  let payload: any = {
+    customer: customerId,
+    billingType: 'CREDIT_CARD',
+    value: amount,
+    nextDueDate: dueDate.toISOString().split('T')[0],
+    description,
+    externalReference,
+    creditCard,
+    creditCardHolderInfo
+  };
+
+  if (interval === 'monthly') {
+    payload.cycle = 'MONTHLY';
+  } else {
+    // Para plano anual/semestral (Cobrança única)
+    endpoint = `${baseUrl}/payments`;
+    payload.dueDate = payload.nextDueDate;
+    delete payload.nextDueDate;
+  }
+  
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'access_token': token },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (data.errors) {
+    console.error('Erro Asaas CC:', data.errors);
+    throw new Error('Falha ao processar cartão: ' + data.errors[0].description);
+  }
+
+  return data;
+}
