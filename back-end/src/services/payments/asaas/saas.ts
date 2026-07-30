@@ -34,6 +34,7 @@ export async function findOrCreateAsaasCustomer(name: string, email: string, cpf
 export async function createAsaasSaasSubscription(customerId: string, amount: number, externalReference: string, description: string) {
   const token = env.ASAAS_API_KEY;
   const baseUrl = env.ASAAS_API_URL;
+  if (!token) throw new Error('ASAAS_API_KEY não configurada');
 
   // Cria assinatura (Mensal) - Por padrão, usamos UNDEFINED para billingType para que o usuário escolha no link
   const dueDate = new Date();
@@ -73,6 +74,7 @@ export async function createAsaasSaasSubscription(customerId: string, amount: nu
 export async function createAsaasSaasCharge(customerId: string, amount: number, externalReference: string, description: string, maxInstallments: number) {
   const token = env.ASAAS_API_KEY;
   const baseUrl = env.ASAAS_API_URL;
+  if (!token) throw new Error('ASAAS_API_KEY não configurada');
 
   const dueDate = new Date();
   
