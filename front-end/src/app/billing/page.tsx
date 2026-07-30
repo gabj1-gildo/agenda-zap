@@ -349,6 +349,7 @@ export default function BillingPage() {
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setCheckoutLoading(true);
+    try {
       const token = (session?.user as any)?.accessToken;
       const tenantId = (session?.user as any)?.tenantId;
 
