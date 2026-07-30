@@ -27,10 +27,14 @@ const envSchema = z.object({
   MERCADOPAGO_CLIENT_ID: z.string().optional(),
   MERCADOPAGO_CLIENT_SECRET: z.string().optional(),
   MP_ACCESS_TOKEN: z.string().optional(), // Token da Plataforma para gerenciar assinaturas
-  ABACATEPAY_API_URL: z.string().url().default('https://api.abacatepay.com'),
   MP_SUCCESS_URL: z.string().optional(),
   MP_FAILURE_URL: z.string().optional(),
   MP_REDIRECT_URI: z.string().optional(),
+  
+  ASAAS_API_URL: z.string().url().default('https://api-sandbox.asaas.com/v3'), // Padrão sandbox
+  ASAAS_API_KEY: z.string().optional(), // Token da API do Asaas (plataforma)
+
+  ABACATEPAY_API_URL: z.string().url().default('https://api.abacatepay.com'),
   
   // IA
   GEMINI_API_KEY: z.string().optional(),

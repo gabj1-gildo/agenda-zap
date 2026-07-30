@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { ShieldCheck, CheckCircle, XCircle, Clock, Zap, Sparkles, ChevronDown, ChevronUp, CreditCard, ArrowRight } from "lucide-react";
 import { getBackendUrl } from "@/lib/api";
 import { toast } from "sonner";
-import { initMercadoPago } from '@mercadopago/sdk-react';
-import { PaymentBrick } from "@/components/checkout/mercadopago/PaymentBrick";
 import { cn } from "@/lib/utils";
 
 // ─── Compact Plan Card ──────────────────────────────────────────
@@ -302,7 +300,8 @@ export default function BillingPage() {
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [mpInitialized, setMpInitialized] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", document: "", phone: "", method: "CREDIT_CARD" });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -330,6 +329,13 @@ export default function BillingPage() {
           const plansData = await plansRes.json();
           if (plansData.success) setPlans(plansData.data);
 
+          // Set Initial Form Values
+          setForm(prev => ({
+            ...prev,
+            name: (session?.user as any)?.name || "",
+            email: (session?.user as any)?.email || ""
+          }));
+
         } catch (error) {
           toast.error("Erro ao carregar dados de faturamento.");
         } finally {
@@ -340,41 +346,34 @@ export default function BillingPage() {
     }
   }, [status, router, session]);
 
-  useEffect(() => {
-    if (showCheckout && !mpInitialized) {
-      initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
-      setMpInitialized(true);
-    }
-  }, [showCheckout, mpInitialized]);
-
-  const handleSubscribe = async (formData: any) => {
-    try {
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCheckoutLoading(true);
       const token = (session?.user as any)?.accessToken;
       const tenantId = (session?.user as any)?.tenantId;
 
-      const res = await fetch(getBackendUrl('/api/admin/billing/subscribe'), {
+      const res = await fetch(getBackendUrl('/api/saas/checkout'), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "tenant-id": tenantId
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          planId: selectedPlanId,
-          formData // { formData: { token, payment_method_id, payer, etc }, additionalData }
+          ...form,
+          planId: selectedPlanId
         })
       });
 
       const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success("Assinatura ativada com sucesso!");
-        setShowCheckout(false);
-        window.location.reload();
+      if (res.ok && data.success && data.data.paymentUrl) {
+        window.location.href = data.data.paymentUrl;
       } else {
         toast.error(data.error || "Erro ao realizar assinatura.");
       }
     } catch (e) {
       toast.error("Falha ao processar assinatura.");
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -436,21 +435,52 @@ export default function BillingPage() {
 
       {/* Plans or Checkout */}
       {showCheckout ? (
-        <Card className="max-w-md mx-auto w-full shadow-2xl border-primary/20 animate-in fade-in zoom-in-95 duration-300">
+        <Card className="max-w-md mx-auto w-full shadow-2xl border-primary/20 animate-in fade-in zoom-in-95 duration-300 relative">
+          <button onClick={() => setShowCheckout(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+            <XCircle className="w-5 h-5" />
+          </button>
           <CardHeader className="text-center pb-3">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
               <CreditCard className="w-6 h-6 text-primary" />
             </div>
-            <CardTitle className="text-xl">Pagamento Seguro</CardTitle>
-            <CardDescription className="text-xs">Processado e protegido pelo Mercado Pago.</CardDescription>
+            <CardTitle className="text-xl">Finalizar Pagamento</CardTitle>
+            <CardDescription className="text-xs">Ambiente Seguro.</CardDescription>
           </CardHeader>
           <CardContent>
-            <PaymentBrick
-              amount={Number(plans.find(p => p.id === selectedPlanId)?.price || 0)}
-              interval={plans.find(p => p.id === selectedPlanId)?.interval || 'monthly'}
-              onPaymentSuccess={handleSubscribe}
-              onCancel={() => setShowCheckout(false)}
-            />
+            <form onSubmit={handleSubscribe} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Nome Completo</label>
+                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">E-mail</label>
+                <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">CPF ou CNPJ</label>
+                  <input required type="text" value={form.document} onChange={e => setForm({...form, document: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">WhatsApp</label>
+                  <input required type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                </div>
+              </div>
+              <div className="pt-2">
+                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Forma de Pagamento</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={\`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}\`}>
+                    <CreditCard className="w-4 h-4" /> Cartão
+                  </button>
+                  <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={\`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}\`}>
+                    <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-[10px]">P</div> PIX
+                  </button>
+                </div>
+              </div>
+              <Button type="submit" disabled={checkoutLoading} className="w-full mt-2 font-bold py-5 rounded-xl text-[13px]">
+                {checkoutLoading ? "Gerando Link..." : "Ir para Pagamento"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       ) : (

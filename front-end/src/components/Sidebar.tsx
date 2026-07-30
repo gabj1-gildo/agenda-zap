@@ -22,7 +22,7 @@ type NavItem = {
 };
 
 const navLinks: NavItem[] = [
-  { href: "/",             label: "Painel",        icon: LayoutDashboard, category: "Principal" },
+  { href: "/dashboard",    label: "Painel",        icon: LayoutDashboard, category: "Principal" },
   { href: "/agenda",       label: "Agenda",        icon: CalendarDays,    requiresTenant: true, category: "Principal" },
   { href: "/appointments", label: "Agendamentos",  icon: CalendarCheck,   requiresTenant: true, category: "Principal" },
   { href: "/clients",      label: "Clientes",      icon: Contact,         requiresTenant: true, category: "Relacionamento" },
@@ -31,6 +31,7 @@ const navLinks: NavItem[] = [
   { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Relacionamento" },
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
   { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
+  { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "Administração" },
   { href: "/billing",      label: "Faturamento",   icon: CreditCard,      requiresTenant: true, category: "Administração" },
   { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "Administração" },
   { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Administração (Super)" },
@@ -95,7 +96,7 @@ export function Sidebar() {
     let activeCat = "Principal";
     for (const [cat, items] of Object.entries(categoriesMap)) {
       const hasActive = items.some(item => {
-        if (item.href === "/") return pathname === "/";
+        if (item.href === "/dashboard") return pathname === "/dashboard";
         return pathname.startsWith(item.href);
       });
       if (hasActive) {
@@ -109,7 +110,7 @@ export function Sidebar() {
   if (pathname === "/login") return null;
 
   const isActive = (href: string) => {
-    if (href === "/" || href === "/admin") return pathname === href;
+    if (href === "/dashboard" || href === "/admin") return pathname === href;
     return pathname.startsWith(href);
   };
 
@@ -128,6 +129,9 @@ export function Sidebar() {
       const activeTenantId = (session as any)?.tenantId;
       const activeTenant = tenants.find((t: any) => t.id === activeTenantId);
       const permissions = activeTenant?.permissions || [];
+
+      // Ocultar categoria Superadmin para não-superadmins, independentemente de rotas
+      if (item.category === "Administração (Super)" && role !== "SUPERADMIN") return acc;
 
       if (!hasRouteAccess(item.href, role, permissions)) return acc;
       
