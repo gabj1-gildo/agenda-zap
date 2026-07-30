@@ -19,6 +19,8 @@ export default function LandingPage() {
   const [form, setForm] = useState({ name: "", email: "", document: "", phone: "", method: "CREDIT_CARD" });
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  const [loginUrl, setLoginUrl] = useState("/login");
+
   useEffect(() => {
     fetch(getBackendUrl('/api/public/plans'))
       .then(res => res.json())
@@ -29,6 +31,14 @@ export default function LandingPage() {
       })
       .catch(() => toast.error("Falha ao carregar planos"))
       .finally(() => setLoading(false));
+
+    // Calculate main domain for login
+    if (typeof window !== 'undefined') {
+      const host = window.location.host;
+      if (host.startsWith('planos.')) {
+        setLoginUrl(`${window.location.protocol}//${host.replace('planos.', '')}/login`);
+      }
+    }
   }, []);
 
   const groupedPlans = useMemo(() => {
@@ -78,9 +88,9 @@ export default function LandingPage() {
           </div>
           <span className="font-display font-extrabold text-2xl tracking-wide">AgendaZap</span>
         </div>
-        <Link href="/login" className="px-6 py-2.5 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors">
+        <a href={loginUrl} className="px-6 py-2.5 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors">
           Acessar Sistema
-        </Link>
+        </a>
       </header>
 
       {/* HERO SECTION */}

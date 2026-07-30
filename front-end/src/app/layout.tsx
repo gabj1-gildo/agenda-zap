@@ -1,11 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
-import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AuthProvider } from "@/components/AuthProvider";
-import { PaletteProvider } from "@/components/PaletteProvider";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -37,26 +33,16 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex bg-background transition-colors duration-300">
-        <AuthProvider>
-          <PaletteProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <Sidebar />
-              <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <Header />
-                <main className="flex-1 overflow-auto p-4 lg:p-6">
-                  {children}
-                </main>
-              </div>
-              <Toaster richColors position="top-right" />
-            </ThemeProvider>
-          </PaletteProvider>
-        </AuthProvider>
+      <body className="min-h-full flex bg-background text-foreground transition-colors duration-300">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
