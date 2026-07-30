@@ -15,12 +15,12 @@ export async function POST(request: Request) {
     const paymentId = body?.data?.id || id;
     const topic = body?.type || action;
 
-    console.log(\`[WEBHOOK MP SAAS] Evento recebido: \${topic} | ID: \${paymentId}\`);
+    console.log(`[WEBHOOK MP SAAS] Evento recebido: ${topic} | ID: ${paymentId}`);
 
     if (topic === 'payment' && paymentId) {
       // Busca detalhes do pagamento no MP
-      const mpResponse = await fetch(\`https://api.mercadopago.com/v1/payments/\${paymentId}\`, {
-        headers: { 'Authorization': \`Bearer \${env.MP_ACCESS_TOKEN}\` }
+      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { 'Authorization': `Bearer ${env.MP_ACCESS_TOKEN}` }
       });
       
       if (mpResponse.ok) {

@@ -113,7 +113,7 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
     // Se não, poderia ser um email de "Renovação confirmada", mas o provedor (Asaas/MP) já manda recibo.
     if (isNewUser) {
       const loginUrl = process.env.FRONTEND_URL + '/login';
-      const msgText = \`Olá *${name}*, seja bem-vindo ao Agenda Zap! 🎉\n\nSeu pagamento foi aprovado e sua conta já está liberada.\n\nAcesse: ${loginUrl}\nLogin: ${email}\nSenha provisória: *${plainPassword}*\n\nVocê poderá alterar a senha no primeiro acesso.\n\nBoas vendas!\`;
+      const msgText = `Olá *${name}*, seja bem-vindo ao Agenda Zap! 🎉\n\nSeu pagamento foi aprovado e sua conta já está liberada.\n\nAcesse: ${loginUrl}\nLogin: ${email}\nSenha provisória: *${plainPassword}*\n\nVocê poderá alterar a senha no primeiro acesso.\n\nBoas vendas!`;
 
       // Whatsapp
       const instanceSetting = await db.query.systemSettings.findFirst({
@@ -124,13 +124,15 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
       }
 
       // E-mail
-      const emailHtml = \`
-        <h2>Bem-vindo ao Agenda Zap!</h2>
-        <p>Seu pagamento foi confirmado.</p>
-        <p><strong>Acesse:</strong> <a href="\${loginUrl}">\${loginUrl}</a></p>
-        <p><strong>Login:</strong> \${email}</p>
-        <p><strong>Senha:</strong> \${plainPassword}</p>
-      \`;
+      const emailHtml = `
+        <h1>Bem-vindo(a) ao Agenda Zap!</h1>
+        <p>Olá <b>${name}</b>,</p>
+        <p>Sua conta foi criada e o pagamento confirmado com sucesso.</p>
+        <p><b>Acesso:</b> <a href="${loginUrl}">${loginUrl}</a></p>
+        <p><b>Login:</b> ${email}</p>
+        <p><b>Senha provisória:</b> ${plainPassword}</p>
+        <p>Recomendamos que você altere sua senha no primeiro acesso.</p>
+      `;
       await sendEmail({ to: email, subject: 'Sua conta no Agenda Zap', html: emailHtml }).catch(e => console.error('Erro Email Webhook', e));
     }
 
