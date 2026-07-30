@@ -1427,9 +1427,7 @@ function SettingsContent() {
             </Card>
         </TabsContent>
 
-        <TabsContent value="seguranca" className="space-y-6">
-          {/* Aba de segurança e conta (perfil foi movido para o menu lateral) */}
-        </TabsContent>
+        
       </Tabs>
       
       {showPhoneModal && (
