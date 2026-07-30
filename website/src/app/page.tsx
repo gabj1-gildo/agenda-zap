@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { 
   CheckCircle2, XCircle, ArrowRight, Sparkles, X, CreditCard, 
   MessageSquare, CalendarCheck, TrendingUp, Clock, ShieldCheck, 
-  Bot, PhoneForwarded, Target, Zap, ChevronDown
+  Bot, PhoneForwarded, Target, Zap, ChevronDown, Copy, Check, MapPin, QrCode
 } from "lucide-react";
 import { getBackendUrl } from "@/lib/api";
 import { toast } from "sonner";
 import { formatPhone } from "@/lib/utils";
 import { FadeIn } from "@/components/FadeIn";
 
-// --- FAQ Component ---
 function FaqItem({ question, answer }: { question: string, answer: string }) {
   const [open, setOpen] = useState(false);
   return (
@@ -21,9 +20,9 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
         className="w-full flex items-center justify-between p-5 text-left font-bold text-foreground hover:bg-muted/50 transition-colors"
       >
         <span>{question}</span>
-        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 \${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
-      <div className={`px-5 transition-all duration-300 \${open ? 'pb-5 opacity-100 max-h-48' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+      <div className={`px-5 transition-all duration-300 ${open ? 'pb-5 opacity-100 max-h-48' : 'max-h-0 opacity-0 overflow-hidden'}`}>
         <p className="text-sm text-muted-foreground">{answer}</p>
       </div>
     </div>
@@ -33,6 +32,7 @@ function FaqItem({ question, answer }: { question: string, answer: string }) {
 export default function LandingPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'semiannual' | 'yearly'>('monthly');
   
   // Checkout Modal State
   const [showCheckout, setShowCheckout] = useState(false);
@@ -40,7 +40,21 @@ export default function LandingPage() {
   
   // Form State
   const [form, setForm] = useState({ name: "", email: "", document: "", phone: "", method: "CREDIT_CARD" });
+  const [creditCard, setCreditCard] = useState({ number: '', holderName: '', expiryMonth: '', expiryYear: '', ccv: '' });
+  const [address, setAddress] = useState({ cep: '', number: '' });
+  
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  
+  // Validation States
+  const [validatingDoc, setValidatingDoc] = useState(false);
+  const [validatingCep, setValidatingCep] = useState(false);
+
+  // OTP and Pix State
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [pixData, setPixData] = useState<{qrCodeBase64: string, qrCodeString: string} | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [loginUrl, setLoginUrl] = useState("/login");
 
@@ -55,11 +69,10 @@ export default function LandingPage() {
       .catch(() => toast.error("Falha ao carregar planos"))
       .finally(() => setLoading(false));
 
-    // Calculate main domain for login
     if (typeof window !== 'undefined') {
       const host = window.location.host;
       if (host.startsWith('planos.')) {
-        setLoginUrl(`\${window.location.protocol}//\${host.replace('planos.', '')}/login`);
+        setLoginUrl(`${window.location.protocol}//${host.replace('planos.', '')}/login`);
       }
     }
   }, []);
@@ -74,29 +87,156 @@ export default function LandingPage() {
   }, [plans]);
   
   const planNames = Object.keys(groupedPlans);
-  const recommendedPlanName = planNames.length > 1 ? planNames[1] : planNames[0];
+  
+  // Formata Documento
+  const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length <= 11) {
+      val = val.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      val = val.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+      if (val.length > 18) val = val.substring(0, 18);
+    }
+    setForm({...form, document: val});
+  };
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  const handleDocBlur = async () => {
+    const doc = form.document.replace(/\D/g, '');
+    if (doc.length === 11) {
+      setValidatingDoc(true);
+      try {
+        const res = await fetch(getBackendUrl(`/api/validate/cpf?cpf=${doc}`));
+        const data = await res.json();
+        if (!data.success) toast.error(data.error || "CPF Inválido");
+      } catch {
+        toast.error("Erro ao validar CPF");
+      } finally {
+        setValidatingDoc(false);
+      }
+    } else if (doc.length === 14) {
+      setValidatingDoc(true);
+      try {
+        const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${doc}`);
+        if (!res.ok) toast.error("CNPJ Inválido ou não encontrado");
+      } catch {
+        toast.error("Erro ao validar CNPJ");
+      } finally {
+        setValidatingDoc(false);
+      }
+    }
+  };
+
+  const handleCepBlur = async () => {
+    const cep = address.cep.replace(/\D/g, '');
+    if (cep.length === 8) {
+      setValidatingCep(true);
+      try {
+        const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
+        if (!res.ok) toast.error("CEP não encontrado");
+        else toast.success("Endereço localizado via CEP");
+      } catch {
+        toast.error("Erro ao buscar CEP");
+      } finally {
+        setValidatingCep(false);
+      }
+    }
+  };
+
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCheckoutLoading(true);
+    const doc = form.document.replace(/\D/g, '');
+    if (doc.length !== 11 && doc.length !== 14) {
+      toast.error("Documento inválido"); return;
+    }
+    if (form.method === 'CREDIT_CARD' && (address.cep.length < 8 || !address.number || !creditCard.number || !creditCard.ccv)) {
+      toast.error("Preencha todos os dados do cartão e endereço"); return;
+    }
 
+    setCheckoutLoading(true);
     try {
+      const res = await fetch(getBackendUrl('/api/saas/otp'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone, name: form.name })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOtpStep(true);
+        toast.success("Código enviado para o seu WhatsApp!");
+      } else {
+        toast.error(data.error || "Erro ao enviar código de validação");
+      }
+    } catch {
+      toast.error("Erro de conexão");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  const handleFinalCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length < 6) {
+      toast.error("Digite o código de 6 dígitos"); return;
+    }
+    
+    setCheckoutLoading(true);
+    try {
+      const payload: any = {
+        ...form,
+        planId: selectedPlan.id,
+        otpCode,
+      };
+      
+      if (form.method === 'CREDIT_CARD') {
+        payload.creditCard = {
+          holderName: creditCard.holderName,
+          number: creditCard.number.replace(/\D/g, ''),
+          expiryMonth: creditCard.expiryMonth,
+          expiryYear: creditCard.expiryYear,
+          ccv: creditCard.ccv
+        };
+        payload.creditCardHolderInfo = {
+          name: form.name,
+          email: form.email,
+          cpfCnpj: form.document.replace(/\D/g, ''),
+          postalCode: address.cep.replace(/\D/g, ''),
+          addressNumber: address.number,
+          phone: form.phone.replace(/\D/g, '')
+        };
+      }
+
       const res = await fetch(getBackendUrl('/api/saas/checkout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, planId: selectedPlan.id })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       
-      if (data.success && data.data.paymentUrl) {
-        window.location.href = data.data.paymentUrl;
+      if (data.success) {
+        if (form.method === 'PIX') {
+          setPixData({
+            qrCodeBase64: data.data.pix.qrCodeBase64,
+            qrCodeString: data.data.pix.qrCodeString
+          });
+        } else {
+          setPaymentSuccess(true);
+        }
       } else {
-        toast.error(data.error || "Erro ao processar checkout");
+        toast.error(data.error || "Erro ao processar pagamento");
       }
     } catch (e) {
       toast.error("Erro de conexão ao processar checkout");
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const copyPix = () => {
+    if (pixData?.qrCodeString) {
+      navigator.clipboard.writeText(pixData.qrCodeString);
+      setCopied(true);
+      toast.success("Código PIX copiado!");
+      setTimeout(() => setCopied(false), 3000);
     }
   };
 
@@ -127,9 +267,8 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col items-center w-full">
         
-        {/* 1. HERO SECTION */}
+        {/* HERO SECTION */}
         <section className="w-full px-4 py-24 md:py-32 flex flex-col items-center text-center relative overflow-hidden">
-          {/* Background effects */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/20 rounded-full blur-[120px] -z-10 opacity-50" />
           
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -145,193 +284,23 @@ export default function LandingPage() {
             <button onClick={scrollToPricing} className="px-8 py-4 bg-primary text-primary-foreground font-bold rounded-full text-lg flex items-center gap-2 hover:opacity-90 hover:scale-105 transition-all shadow-xl shadow-primary/25">
               Começar Agora <ArrowRight className="w-5 h-5" />
             </button>
-            <button onClick={() => document.getElementById('beneficios')?.scrollIntoView({ behavior: 'smooth' })} className="px-8 py-4 bg-muted text-foreground font-bold rounded-full text-lg hover:bg-muted/80 transition-all">
-              Conhecer Funcionalidades
-            </button>
           </div>
         </section>
 
-        {/* 2. A DOR / PROBLEMAS */}
-        <section id="dor" className="w-full px-4 py-24 bg-card border-y border-border/50">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Você se identifica com essas situações?</h2>
-              <p className="text-muted-foreground text-lg">Gerenciar um negócio não deveria ser sinônimo de perder noites de sono.</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-8 rounded-3xl bg-background border border-border/50 shadow-sm">
-                <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Perda de Clientes pela Demora</h3>
-                <p className="text-muted-foreground">Você está executando o serviço e não pode responder o WhatsApp. Quando responde, o cliente já fechou com a concorrência.</p>
-              </div>
-              <div className="p-8 rounded-3xl bg-background border border-border/50 shadow-sm">
-                <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6">
-                  <CreditCard className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Esquecimento e Inadimplência</h3>
-                <p className="text-muted-foreground">Agendar no papel ou em planilhas te faz esquecer de cobrar sinal ou de lembrar o cliente, gerando faltas e prejuízos.</p>
-              </div>
-              <div className="p-8 rounded-3xl bg-background border border-border/50 shadow-sm">
-                <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-2xl flex items-center justify-center mb-6">
-                  <PhoneForwarded className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">O(a) Empreendedor(a) "Secretária"</h3>
-                <p className="text-muted-foreground">Você passa mais tempo organizando horários, respondendo dúvidas básicas e remarcando agendas do que fazendo o seu serviço principal.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. BENEFÍCIOS / FUNCIONALIDADES */}
-        <section id="beneficios" className="w-full px-4 py-24">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4">O sistema que trabalha por você.</h2>
-              <p className="text-muted-foreground text-lg">Descubra como o AgendaZap transforma o seu negócio no piloto automático.</p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 font-bold text-sm">
-                  <Bot className="w-4 h-4" /> Atendimento 24/7
-                </div>
-                <h3 className="text-3xl font-extrabold leading-tight">Sua própria Inteligência Artificial respondendo no WhatsApp.</h3>
-                <p className="text-lg text-muted-foreground">
-                  Treine nossa IA com as informações do seu negócio. Ela responderá dúvidas sobre preços, localização, serviços e fará o atendimento humano de forma impecável, encaminhando o cliente para o agendamento sem que você precise tocar no celular.
-                </p>
-                <ul className="space-y-3 font-medium">
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-primary" /> Respostas instantâneas e naturais.</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-primary" /> Funciona mesmo quando você está dormindo.</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-primary" /> Transbordo para atendimento humano a qualquer momento.</li>
-                </ul>
-              </div>
-              <div className="relative h-[400px] rounded-3xl bg-gradient-to-br from-blue-500/5 to-primary/10 border border-border/50 flex items-center justify-center p-8 overflow-hidden">
-                {/* Mockup visual ilustrativo */}
-                <div className="w-full max-w-sm bg-card rounded-2xl shadow-2xl border border-border/50 p-4">
-                  <div className="flex items-center gap-3 border-b border-border/50 pb-3 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white"><Bot className="w-4 h-4"/></div>
-                    <div>
-                      <div className="text-sm font-bold">Assistente AgendaZap</div>
-                      <div className="text-xs text-emerald-500">Online</div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="bg-muted p-3 rounded-2xl rounded-tl-sm text-sm ml-8 opacity-80">Olá! Quero saber o valor do corte.</div>
-                    <div className="bg-primary text-primary-foreground p-3 rounded-2xl rounded-tr-sm text-sm mr-8 shadow-md">
-                      Olá! O valor do corte tradicional é R$ 50,00 e o corte com barba é R$ 80,00. Gostaria de agendar um horário para esta semana? Temos vagas amanhã à tarde!
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-center flex-col-reverse lg:flex-row-reverse mb-24">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 font-bold text-sm">
-                  <CalendarCheck className="w-4 h-4" /> Agenda Inteligente
-                </div>
-                <h3 className="text-3xl font-extrabold leading-tight">Agendamentos integrados e envios de lembretes.</h3>
-                <p className="text-lg text-muted-foreground">
-                  Seu cliente escolhe o serviço e o horário através de um link prático, ou conversando com a IA. O sistema organiza tudo em um calendário visual e dispara mensagens automáticas no WhatsApp para lembrar o cliente do compromisso, reduzindo drasticamente as faltas.
-                </p>
-                <ul className="space-y-3 font-medium">
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Calendário visual fácil de usar.</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Lembretes de agendamento automáticos.</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Prevenção de conflito de horários.</li>
-                </ul>
-              </div>
-              <div className="relative h-[400px] rounded-3xl bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border border-border/50 flex items-center justify-center p-8 overflow-hidden">
-                 <div className="w-full h-full bg-card rounded-2xl shadow-2xl border border-border/50 p-6 flex flex-col gap-3 relative">
-                    <div className="h-6 w-32 bg-muted rounded-md mb-4" />
-                    {[1,2,3].map(i => (
-                      <div key={i} className="flex gap-4 items-center">
-                        <div className="w-12 text-xs text-muted-foreground font-bold">14:00</div>
-                        <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 p-3 rounded-xl text-sm font-semibold flex justify-between">
-                          <span>João Silva</span>
-                          <span>Corte de Cabelo</span>
-                        </div>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 font-bold text-sm">
-                  <Target className="w-4 h-4" /> CRM & Funil de Vendas
-                </div>
-                <h3 className="text-3xl font-extrabold leading-tight">Organize contatos, dispare campanhas e multiplique vendas.</h3>
-                <p className="text-lg text-muted-foreground">
-                  Transforme simples contatos em clientes recorrentes. Organize os interessados em um Funil de Vendas estilo Kanban e crie campanhas de disparo em massa no WhatsApp para promover promoções, novidades ou recuperar clientes sumidos.
-                </p>
-                <ul className="space-y-3 font-medium">
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-purple-500" /> Funil de vendas arrastar-e-soltar.</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-purple-500" /> Histórico unificado de conversas.</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-purple-500" /> Disparos em massa segmentados.</li>
-                </ul>
-              </div>
-              <div className="relative h-[400px] rounded-3xl bg-gradient-to-br from-purple-500/5 to-purple-500/10 border border-border/50 flex items-center justify-center p-8 overflow-hidden">
-                <div className="w-full h-full flex gap-4">
-                  {[1,2].map(col => (
-                    <div key={col} className="flex-1 bg-muted/50 rounded-2xl p-4 flex flex-col gap-3">
-                      <div className="h-4 w-20 bg-muted-foreground/20 rounded-md mb-2" />
-                      {[1,2].map(card => (
-                        <div key={card} className="bg-card p-4 rounded-xl shadow-sm border border-border/50 space-y-2">
-                          <div className="h-3 w-3/4 bg-muted rounded-full" />
-                          <div className="h-3 w-1/2 bg-muted rounded-full" />
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* 4. COMO FUNCIONA */}
-        <section className="w-full px-4 py-24 bg-card border-y border-border/50">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-16">Tão fácil que parece mágica.</h2>
-            <div className="grid md:grid-cols-3 gap-8 relative">
-              {/* Linha conectora desktop */}
-              <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-border via-primary/50 to-border -z-10" />
-              
-              <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-background border-4 border-card shadow-xl flex items-center justify-center mb-6 text-3xl font-display font-extrabold text-primary relative z-10">
-                  1
-                </div>
-                <h4 className="text-xl font-bold mb-2">Conecte o WhatsApp</h4>
-                <p className="text-muted-foreground text-sm">Escaneie o QR Code dentro do painel e seu número estará integrado na hora.</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-background border-4 border-card shadow-xl flex items-center justify-center mb-6 text-3xl font-display font-extrabold text-primary relative z-10">
-                  2
-                </div>
-                <h4 className="text-xl font-bold mb-2">Treine a Inteligência</h4>
-                <p className="text-muted-foreground text-sm">Adicione suas regras, preços e horários com um texto simples. A IA aprende instantaneamente.</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-24 h-24 rounded-full bg-background border-4 border-card shadow-xl flex items-center justify-center mb-6 text-3xl font-display font-extrabold text-primary relative z-10">
-                  3
-                </div>
-                <h4 className="text-xl font-bold mb-2">Comece a Lucrar</h4>
-                <p className="text-muted-foreground text-sm">Divulgue seu número e deixe o sistema atender, agendar e cobrar por você automaticamente.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 5. PRICING SECTION */}
-        <section id="planos" className="w-full px-4 py-24">
+        {/* PRICING SECTION */}
+        <section id="planos" className="w-full px-4 py-24 bg-card border-y border-border/50">
           <div className="w-full max-w-6xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-12">
               <h2 className="text-4xl font-bold">Planos Simples e Transparentes</h2>
               <p className="text-muted-foreground mt-3 text-lg">Escolha o plano ideal. Cancele quando quiser, sem taxas surpresas.</p>
+            </div>
+
+            <div className="flex justify-center mb-12">
+              <div className="inline-flex items-center p-1.5 bg-background border border-border rounded-full">
+                <button onClick={() => setBillingInterval('monthly')} className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${billingInterval === 'monthly' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>Mensal</button>
+                <button onClick={() => setBillingInterval('semiannual')} className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${billingInterval === 'semiannual' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>Semestral <span className="text-[10px] bg-green-500/20 text-green-600 px-2 py-0.5 rounded-full ml-1">-10%</span></button>
+                <button onClick={() => setBillingInterval('yearly')} className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${billingInterval === 'yearly' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>Anual <span className="text-[10px] bg-green-500/20 text-green-600 px-2 py-0.5 rounded-full ml-1">-20%</span></button>
+              </div>
             </div>
 
             {loading ? (
@@ -341,13 +310,15 @@ export default function LandingPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch justify-center">
                 {planNames.map(name => {
-                  const isRecommended = name === recommendedPlanName;
                   const variations = groupedPlans[name];
-                  const displayPlan = variations['monthly'] || Object.values(variations)[0];
+                  const displayPlan = variations[billingInterval] || variations['monthly'] || Object.values(variations)[0];
                   if (!displayPlan) return null;
+                  
+                  // Destaque o PRO no mensal (ou se for o segundo plano)
+                  const isRecommended = (billingInterval === 'monthly' && name.toLowerCase().includes('pro')) || (planNames.length > 1 && name === planNames[1] && !planNames.some(n => n.toLowerCase().includes('pro')));
 
                   return (
-                    <div key={name} className={`relative flex flex-col p-8 rounded-3xl border \${isRecommended ? 'border-primary shadow-2xl shadow-primary/20 bg-gradient-to-b from-primary/[0.05] to-transparent scale-105 z-10' : 'border-border/50 bg-card hover:border-border'}`}>
+                    <div key={name} className={`relative flex flex-col p-8 rounded-3xl border ${isRecommended ? 'border-primary shadow-2xl shadow-primary/20 bg-gradient-to-b from-primary/[0.05] to-transparent scale-105 z-10' : 'border-border/50 bg-card hover:border-border'}`}>
                       {isRecommended && (
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-blue-600 text-white text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap">
                           <Sparkles className="w-3.5 h-3.5" /> O Mais Escolhido
@@ -380,7 +351,7 @@ export default function LandingPage() {
                           const text = isObj ? f.name : f;
                           const included = isObj ? f.included : true;
                           return (
-                            <li key={i} className={`flex items-start gap-3 \${!included ? 'opacity-40' : ''}`}>
+                            <li key={i} className={`flex items-start gap-3 ${!included ? 'opacity-40' : ''}`}>
                               {included ? <CheckCircle2 className="w-5 h-5 text-primary shrink-0" /> : <XCircle className="w-5 h-5 text-muted-foreground shrink-0" />}
                               <span className={!included ? 'line-through' : ''}>{text}</span>
                             </li>
@@ -393,7 +364,7 @@ export default function LandingPage() {
                           setSelectedPlan(displayPlan);
                           setShowCheckout(true);
                         }}
-                        className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all \${isRecommended ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                        className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isRecommended ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5' : 'bg-muted text-foreground hover:bg-muted/80'}`}
                       >
                         Assinar {displayPlan.name} <ArrowRight className="w-4 h-4" />
                       </button>
@@ -402,111 +373,153 @@ export default function LandingPage() {
                 })}
               </div>
             )}
-            
-            <div className="mt-12 flex items-center justify-center gap-6 text-sm font-semibold text-muted-foreground">
-              <div className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Pagamento 100% Seguro</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-primary" /> Liberação Imediata</div>
-            </div>
           </div>
         </section>
 
-        {/* 6. FAQ */}
-        <section id="faq" className="w-full px-4 py-24 bg-card/50 border-t border-border/50">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4">Dúvidas Frequentes</h2>
-              <p className="text-muted-foreground">Tudo o que você precisa saber antes de assinar.</p>
-            </div>
-            <div className="space-y-4">
-              <FaqItem 
-                question="Preciso baixar algum aplicativo no celular ou computador?" 
-                answer="Não! O AgendaZap é 100% em nuvem e funciona direto no navegador do seu celular, tablet ou computador. Basta acessar, conectar seu WhatsApp através do QR Code (igual ao WhatsApp Web) e o sistema já começa a funcionar." 
-              />
-              <FaqItem 
-                question="A Inteligência Artificial pode responder coisas erradas para o cliente?" 
-                answer="Nossa IA é baseada nas instruções que você fornece! Você escreve as regras do seu negócio, tabela de preços e o que ela NÃO deve responder. Em caso de dúvidas complexas, a IA avisa o cliente que um atendente humano irá assumir a conversa." 
-              />
-              <FaqItem 
-                question="Posso usar meu próprio número de WhatsApp?" 
-                answer="Sim! Você conecta o seu próprio número de WhatsApp escaneando o QR Code na nossa plataforma. Não usamos números terceirizados. Seus clientes vão conversar diretamente com o seu número oficial." 
-              />
-              <FaqItem 
-                question="Existe fidelidade ou multa de cancelamento?" 
-                answer="De forma alguma. O serviço é pré-pago no formato assinatura mensal. Você pode cancelar a qualquer momento diretamente pelo painel e não haverá nenhuma cobrança futura." 
-              />
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* FOOTER */}
       <footer className="w-full py-12 px-6 border-t border-border/40 text-center">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5 opacity-80">
-            <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center text-background font-display font-extrabold text-xl -rotate-6">
-              A
-            </div>
-            <span className="font-display font-extrabold text-xl tracking-wide">AgendaZap</span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} AgendaZap. Plataforma de gestão inovadora. Todos os direitos reservados.
-          </p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground font-semibold">
-            <a href="#" className="hover:text-foreground">Termos de Uso</a>
-            <a href="#" className="hover:text-foreground">Privacidade</a>
-          </div>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          &copy; {new Date().getFullYear()} AgendaZap. Todos os direitos reservados.
+        </p>
       </footer>
 
-      {/* CHECKOUT MODAL (Keep Existing Logic) */}
+      {/* CHECKOUT MODAL */}
       {showCheckout && selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="bg-card border border-border rounded-3xl w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95 duration-200">
-            <button onClick={() => setShowCheckout(false)} className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors">
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-y-auto pt-20">
+          <div className="bg-card border border-border rounded-3xl w-full max-w-xl p-8 shadow-2xl relative my-auto">
+            <button onClick={() => { setShowCheckout(false); setOtpStep(false); setPixData(null); setPaymentSuccess(false); }} className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors">
+              <X className="w-6 h-6" />
             </button>
             
-            <h2 className="text-2xl font-bold mb-1">Finalizar Assinatura</h2>
-            <p className="text-sm text-muted-foreground mb-6">Plano <strong>{selectedPlan.name}</strong> por R$ {Number(selectedPlan.price).toFixed(2).replace('.', ',')}</p>
-            
-            <form onSubmit={handleCheckout} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Nome Completo</label>
-                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="João da Silva" />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">E-mail</label>
-                <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="joao@email.com" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">CPF ou CNPJ</label>
-                  <input required type="text" value={form.document} onChange={e => setForm({...form, document: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Apenas números" />
+            {paymentSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check className="w-10 h-10" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">WhatsApp</label>
-                  <input required type="tel" value={form.phone} onChange={e => setForm({...form, phone: formatPhone(e.target.value)})} maxLength={21} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="(11) 99999-9999" />
-                </div>
+                <h2 className="text-2xl font-bold mb-2">Pagamento Aprovado!</h2>
+                <p className="text-muted-foreground mb-8">Sua assinatura do plano <strong>{selectedPlan.name}</strong> foi ativada com sucesso.</p>
+                <a href={loginUrl} className="w-full block bg-primary text-primary-foreground font-bold rounded-xl py-4 hover:opacity-90 transition-opacity">
+                  Acessar Painel
+                </a>
               </div>
+            ) : pixData ? (
+              <div className="text-center py-4">
+                <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <QrCode className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">PIX Gerado com Sucesso</h2>
+                <p className="text-sm text-muted-foreground mb-6">Escaneie o QR Code abaixo ou copie o código para pagar no seu banco.</p>
+                
+                <div className="bg-white p-4 rounded-xl inline-block mb-6 border border-border">
+                  <img src={`data:image/png;base64,${pixData.qrCodeBase64}`} alt="QR Code PIX" className="w-48 h-48" />
+                </div>
 
-              <div className="pt-2">
-                <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Forma de Pagamento</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
-                    <CreditCard className="w-4 h-4" /> Cartão
-                  </button>
-                  <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
-                    <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-[10px]">P</div> PIX
+                <div className="bg-muted p-4 rounded-xl flex items-center gap-3 text-left">
+                  <p className="text-xs font-mono break-all line-clamp-2 flex-1 text-muted-foreground">{pixData.qrCodeString}</p>
+                  <button onClick={copyPix} className="p-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 shrink-0">
+                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   </button>
                 </div>
+                
+                <p className="text-xs text-muted-foreground mt-6">Enviamos o código PIX também para o seu WhatsApp e E-mail.</p>
               </div>
+            ) : otpStep ? (
+              <form onSubmit={handleFinalCheckout} className="py-4 text-center">
+                <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <MessageSquare className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Confirme seu WhatsApp</h2>
+                <p className="text-sm text-muted-foreground mb-8">Enviamos um código de 6 dígitos para <strong>{form.phone}</strong>.</p>
+                
+                <input required type="text" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))} className="w-full text-center tracking-[1em] font-mono font-bold text-2xl bg-background border border-border rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary/20 outline-none mb-6" placeholder="000000" />
+                
+                <button type="submit" disabled={checkoutLoading || otpCode.length < 6} className="w-full bg-primary text-primary-foreground font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
+                  {checkoutLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirmar e Pagar'}
+                </button>
+                <button type="button" onClick={() => setOtpStep(false)} className="mt-4 text-sm text-muted-foreground hover:text-foreground">
+                  Voltar e editar dados
+                </button>
+              </form>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold mb-1">Finalizar Assinatura</h2>
+                <p className="text-sm text-muted-foreground mb-6">Plano <strong>{selectedPlan.name}</strong> por R$ {Number(selectedPlan.price).toFixed(2).replace('.', ',')}</p>
+                
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  {/* Dados Básicos */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Nome Completo</label>
+                      <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="João da Silva" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">E-mail</label>
+                      <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="joao@email.com" />
+                    </div>
+                  </div>
 
-              <button type="submit" disabled={checkoutLoading} className="w-full mt-4 bg-primary text-primary-foreground font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
-                {checkoutLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Ir para Pagamento <ArrowRight className="w-4 h-4" /></>}
-              </button>
-            </form>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">CPF ou CNPJ</label>
+                      <input required type="text" value={form.document} onChange={handleDocChange} onBlur={handleDocBlur} maxLength={18} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="000.000.000-00" />
+                      {validatingDoc && <div className="absolute right-4 top-9 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">WhatsApp</label>
+                      <input required type="tel" value={form.phone} onChange={e => setForm({...form, phone: formatPhone(e.target.value)})} maxLength={21} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="(11) 99999-9999" />
+                    </div>
+                  </div>
+
+                  {/* Metodo de Pagamento */}
+                  <div className="pt-2">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Forma de Pagamento</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors ${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                        <CreditCard className="w-4 h-4" /> Cartão de Crédito
+                      </button>
+                      <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors ${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                        <Zap className="w-4 h-4" /> PIX
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dados do Cartão (Só se Cartão) */}
+                  {form.method === 'CREDIT_CARD' && (
+                    <div className="space-y-4 pt-4 border-t border-border mt-4 animate-in fade-in slide-in-from-top-2">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-primary mb-2"><CreditCard className="w-3 h-3 inline mr-1"/> Dados do Cartão</label>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <input required type="text" value={creditCard.number} onChange={e => setCreditCard({...creditCard, number: e.target.value})} maxLength={19} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="Número do Cartão" />
+                        </div>
+                        <div>
+                          <input required type="text" value={creditCard.holderName} onChange={e => setCreditCard({...creditCard, holderName: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="Nome impresso no cartão" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <input required type="text" value={creditCard.expiryMonth} onChange={e => setCreditCard({...creditCard, expiryMonth: e.target.value.replace(/\D/g, '')})} maxLength={2} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary text-center" placeholder="Mês (Ex: 12)" />
+                        <input required type="text" value={creditCard.expiryYear} onChange={e => setCreditCard({...creditCard, expiryYear: e.target.value.replace(/\D/g, '')})} maxLength={4} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary text-center" placeholder="Ano (Ex: 2029)" />
+                        <input required type="text" value={creditCard.ccv} onChange={e => setCreditCard({...creditCard, ccv: e.target.value.replace(/\D/g, '')})} maxLength={4} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary text-center" placeholder="CVV" />
+                      </div>
+                      
+                      <label className="block text-xs font-bold uppercase tracking-widest text-primary mb-2 mt-4"><MapPin className="w-3 h-3 inline mr-1"/> Endereço de Cobrança</label>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-2 relative">
+                          <input required type="text" value={address.cep} onChange={e => setAddress({...address, cep: e.target.value})} onBlur={handleCepBlur} maxLength={9} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="CEP" />
+                          {validatingCep && <div className="absolute right-4 top-3.5 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+                        </div>
+                        <input required type="text" value={address.number} onChange={e => setAddress({...address, number: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary" placeholder="Número" />
+                      </div>
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={checkoutLoading || validatingDoc || validatingCep} className="w-full mt-6 bg-primary text-primary-foreground font-bold rounded-xl py-4 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50">
+                    {checkoutLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Continuar <ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
