@@ -1,0 +1,8 @@
+Tenant ID,Tenant Name,Service Name,Price,Duration,Duration Estimated,Status
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Corte de cabelo",50,30,YES,SUCCESS
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Barba",35,30,YES,SUCCESS
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Combo Corte + Barba por apenas 70",0,0,NO,FAILED_PARSE
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Maquiagem",120.5,30,YES,SUCCESS
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Temos os melhores serviços da região!",0,0,NO,FAILED_PARSE
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Consulte nossos preços no balcão.",0,0,NO,FAILED_PARSE
+e32da09c-ae6a-4594-b0b4-f482fbbab718,"Barbearia Teste IA (Migration)","Luzes",150,30,YES,SUCCESS
