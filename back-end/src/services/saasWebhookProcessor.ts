@@ -55,8 +55,7 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
       // Vincula
       await db.insert(userTenants).values({
         userId: user.id,
-        tenantId: newTenant.id,
-        role: 'ADMIN'
+        tenantId: newTenant.id
       });
     }
 
