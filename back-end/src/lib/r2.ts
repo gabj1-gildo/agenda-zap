@@ -1,4 +1,4 @@
-﻿import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 // R2 requires access key and secret key, and the account endpoint
 const endpoint = process.env.R2_ENDPOINT || '';
@@ -15,7 +15,7 @@ export const r2 = new S3Client({
     accessKeyId,
     secretAccessKey,
   },
-  forcePathStyle: true, // NecessÃ¡rio em alguns ambientes para o R2
+  forcePathStyle: true, // Necessário em alguns ambientes para o R2
 });
 
 export { PutObjectCommand, GetObjectCommand, DeleteObjectCommand };

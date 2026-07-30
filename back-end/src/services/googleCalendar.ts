@@ -1,4 +1,4 @@
-﻿import { google } from 'googleapis';
+import { google } from 'googleapis';
 import { db } from '@/db';
 import { eq } from 'drizzle-orm';
 import { tenants } from '@/db/schema/tenants';
@@ -111,12 +111,12 @@ export async function syncAppointmentToCalendar(appointmentId: string): Promise<
   try {
     const { appointments, clients, services } = await import('@/db/schema');
     
-    // Buscar o agendamento com os dados necessÃ¡rios
+    // Buscar o agendamento com os dados necessários
     const apts = await db.select().from(appointments).where(eq(appointments.id, appointmentId)).limit(1);
     if (!apts.length) return false;
     
     const appointment = apts[0];
-    if (appointment.googleEventId) return true; // JÃ¡ sincronizado
+    if (appointment.googleEventId) return true; // Já sincronizado
     
     let clientName = 'Cliente desconhecido';
     let clientPhone = '';
@@ -140,7 +140,7 @@ export async function syncAppointmentToCalendar(appointmentId: string): Promise<
     const endTime = new Date(startTime.getTime() + duration * 60000);
     
     const title = `${appointment.serviceName} - ${clientName}`;
-    const description = `Agendamento criado via AgendaZap.\nCliente: ${clientName}\nTelefone: ${clientPhone}\nServiÃ§o: ${appointment.serviceName}\nValor: R$ ${appointment.price}`;
+    const description = `Agendamento criado via AgendaZap.\nCliente: ${clientName}\nTelefone: ${clientPhone}\nServiço: ${appointment.serviceName}\nValor: R$ ${appointment.price}`;
     
     const eventId = await addEventToCalendar(appointment.tenantId, {
       title,
@@ -168,7 +168,7 @@ export async function unsyncAppointmentFromCalendar(appointmentId: string): Prom
     
     const success = await deleteEventFromCalendar(apts[0].tenantId, apts[0].googleEventId);
     if (success) {
-      // Remove a referÃªncia do banco
+      // Remove a referência do banco
       await db.update(appointments).set({ googleEventId: null }).where(eq(appointments.id, appointmentId));
     }
     return success;

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { systemSettings } from '@/db/schema';
@@ -33,12 +33,12 @@ export async function POST(req: Request) {
     if (channel === 'email') {
       await sendEmail({
         to: userRecord.email,
-        subject: 'CÃ³digo de RecuperaÃ§Ã£o de Senha - AgendaZap',
-        html: `<p>OlÃ¡ ${userRecord.name || ''},</p><p>Seu cÃ³digo de recuperaÃ§Ã£o de senha Ã©: <strong>${resetToken}</strong></p><p>Este cÃ³digo expira em 15 minutos.</p>`,
+        subject: 'Código de Recuperação de Senha - AgendaZap',
+        html: `<p>Olá ${userRecord.name || ''},</p><p>Seu código de recuperação de senha é: <strong>${resetToken}</strong></p><p>Este código expira em 15 minutos.</p>`,
       });
     } else if (channel === 'whatsapp') {
       if (!userRecord.phone) {
-        return NextResponse.json({ success: false, error: 'UsuÃ¡rio nÃ£o possui telefone cadastrado' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Usuário não possui telefone cadastrado' }, { status: 400 });
       }
 
       // Fetch global whatsapp instance setting
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       const instanceName = instanceSetting?.value || 'whatsapp-vendas';
 
       const cleanPhone = userRecord.phone.replace(/\D/g, '');
-      const message = `OlÃ¡ ${userRecord.name || ''}, seu cÃ³digo de recuperaÃ§Ã£o de senha Ã©: *${resetToken}*\n\nEste cÃ³digo expira em 15 minutos.`;
+      const message = `Olá ${userRecord.name || ''}, seu código de recuperação de senha é: *${resetToken}*\n\nEste código expira em 15 minutos.`;
 
       const sent = await sendWhatsAppMessage(
         `${cleanPhone}@s.whatsapp.net`, 

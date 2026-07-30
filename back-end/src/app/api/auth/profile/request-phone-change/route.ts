@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -16,10 +16,10 @@ export async function POST(req: Request) {
 
     const { newPhone, currentPassword } = await req.json();
     if (!currentPassword) {
-      return NextResponse.json({ success: false, error: 'Senha atual Ã© obrigatÃ³ria' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Senha atual é obrigatória' }, { status: 400 });
     }
     if (!newPhone || typeof newPhone !== 'string' || newPhone.trim() === '') {
-      return NextResponse.json({ success: false, error: 'NÃºmero de telefone invÃ¡lido' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Número de telefone inválido' }, { status: 400 });
     }
 
     // Clean phone number
@@ -36,13 +36,13 @@ export async function POST(req: Request) {
     }
     
     if (user.phone && cleanPhone === user.phone.replace(/\D/g, '')) {
-      return NextResponse.json({ success: false, error: 'O novo telefone Ã© igual ao atual' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'O novo telefone é igual ao atual' }, { status: 400 });
     }
 
     // Check if new phone is already in use by another user
     const [existing] = await db.select().from(users).where(eq(users.phone, cleanPhone));
     if (existing) {
-      return NextResponse.json({ success: false, error: 'Este telefone jÃ¡ estÃ¡ em uso por outro usuÃ¡rio' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Este telefone já está em uso por outro usuário' }, { status: 400 });
     }
 
     // Generate 6 digit OTP
@@ -60,17 +60,17 @@ export async function POST(req: Request) {
     });
     const instanceName = instanceSetting?.value || undefined;
 
-    const message = `OlÃ¡ ${user.name},\n\nVocÃª solicitou a alteraÃ§Ã£o do seu nÃºmero de telefone de acesso na AgendaZap.\n\nSeu cÃ³digo de confirmaÃ§Ã£o Ã©: *${otp}*\n\nEste cÃ³digo expira em 15 minutos. Se vocÃª nÃ£o solicitou esta alteraÃ§Ã£o, desconsidere esta mensagem.`;
+    const message = `Olá ${user.name},\n\nVocê solicitou a alteração do seu número de telefone de acesso na AgendaZap.\n\nSeu código de confirmação é: *${otp}*\n\nEste código expira em 15 minutos. Se você não solicitou esta alteração, desconsidere esta mensagem.`;
     // Uses system wide whatsapp service, since tenant may not exist
     const sent = await sendWhatsAppMessage(`${cleanPhone}@s.whatsapp.net`, message, undefined);
 
     if (!sent) {
-      return NextResponse.json({ success: false, error: 'Erro ao enviar mensagem via WhatsApp. Verifique se o nÃºmero estÃ¡ correto e se o sistema estÃ¡ conectado.' }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Erro ao enviar mensagem via WhatsApp. Verifique se o número está correto e se o sistema está conectado.' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'CÃ³digo enviado via WhatsApp' });
+    return NextResponse.json({ success: true, message: 'Código enviado via WhatsApp' });
   } catch (error: any) {
     console.error('Error requesting phone change:', error);
-    return NextResponse.json({ success: false, error: 'Erro interno ao solicitar alteraÃ§Ã£o.' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Erro interno ao solicitar alteração.' }, { status: 500 });
   }
 }

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { systemSettings } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -12,11 +12,11 @@ export async function POST(req: Request) {
   try {
     const user = verifyAuth(req);
     if (!user || user.role !== 'SUPERADMIN') {
-      return NextResponse.json({ success: false, message: 'NÃ£o autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'Não autorizado' }, { status: 401 });
     }
 
     if (!EVOLUTION_URL) {
-      return NextResponse.json({ error: 'EVOLUTION_API_URL nÃ£o configurada no .env' }, { status: 500 });
+      return NextResponse.json({ error: 'EVOLUTION_API_URL não configurada no .env' }, { status: 500 });
     }
 
     const { instanceName: requestedInstanceName } = await req.json();
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const instanceName = requestedInstanceName || 'sistema-agenda-zap';
 
     if (!instanceName) {
-      return NextResponse.json({ success: false, message: 'Nome da instÃ¢ncia Ã© obrigatÃ³rio' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Nome da instância é obrigatório' }, { status: 400 });
     }
 
     // Create instance on Evolution API
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         .where(eq(systemSettings.key, 'whatsapp_default_instance_name'));
     } else {
       await db.insert(systemSettings)
-        .values({ key: 'whatsapp_default_instance_name', value: instanceName, description: 'InstÃ¢ncia padrÃ£o do sistema para envios globais' });
+        .values({ key: 'whatsapp_default_instance_name', value: instanceName, description: 'Instância padrão do sistema para envios globais' });
     }
 
     const existingStatus = await db.query.systemSettings.findFirst({
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
         .where(eq(systemSettings.key, 'whatsapp_default_status'));
     } else {
       await db.insert(systemSettings)
-        .values({ key: 'whatsapp_default_status', value: 'PENDING_QR', description: 'Status da conexÃ£o do WhatsApp PadrÃ£o' });
+        .values({ key: 'whatsapp_default_status', value: 'PENDING_QR', description: 'Status da conexão do WhatsApp Padrão' });
     }
 
     return NextResponse.json({
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Phone/Evolution error:', error);
-    return NextResponse.json({ success: false, message: 'Erro ao criar instÃ¢ncia' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Erro ao criar instância' }, { status: 500 });
   }
 }
 
@@ -114,11 +114,11 @@ export async function GET(req: Request) {
   try {
     const user = verifyAuth(req);
     if (!user || user.role !== 'SUPERADMIN') {
-      return NextResponse.json({ success: false, message: 'NÃ£o autorizado' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'Não autorizado' }, { status: 401 });
     }
 
     if (!EVOLUTION_URL) {
-      return NextResponse.json({ error: 'EVOLUTION_API_URL nÃ£o configurada no .env' }, { status: 500 });
+      return NextResponse.json({ error: 'EVOLUTION_API_URL não configurada no .env' }, { status: 500 });
     }
 
     const instanceSetting = await db.query.systemSettings.findFirst({
@@ -128,7 +128,7 @@ export async function GET(req: Request) {
     const instanceName = instanceSetting?.value;
 
     if (!instanceName) {
-      return NextResponse.json({ success: false, message: 'Sem instÃ¢ncia vinculada' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Sem instância vinculada' }, { status: 404 });
     }
 
     const statusRes = await fetch(
@@ -149,10 +149,10 @@ export async function GET(req: Request) {
         .where(eq(systemSettings.key, 'whatsapp_default_status'));
     } else {
       await db.insert(systemSettings)
-        .values({ key: 'whatsapp_default_status', value: state.toUpperCase(), description: 'Status da conexÃ£o do WhatsApp PadrÃ£o' });
+        .values({ key: 'whatsapp_default_status', value: state.toUpperCase(), description: 'Status da conexão do WhatsApp Padrão' });
     }
 
-    // Se ainda nÃ£o conectado, pegar novo QR
+    // Se ainda não conectado, pegar novo QR
     let qrCode: string | null = null;
     if (state !== 'open') {
       const qrRes = await fetch(

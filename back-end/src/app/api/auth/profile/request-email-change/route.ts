@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     const { newEmail } = await req.json();
     if (!newEmail || typeof newEmail !== 'string' || !newEmail.includes('@')) {
-      return NextResponse.json({ success: false, error: 'E-mail invÃ¡lido' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 });
     }
 
     const [user] = await db.select().from(users).where(eq(users.id, session.id));
@@ -23,13 +23,13 @@ export async function POST(req: Request) {
     }
     
     if (newEmail.toLowerCase() === user.email.toLowerCase()) {
-      return NextResponse.json({ success: false, error: 'O novo e-mail Ã© igual ao atual' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'O novo e-mail é igual ao atual' }, { status: 400 });
     }
 
     // Check if new email is already in use by another user
     const [existing] = await db.select().from(users).where(eq(users.email, newEmail.toLowerCase()));
     if (existing) {
-      return NextResponse.json({ success: false, error: 'Este e-mail jÃ¡ estÃ¡ em uso' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Este e-mail já está em uso' }, { status: 400 });
     }
 
     // Generate 6 digit OTP
@@ -45,25 +45,25 @@ export async function POST(req: Request) {
     // Send email
     await sendEmail({
       to: newEmail.toLowerCase(),
-      subject: 'AgendaZap - ConfirmaÃ§Ã£o de novo E-mail',
+      subject: 'AgendaZap - Confirmação de novo E-mail',
       html: `
         <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto;">
-          <h2>ConfirmaÃ§Ã£o de AlteraÃ§Ã£o de E-mail</h2>
-          <p>OlÃ¡ ${user.name},</p>
-          <p>VocÃª solicitou a alteraÃ§Ã£o do seu e-mail de acesso na AgendaZap.</p>
-          <p>Use o cÃ³digo de 6 dÃ­gitos abaixo para confirmar esta alteraÃ§Ã£o:</p>
+          <h2>Confirmação de Alteração de E-mail</h2>
+          <p>Olá ${user.name},</p>
+          <p>Você solicitou a alteração do seu e-mail de acesso na AgendaZap.</p>
+          <p>Use o código de 6 dígitos abaixo para confirmar esta alteração:</p>
           <div style="background: #f4f4f5; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; border-radius: 8px;">
             ${otp}
           </div>
-          <p>Este cÃ³digo expira em 15 minutos.</p>
-          <p>Se vocÃª nÃ£o solicitou esta alteraÃ§Ã£o, ignore este e-mail.</p>
+          <p>Este código expira em 15 minutos.</p>
+          <p>Se você não solicitou esta alteração, ignore este e-mail.</p>
         </div>
       `
     });
 
-    return NextResponse.json({ success: true, message: 'CÃ³digo enviado' });
+    return NextResponse.json({ success: true, message: 'Código enviado' });
   } catch (error: any) {
     console.error('Error requesting email change:', error);
-    return NextResponse.json({ success: false, error: 'Erro interno ao solicitar alteraÃ§Ã£o.' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Erro interno ao solicitar alteração.' }, { status: 500 });
   }
 }

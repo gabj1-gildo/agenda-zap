@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { appointments, paymentKeys, tenants } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
     if (paymentMethod === 'pix' && pixCode) {
       responseData = { success: true, pixCode, paymentId };
       if (clientPhone) {
-        const introMsg = `OlÃ¡ ${clientName}! Segue o cÃ³digo Pix Copia e Cola para o pagamento do seu agendamento de *${serviceName}* no valor de R$ *${priceFormatted}*:`;
+        const introMsg = `Olá ${clientName}! Segue o código Pix Copia e Cola para o pagamento do seu agendamento de *${serviceName}* no valor de R$ *${priceFormatted}*:`;
         await sendWhatsAppMessage(clientPhone, introMsg, tenant?.id || undefined);
         await new Promise(r => setTimeout(r, 1000));
         await sendWhatsAppMessage(clientPhone, pixCode, tenant?.id || undefined);
@@ -154,7 +154,7 @@ export async function POST(req: Request) {
     } else if (paymentLink) {
       responseData = { success: true, paymentLink, paymentId };
       if (clientPhone) {
-        const msg = `OlÃ¡ ${clientName}! Segue o link para o pagamento do seu agendamento de *${serviceName}* no valor de R$ *${priceFormatted}*:\n\n${paymentLink}`;
+        const msg = `Olá ${clientName}! Segue o link para o pagamento do seu agendamento de *${serviceName}* no valor de R$ *${priceFormatted}*:\n\n${paymentLink}`;
         await sendWhatsAppMessage(clientPhone, msg, tenant?.id || undefined);
       }
     } else {

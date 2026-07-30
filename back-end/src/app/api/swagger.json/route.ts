@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const swaggerSpec = {
@@ -6,7 +6,7 @@ export async function GET() {
     info: {
       title: 'AgendaZap - API Externa & Webhooks',
       version: '1.0.0',
-      description: 'DocumentaÃ§Ã£o dos Webhooks e endpoints de integraÃ§Ã£o externa para lojistas.'
+      description: 'Documentação dos Webhooks e endpoints de integração externa para lojistas.'
     },
     servers: [
       {
@@ -35,7 +35,7 @@ export async function GET() {
       },
       '/api/webhooks/payment': {
         post: {
-          summary: 'Recebe notificaÃ§Ãµes de gateways de pagamento',
+          summary: 'Recebe notificações de gateways de pagamento',
           description: 'Processa pagamentos Asaas, Mercado Pago e AbacatePay, atualizando status de agendamentos.',
           responses: {
             '200': { description: 'Pagamento atualizado com sucesso.' }

@@ -1,10 +1,10 @@
-﻿
+
 require('dotenv').config();
 
 async function testSend() {
-  // Pegue o seu prÃ³prio nÃºmero ou o nÃºmero do cliente (coloque no formato DDI+DDD+NUMERO)
-  // Como Ã© sÃ³ um teste local para ver se a Evolution envia, vamos colocar um nÃºmero aleatÃ³rio ou pedir pro usuÃ¡rio colocar o dele.
-  // Vou apenas listar as instÃ¢ncias para ver se a AgendaZap tÃ¡ conectada de fato.
+  // Pegue o seu próprio número ou o número do cliente (coloque no formato DDI+DDD+NUMERO)
+  // Como é só um teste local para ver se a Evolution envia, vamos colocar um número aleatório ou pedir pro usuário colocar o dele.
+  // Vou apenas listar as instâncias para ver se a AgendaZap tá conectada de fato.
   const url = process.env.EVOLUTION_API_URL?.replace(/\/$/, '');
   const apikey = process.env.EVOLUTION_API_KEY;
   const instance = process.env.EVOLUTION_INSTANCE_NAME;
@@ -13,7 +13,7 @@ async function testSend() {
   console.log(`API_KEY: ${apikey}`);
   console.log(`INSTANCE: ${instance}`);
 
-  console.log('\n--- Verificando status da instÃ¢ncia ---');
+  console.log('\n--- Verificando status da instância ---');
   const statusRes = await fetch(`${url}/instance/connectionState/${instance}`, {
     headers: { apikey }
   });

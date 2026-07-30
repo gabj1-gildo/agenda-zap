@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { appointments } from "@/db/schema/appointments";
 import { tenants } from "@/db/schema/tenants";
@@ -15,11 +15,11 @@ export async function processDailyReport() {
   try {
     const now = new Date();
     
-    // InÃ­cio e fim do dia atual
+    // Início e fim do dia atual
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-    // InÃ­cio e fim do dia seguinte
+    // Início e fim do dia seguinte
     const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
     const endOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 23, 59, 59);
 
@@ -38,7 +38,7 @@ export async function processDailyReport() {
         )
       );
 
-    // Buscar agendamentos de amanhÃ£ para o resumo
+    // Buscar agendamentos de amanhã para o resumo
     const tomorrowAppointments = await db
       .select({
         tenantId: appointments.tenantId,
@@ -77,8 +77,8 @@ export async function processDailyReport() {
       const revenue = confirmedOrCompleted.reduce((acc, curr) => acc + Number(curr.price), 0);
       const totalToday = confirmedOrCompleted.length;
 
-      // Montar texto da agenda de amanhÃ£
-      let tomorrowScheduleText = "Sem agendamentos confirmados para amanhÃ£.";
+      // Montar texto da agenda de amanhã
+      let tomorrowScheduleText = "Sem agendamentos confirmados para amanhã.";
       if (tenantTomorrowAppts.length > 0) {
         // Ordenar por hora
         tenantTomorrowAppts.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -89,7 +89,7 @@ export async function processDailyReport() {
         }).join("\n");
       }
 
-      const message = `*Fechamento DiÃ¡rio - AgendaZap*\nOlÃ¡, ${tenant.name}!\n\nðŸ“Š *Resumo de Hoje:*\n- Total de Atendimentos pagos: ${totalToday}\n- Faturamento: R$ ${revenue.toFixed(2)}\n\nðŸ“… *Sua Agenda de AmanhÃ£:*\n${tomorrowScheduleText}\n\nBom descanso!`;
+      const message = `*Fechamento Diário - AgendaZap*\nOlá, ${tenant.name}!\n\n📊 *Resumo de Hoje:*\n- Total de Atendimentos pagos: ${totalToday}\n- Faturamento: R$ ${revenue.toFixed(2)}\n\n📅 *Sua Agenda de Amanhã:*\n${tomorrowScheduleText}\n\nBom descanso!`;
 
       const success = await sendWhatsAppMessage(tenant.phone, message, tenant.id || undefined);
       if (success) {
@@ -99,7 +99,7 @@ export async function processDailyReport() {
 
     return {
       success: true,
-      message: "RelatÃ³rios enviados com sucesso",
+      message: "Relatórios enviados com sucesso",
       reportsSent
     };
 

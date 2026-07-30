@@ -1,7 +1,7 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 
 async function refreshQR() {
-  console.log('[1] Gerando novo QR Code para instÃ¢ncia AgendaZap...');
+  console.log('[1] Gerando novo QR Code para instância AgendaZap...');
   const res = await fetch('http://localhost:8080/instance/connect/AgendaZap', {
     headers: { apikey: 'evolution_secret_key' }
   });
@@ -15,9 +15,9 @@ async function refreshQR() {
       <p style="color:gray;font-size:12px">Gerado em: ${new Date().toLocaleString()}</p>
     </body></html>`;
     fs.writeFileSync('qrcode.html', html);
-    console.log('âœ… QR Code atualizado! Abra BACK-END/qrcode.html no navegador e escaneie com o WhatsApp do robo.');
+    console.log('✅ QR Code atualizado! Abra BACK-END/qrcode.html no navegador e escaneie com o WhatsApp do robo.');
   } else if (d.instance && d.instance.state === 'open') {
-    console.log('âœ… InstÃ¢ncia jÃ¡ estÃ¡ conectada! Estado: open - Pode testar o envio!');
+    console.log('✅ Instância já está conectada! Estado: open - Pode testar o envio!');
   } else {
     console.log('Resposta inesperada:', JSON.stringify(d, null, 2));
   }

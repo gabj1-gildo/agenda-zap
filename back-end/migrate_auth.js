@@ -1,11 +1,11 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const { Client } = require('pg');
 const argon2 = require('argon2');
 const crypto = require('crypto');
 
 const connectionString = process.env.DIRECT_URL;
 if (!connectionString) {
-  throw new Error("âŒ VariÃ¡vel de ambiente DIRECT_URL nÃ£o definida no .env");
+  throw new Error("❌ Variável de ambiente DIRECT_URL não definida no .env");
 }
 
 const client = new Client({
@@ -15,13 +15,13 @@ const client = new Client({
 
 async function run() {
   await client.connect();
-  console.log('âœ… Conectado ao Supabase!\n');
+  console.log('✅ Conectado ao Supabase!\n');
 
   try {
     await client.query('BEGIN');
     
     // 1. Create ENUMs
-    console.log('ðŸ”§ Criando ENUMs...');
+    console.log('🔧 Criando ENUMs...');
     await client.query(`
       DO $$ BEGIN
         CREATE TYPE user_status AS ENUM ('ACTIVE', 'INACTIVE', 'BLOCKED');
@@ -38,7 +38,7 @@ async function run() {
     `);
 
     // 2. Create users table
-    console.log('ðŸ”§ Criando tabela users...');
+    console.log('🔧 Criando tabela users...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -56,7 +56,7 @@ async function run() {
     `);
 
     // 3. Create audit_logs table
-    console.log('ðŸ”§ Criando tabela audit_logs...');
+    console.log('🔧 Criando tabela audit_logs...');
     await client.query(`
       CREATE TABLE IF NOT EXISTS audit_logs (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -70,11 +70,11 @@ async function run() {
     `);
 
     const defaultPassword = 'AgendaZap2026*';
-    console.log(`\nðŸ”‘ Gerando hash Argon2id para a senha padrÃ£o: ${defaultPassword}`);
+    console.log(`\n🔑 Gerando hash Argon2id para a senha padrão: ${defaultPassword}`);
     const hashed = await argon2.hash(defaultPassword);
 
     // 4. Migrate SuperAdmins
-    console.log('ðŸ“¦ Migrando SuperAdmins...');
+    console.log('📦 Migrando SuperAdmins...');
     const adminsRes = await client.query('SELECT * FROM users_admin');
     for (const admin of adminsRes.rows) {
       // Check if exists in users
@@ -93,12 +93,12 @@ async function run() {
           admin.created_at,
           admin.updated_at
         ]);
-        console.log(`   âœ… Migrado: ${admin.email}`);
+        console.log(`   ✅ Migrado: ${admin.email}`);
       }
     }
 
     // 5. Migrate Tenants
-    console.log('ðŸ“¦ Migrando Lojistas (Tenants)...');
+    console.log('📦 Migrando Lojistas (Tenants)...');
     const tenantsRes = await client.query('SELECT * FROM tenants WHERE email IS NOT NULL');
     for (const t of tenantsRes.rows) {
       const exists = await client.query('SELECT id FROM users WHERE email = $1', [t.email]);
@@ -117,14 +117,14 @@ async function run() {
           t.created_at,
           t.updated_at
         ]);
-        console.log(`   âœ… Migrado: ${t.email}`);
+        console.log(`   ✅ Migrado: ${t.email}`);
       }
     }
 
     // 6. Cleanup old schema
-    console.log('\nðŸ§¹ Limpando schema antigo...');
+    console.log('\n🧹 Limpando schema antigo...');
     await client.query('DROP TABLE IF EXISTS users_admin CASCADE');
-    console.log('   âœ… Tabela users_admin removida');
+    console.log('   ✅ Tabela users_admin removida');
 
     // Remove email/password from tenants if columns exist
     await client.query(`
@@ -132,13 +132,13 @@ async function run() {
       DROP COLUMN IF EXISTS email,
       DROP COLUMN IF EXISTS password_hash;
     `);
-    console.log('   âœ… Colunas de auth removidas da tabela tenants');
+    console.log('   ✅ Colunas de auth removidas da tabela tenants');
 
     await client.query('COMMIT');
-    console.log('\nðŸŽ‰ MigraÃ§Ã£o concluÃ­da com sucesso!');
+    console.log('\n🎉 Migração concluída com sucesso!');
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('âŒ Erro durante a migraÃ§Ã£o:', error);
+    console.error('❌ Erro durante a migração:', error);
   } finally {
     await client.end();
   }

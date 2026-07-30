@@ -1,4 +1,4 @@
-﻿import { env } from '@/config/env';
+import { env } from '@/config/env';
 import { Resend } from 'resend';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
@@ -8,8 +8,8 @@ export async function sendTemporaryPasswordEmail(email: string, tempPassword: st
   
   if (!resend) {
     console.log('\n=============================================');
-    console.log('ðŸ“§ (MOCK) ENVIAR EMAIL PARA:', email);
-    console.log('ðŸ”‘ SENHA TEMPORÃRIA:', tempPassword);
+    console.log('📧 (MOCK) ENVIAR EMAIL PARA:', email);
+    console.log('🔑 SENHA TEMPORÁRIA:', tempPassword);
     console.log('=============================================\n');
     return;
   }
@@ -28,7 +28,7 @@ export async function sendTemporaryPasswordEmail(email: string, tempPassword: st
               ${tempPassword}
             </span>
           </div>
-          <p style="color: #4a5568; font-size: 16px;">Por motivos de seguranÃ§a, <strong>serÃ¡ obrigatÃ³rio redefinir esta senha no seu primeiro acesso</strong>.</p>
+          <p style="color: #4a5568; font-size: 16px;">Por motivos de segurança, <strong>será obrigatório redefinir esta senha no seu primeiro acesso</strong>.</p>
           
           <div style="text-align: center; margin-top: 32px;">
             <a href="${loginUrl}" style="background-color: #3182ce; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">

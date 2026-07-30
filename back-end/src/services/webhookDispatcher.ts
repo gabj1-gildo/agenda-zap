@@ -1,4 +1,4 @@
-﻿import { db } from '@/db';
+import { db } from '@/db';
 import { tenantWebhooks } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -36,7 +36,7 @@ export async function dispatchWebhook(tenantId: string, eventType: WebhookEvent,
         headers['X-AgendaZap-Signature'] = `sha256=${signature}`;
       }
 
-      // Disparo assÃ­ncrono real-time (fire and forget)
+      // Disparo assíncrono real-time (fire and forget)
       fetch(hook.url, {
         method: 'POST',
         headers,
