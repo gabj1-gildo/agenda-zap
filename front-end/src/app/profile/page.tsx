@@ -373,7 +373,7 @@ export default function ProfilePage() {
                   <div className="flex flex-col items-center gap-3">
                     <div className="relative group w-32 h-32 rounded-full border-4 border-background shadow-md overflow-hidden bg-muted flex items-center justify-center transition-all hover:shadow-lg">
                       {profile.avatarUrl ? (
-                        <img src={`${profile.avatarUrl}?token=${(session?.user as any)?.accessToken}`} alt="Avatar Atual" className="w-full h-full object-cover" />
+                        <img src={`/api/image-proxy?url=${encodeURIComponent(profile.avatarUrl)}`} alt="Avatar Atual" className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-12 h-12 text-muted-foreground/50" />
                       )}
@@ -410,7 +410,7 @@ export default function ProfilePage() {
                       {/* Container Nova Foto */}
                       <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-left-4">
                         <div className="relative group w-32 h-32 rounded-full border-4 border-emerald-500 shadow-lg overflow-hidden bg-emerald-500/10 flex items-center justify-center ring-4 ring-emerald-500/20">
-                          <img src={`${newAvatarUrl}?token=${(session?.user as any)?.accessToken}`} alt="Novo Avatar" className="w-full h-full object-cover" />
+                          <img src={`/api/image-proxy?url=${encodeURIComponent(newAvatarUrl)}`} alt="Novo Avatar" className="w-full h-full object-cover" />
                           
                           {/* Hover Overlay para Visualizar a Nova */}
                           <div 
@@ -822,7 +822,7 @@ export default function ProfilePage() {
               <X className="w-6 h-6" />
             </button>
             <img 
-              src={`${viewImage}?token=${(session?.user as any)?.accessToken}`} 
+              src={`/api/image-proxy?url=${encodeURIComponent(viewImage)}`} 
               alt="Visualização" 
               className="w-auto h-auto max-h-[80vh] rounded-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}

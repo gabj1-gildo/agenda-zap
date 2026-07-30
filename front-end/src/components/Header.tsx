@@ -85,7 +85,7 @@ export function Header() {
   
   const avatarRaw = (session?.user?.image || (session?.user as any)?.picture) as string;
   const hasAvatar = typeof avatarRaw === 'string' && avatarRaw.trim() !== '' && avatarRaw !== 'null';
-  const avatarSrc = hasAvatar ? (avatarRaw.includes("?token=") ? avatarRaw : `${avatarRaw}?token=${(session?.user as any)?.accessToken}`) : "";
+  const avatarSrc = hasAvatar ? `/api/image-proxy?url=${encodeURIComponent(avatarRaw)}` : "";
 
   return (
     <header

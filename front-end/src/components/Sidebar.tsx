@@ -63,11 +63,11 @@ export function Sidebar() {
   const activeTenantName = activeTenant?.name || "Empresa selecionada";
   const activeTenantLogoRaw = activeTenant?.logoUrl;
   const hasLogo = typeof activeTenantLogoRaw === 'string' && activeTenantLogoRaw.trim() !== '' && activeTenantLogoRaw !== 'null';
-  const activeTenantLogo = hasLogo ? (activeTenantLogoRaw.includes("?token=") ? activeTenantLogoRaw : `${activeTenantLogoRaw}?token=${(session?.user as any)?.accessToken}`) : "";
+  const activeTenantLogo = hasLogo ? `/api/image-proxy?url=${encodeURIComponent(activeTenantLogoRaw)}` : "";
   
   const avatarRaw = (session?.user?.image || (session?.user as any)?.picture) as string;
   const hasAvatar = typeof avatarRaw === 'string' && avatarRaw.trim() !== '' && avatarRaw !== 'null';
-  const avatarSrc = hasAvatar ? (avatarRaw.includes("?token=") ? avatarRaw : `${avatarRaw}?token=${(session?.user as any)?.accessToken}`) : "";
+  const avatarSrc = hasAvatar ? `/api/image-proxy?url=${encodeURIComponent(avatarRaw)}` : "";
 
   useEffect(() => {
     if (activeTenantId) {
