@@ -7,7 +7,7 @@ import { createMercadoPagoPixPayment } from '@/services/payments/mercadopago/saa
 import { Redis } from '@upstash/redis';
 import { env } from '@/config/env';
 import { sendEmail } from '@/services/emailService';
-import { sendWhatsAppMessage } from '@/services/whatsapp/evolutionApi';
+import { sendWhatsAppMessage } from '@/services/evolutionApi';
 
 const redis = new Redis({
   url: env.UPSTASH_REDIS_REST_URL!,
