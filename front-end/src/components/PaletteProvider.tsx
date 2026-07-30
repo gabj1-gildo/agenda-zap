@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -15,7 +15,7 @@ export function PaletteProvider({ children }: { children: React.ReactNode }) {
   const [palette, setPaletteState] = useState<Palette>("default");
 
   useEffect(() => {
-    // Carrega a preferÃªncia salva ao iniciar
+    // Carrega a preferência salva ao iniciar
     const saved = localStorage.getItem("agenda-zap-palette") as Palette;
     if (saved) {
       setPaletteState(saved);

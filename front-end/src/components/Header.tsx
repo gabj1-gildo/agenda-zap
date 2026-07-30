@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Bell, Search, Building2, ChevronDown, Menu, LayoutDashboard, Calendar, CalendarDays, CalendarCheck, MessageSquare, CreditCard, Settings, Building2 as Building2Icon, Users, Server, Contact, Filter, Megaphone, UserCircle, Wand2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -38,13 +38,13 @@ const navLinks: NavItem[] = [
   { href: "/chats",        label: "Conversas",     icon: MessageSquare,   badgeKey: "chats", requiresTenant: true, category: "Relacionamento" },
   { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Relacionamento" },
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
-  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "AdministraÃ§Ã£o" },
-  { href: "/admin/users",  label: "UsuÃ¡rios",      icon: Users,           category: "AdministraÃ§Ã£o" },
-  { href: "/admin/broadcast", label: "Disparos",   icon: Megaphone,       category: "AdministraÃ§Ã£o" },
-  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "AdministraÃ§Ã£o" },
-  { href: "/admin/ai-presets",label: "Templates de IA", icon: Wand2,           category: "AdministraÃ§Ã£o" },
-  { href: "/settings",     label: "ConfiguraÃ§Ãµes", icon: Settings,        requiresTenant: true, category: "AdministraÃ§Ã£o" },
-  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle, category: "AdministraÃ§Ã£o" },
+  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Administração" },
+  { href: "/admin/users",  label: "Usuários",      icon: Users,           category: "Administração" },
+  { href: "/admin/broadcast", label: "Disparos",   icon: Megaphone,       category: "Administração" },
+  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "Administração" },
+  { href: "/admin/ai-presets",label: "Templates de IA", icon: Wand2,           category: "Administração" },
+  { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
+  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle, category: "Administração" },
 ];
 
 export function Header() {
@@ -71,11 +71,11 @@ export function Header() {
   const activeTenant = tenants.find((t) => t.id === (session as any)?.tenantId);
 
   const pageTitles: Record<string, { title: string; sub: string }> = {
-    "/":             { title: "Painel",        sub: "VisÃ£o geral do sistema" },
-    "/appointments": { title: "Agenda",        sub: "Controle de horÃ¡rios" },
+    "/":             { title: "Painel",        sub: "Visão geral do sistema" },
+    "/appointments": { title: "Agenda",        sub: "Controle de horários" },
     "/chats":        { title: "Conversas",     sub: "Inbox de mensagens" },
-    "/payments":     { title: "Pagamentos",    sub: "CobranÃ§as e recebimentos" },
-    "/settings":     { title: "ConfiguraÃ§Ãµes", sub: "Dados, horÃ¡rios e integraÃ§Ãµes" },
+    "/payments":     { title: "Pagamentos",    sub: "Cobranças e recebimentos" },
+    "/settings":     { title: "Configurações", sub: "Dados, horários e integrações" },
   };
 
   const current = Object.entries(pageTitles).reverse().find(([k]) =>
@@ -277,7 +277,7 @@ export function Header() {
               <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
             </Link>
             <Link href="/settings" className="w-full">
-              <DropdownMenuItem className="cursor-pointer">ConfiguraÃ§Ãµes</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem

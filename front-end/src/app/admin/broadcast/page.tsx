@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
@@ -29,13 +29,13 @@ export default function AdminBroadcastPage() {
       const json = await res.json();
 
       if (res.ok && json.success) {
-        toast.success(json.message || "Disparo concluÃ­do!");
+        toast.success(json.message || "Disparo concluído!");
         setMessage("");
       } else {
         toast.error(json.message || "Erro ao realizar disparo");
       }
     } catch (error) {
-      toast.error("Erro de conexÃ£o");
+      toast.error("Erro de conexão");
     } finally {
       setSending(false);
     }
@@ -53,7 +53,7 @@ export default function AdminBroadcastPage() {
         open={showConfirm}
         onOpenChange={setShowConfirm}
         title="Confirmar Disparo Global"
-        description="Tem certeza que deseja disparar esta mensagem em massa? Esta aÃ§Ã£o enviarÃ¡ a mensagem para a base selecionada e consumirÃ¡ recursos da API."
+        description="Tem certeza que deseja disparar esta mensagem em massa? Esta ação enviará a mensagem para a base selecionada e consumirá recursos da API."
         onConfirm={executeBroadcast}
         confirmText="Disparar"
       />
@@ -63,7 +63,7 @@ export default function AdminBroadcastPage() {
           <Megaphone className="w-8 h-8 text-blue-500" />
           Disparo Global (Broadcast)
         </h1>
-        <p className="text-muted-foreground mt-1">Envie mensagens via WhatsApp para as empresas e usuÃ¡rios da plataforma utilizando a instÃ¢ncia padrÃ£o.</p>
+        <p className="text-muted-foreground mt-1">Envie mensagens via WhatsApp para as empresas e usuários da plataforma utilizando a instância padrão.</p>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
@@ -77,15 +77,15 @@ export default function AdminBroadcastPage() {
           <form onSubmit={handleBroadcast} className="space-y-6">
             
             <div className="space-y-2">
-              <label className="text-sm font-semibold">PÃºblico Alvo</label>
+              <label className="text-sm font-semibold">Público Alvo</label>
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:ring-1 focus:ring-primary outline-none"
               >
-                <option value="ALL">Todos (Empresas e FuncionÃ¡rios)</option>
+                <option value="ALL">Todos (Empresas e Funcionários)</option>
                 <option value="TENANTS">Apenas Empresas (Tenants)</option>
-                <option value="USERS">Apenas FuncionÃ¡rios/UsuÃ¡rios</option>
+                <option value="USERS">Apenas Funcionários/Usuários</option>
               </select>
             </div>
 
@@ -94,12 +94,12 @@ export default function AdminBroadcastPage() {
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="OlÃ¡! Temos novidades no AgendaZap..."
+                placeholder="Olá! Temos novidades no AgendaZap..."
                 required
                 rows={6}
                 className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:ring-1 focus:ring-primary outline-none resize-y"
               />
-              <p className="text-xs text-muted-foreground">O WhatsApp enviarÃ¡ a mensagem exatamente como formatada aqui.</p>
+              <p className="text-xs text-muted-foreground">O WhatsApp enviará a mensagem exatamente como formatada aqui.</p>
             </div>
 
             <div className="flex justify-end">

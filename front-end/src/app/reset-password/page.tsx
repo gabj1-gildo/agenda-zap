@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,13 +22,13 @@ export default function ResetPasswordPage() {
     setError('');
 
     if (newPassword !== confirmPassword) {
-      setError('As senhas nÃ£o coincidem.');
+      setError('As senhas não coincidem.');
       return;
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      setError('A senha deve ter pelo menos 8 caracteres, contendo 1 letra maiÃºscula, 1 minÃºscula, 1 nÃºmero e 1 caractere especial.');
+      setError('A senha deve ter pelo menos 8 caracteres, contendo 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial.');
       return;
     }
 
@@ -101,7 +101,7 @@ export default function ResetPasswordPage() {
             Acesso Seguro.
           </blockquote>
           <p style={{ color: "#9AA3C0" }} className="text-sm">
-            Para garantir a seguranÃ§a da sua conta, atualize sua senha.
+            Para garantir a segurança da sua conta, atualize sua senha.
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export default function ResetPasswordPage() {
         >
           <div>
             <div className="text-sm font-semibold text-white">
-              AutenticaÃ§Ã£o Unificada
+              Autenticação Unificada
             </div>
             <div style={{ color: "#9AA3C0" }} className="text-[11px]">
               AgendaZap v2.0
@@ -131,7 +131,7 @@ export default function ResetPasswordPage() {
               Definir Nova Senha
             </h1>
             <p className="text-sm text-muted-foreground">
-              Para sua seguranÃ§a, Ã© obrigatÃ³rio atualizar a sua senha temporÃ¡ria para uma permanente.
+              Para sua segurança, é obrigatório atualizar a sua senha temporária para uma permanente.
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                Senha TemporÃ¡ria
+                Senha Temporária
               </label>
               <div className="relative">
                 <input
@@ -188,10 +188,10 @@ export default function ResetPasswordPage() {
                 </button>
               </div>
               <ul className="text-[10px] text-muted-foreground mt-2 space-y-1 leading-tight">
-                <li className={hasMinLength ? "text-green-600 dark:text-green-400 font-medium" : ""}>â€¢ MÃ­nimo de 8 caracteres</li>
-                <li className={hasUpper && hasLower ? "text-green-600 dark:text-green-400 font-medium" : ""}>â€¢ Letras maiÃºsculas e minÃºsculas</li>
-                <li className={hasNumber ? "text-green-600 dark:text-green-400 font-medium" : ""}>â€¢ Pelo menos um nÃºmero</li>
-                <li className={hasSpecial ? "text-green-600 dark:text-green-400 font-medium" : ""}>â€¢ Pelo menos um caractere especial (!@#$%, etc)</li>
+                <li className={hasMinLength ? "text-green-600 dark:text-green-400 font-medium" : ""}>• Mínimo de 8 caracteres</li>
+                <li className={hasUpper && hasLower ? "text-green-600 dark:text-green-400 font-medium" : ""}>• Letras maiúsculas e minúsculas</li>
+                <li className={hasNumber ? "text-green-600 dark:text-green-400 font-medium" : ""}>• Pelo menos um número</li>
+                <li className={hasSpecial ? "text-green-600 dark:text-green-400 font-medium" : ""}>• Pelo menos um caractere especial (!@#$%, etc)</li>
               </ul>
             </div>
 
@@ -218,7 +218,7 @@ export default function ResetPasswordPage() {
               </div>
               {confirmPassword.length > 0 && (
                 <p className={`text-[10px] mt-1.5 font-medium ${passwordsMatch ? 'text-green-600 dark:text-green-400' : 'text-rose-600'}`}>
-                  {passwordsMatch ? 'âœ“ As senhas coincidem' : 'âœ— As senhas nÃ£o coincidem'}
+                  {passwordsMatch ? '✓ As senhas coincidem' : '✗ As senhas não coincidem'}
                 </p>
               )}
             </div>
@@ -229,7 +229,7 @@ export default function ResetPasswordPage() {
               style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
               className="w-full py-3.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-60 mt-4"
             >
-              {loading ? "Atualizando..." : "Confirmar AlteraÃ§Ã£o"}
+              {loading ? "Atualizando..." : "Confirmar Alteração"}
             </button>
           </form>
           

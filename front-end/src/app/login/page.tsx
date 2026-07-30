@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
@@ -28,7 +28,7 @@ export default function LoginPage() {
     setLoading(false);
     
     if (res?.error) {
-      toast.error("Credenciais invÃ¡lidas. Tente novamente.");
+      toast.error("Credenciais inválidas. Tente novamente.");
     } else {
       toast.success("Acesso autorizado!");
       // Always redirect to home; ignore any callbackUrl from API routes
@@ -63,10 +63,10 @@ export default function LoginPage() {
 
         <div>
           <blockquote className="text-3xl font-display font-extrabold text-white leading-tight mb-4">
-            Plataforma de gestÃ£o inteligente de negÃ³cios.
+            Plataforma de gestão inteligente de negócios.
           </blockquote>
           <p style={{ color: "#9AA3C0" }} className="text-sm">
-            Tudo o que vocÃª precisa em um Ãºnico lugar.
+            Tudo o que você precisa em um único lugar.
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export default function LoginPage() {
         >
           <div>
             <div className="text-sm font-semibold text-white">
-              AutenticaÃ§Ã£o Unificada
+              Autenticação Unificada
             </div>
             <div style={{ color: "#9AA3C0" }} className="text-[11px]">
               AgendaZap v2.0
@@ -96,7 +96,7 @@ export default function LoginPage() {
               Bem-vindo ao AgendaZap
             </h1>
             <p className="text-sm text-muted-foreground">
-              FaÃ§a login com seu email e senha para acessar o sistema.
+              Faça login com seu email e senha para acessar o sistema.
             </p>
           </div>
 

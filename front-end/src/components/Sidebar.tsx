@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { hasRouteAccess } from "@/lib/routePermissions";
@@ -30,23 +30,23 @@ const navLinks: NavItem[] = [
   { href: "/chats",        label: "Conversas",     icon: MessageSquare,   badgeKey: "chats", requiresTenant: true, category: "Relacionamento" },
   { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Relacionamento" },
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
-  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "AdministraÃ§Ã£o" },
-  { href: "/admin/users",  label: "UsuÃ¡rios",      icon: Users,           category: "AdministraÃ§Ã£o" },
-  { href: "/admin/broadcast", label: "Disparos",   icon: Megaphone,       category: "AdministraÃ§Ã£o" },
-  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "AdministraÃ§Ã£o" },
-  { href: "/admin/plans",  label: "Planos (SaaS)", icon: CreditCard,      category: "AdministraÃ§Ã£o" },
-  { href: "/admin/ai-presets",label: "Templates de IA", icon: Wand2,      category: "AdministraÃ§Ã£o" },
-  { href: "/settings",     label: "ConfiguraÃ§Ãµes", icon: Settings,        requiresTenant: true, category: "AdministraÃ§Ã£o" },
-  { href: "/billing",      label: "Faturamento",   icon: CreditCard,      requiresTenant: true, category: "AdministraÃ§Ã£o" },
-  { href: "/reports",      label: "RelatÃ³rios",    icon: FileText,        requiresTenant: true, category: "AdministraÃ§Ã£o" },
-  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "AdministraÃ§Ã£o" },
+  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Administração" },
+  { href: "/admin/users",  label: "Usuários",      icon: Users,           category: "Administração" },
+  { href: "/admin/broadcast", label: "Disparos",   icon: Megaphone,       category: "Administração" },
+  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "Administração" },
+  { href: "/admin/plans",  label: "Planos (SaaS)", icon: CreditCard,      category: "Administração" },
+  { href: "/admin/ai-presets",label: "Templates de IA", icon: Wand2,      category: "Administração" },
+  { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
+  { href: "/billing",      label: "Faturamento",   icon: CreditCard,      requiresTenant: true, category: "Administração" },
+  { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "Administração" },
+  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "Administração" },
 ];
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   "Principal": LayoutDashboard,
   "Relacionamento": MessageSquare,
   "Financeiro": CreditCard,
-  "AdministraÃ§Ã£o": Settings,
+  "Administração": Settings,
 };
 
 export function Sidebar() {
@@ -175,7 +175,7 @@ export function Sidebar() {
         </span>
       </div>
 
-      {/* Nav â€” collapsible submenus */}
+      {/* Nav — collapsible submenus */}
       <nav className="flex flex-col gap-0.5 flex-1 overflow-y-auto pr-1">
         {categories.map(([category, items]) => {
           const isOpen = openCategories[category] ?? false;
@@ -342,7 +342,7 @@ export function Sidebar() {
             {session?.user?.name || session?.user?.email || "Admin"}
           </div>
           <div className="text-[10px] opacity-40">
-            {role === "SUPERADMIN" ? "Super Admin" : role === "ADMIN" ? "Admin" : role === "ATTENDANT" ? "Atendente" : "â€”"}
+            {role === "SUPERADMIN" ? "Super Admin" : role === "ADMIN" ? "Admin" : role === "ATTENDANT" ? "Atendente" : "—"}
           </div>
         </div>
         <button

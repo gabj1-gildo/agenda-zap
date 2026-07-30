@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -60,7 +60,7 @@ export default function AdminSettingsPage() {
           if (aiModelSetting) setGlobalAiModel(aiModelSetting.value);
         }
       } catch (error) {
-        toast.error("Erro ao carregar configuraÃ§Ãµes");
+        toast.error("Erro ao carregar configurações");
       } finally {
         setLoading(false);
       }
@@ -96,41 +96,41 @@ export default function AdminSettingsPage() {
       const resName = await fetch(getBackendUrl("/api/admin/system-settings"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ key: "whatsapp_default_instance_name", value: instanceName, description: "InstÃ¢ncia padrÃ£o do sistema para envios globais" })
+        body: JSON.stringify({ key: "whatsapp_default_instance_name", value: instanceName, description: "Instância padrão do sistema para envios globais" })
       });
       
       const resKey = await fetch(getBackendUrl("/api/admin/system-settings"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ key: "whatsapp_default_api_key", value: instanceKey, description: "Token da instÃ¢ncia padrÃ£o" })
+        body: JSON.stringify({ key: "whatsapp_default_api_key", value: instanceKey, description: "Token da instância padrão" })
       });
 
       const resAiProvider = await fetch(getBackendUrl("/api/admin/system-settings"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ key: "global_ai_provider", value: globalAiProvider, description: "Provider global de InteligÃªncia Artificial" })
+        body: JSON.stringify({ key: "global_ai_provider", value: globalAiProvider, description: "Provider global de Inteligência Artificial" })
       });
       
       const resAiModel = await fetch(getBackendUrl("/api/admin/system-settings"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ key: "global_ai_model", value: globalAiModel, description: "Modelo global de IA padrÃ£o (ex: gemini-2.5-flash)" })
+        body: JSON.stringify({ key: "global_ai_model", value: globalAiModel, description: "Modelo global de IA padrão (ex: gemini-2.5-flash)" })
       });
 
       if (resName.ok && resKey.ok && resAiProvider.ok && resAiModel.ok) {
-        toast.success("ConfiguraÃ§Ãµes salvas com sucesso!");
+        toast.success("Configurações salvas com sucesso!");
       } else {
-        toast.error("Erro ao salvar algumas configuraÃ§Ãµes");
+        toast.error("Erro ao salvar algumas configurações");
       }
     } catch (error) {
-      toast.error("Erro de conexÃ£o");
+      toast.error("Erro de conexão");
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Carregando configuraÃ§Ãµes...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
   }
 
   return (
@@ -138,9 +138,9 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <Settings className="w-8 h-8 text-primary" />
-          ConfiguraÃ§Ãµes Globais do Sistema
+          Configurações Globais do Sistema
         </h1>
-        <p className="text-muted-foreground mt-1">Gerencie os parÃ¢metros globais da aplicaÃ§Ã£o.</p>
+        <p className="text-muted-foreground mt-1">Gerencie os parâmetros globais da aplicação.</p>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
@@ -148,10 +148,10 @@ export default function AdminSettingsPage() {
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                WhatsApp PadrÃ£o
+                WhatsApp Padrão
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Esta instÃ¢ncia da Evolution API serÃ¡ usada para envios do sistema (ex: recuperaÃ§Ã£o de senha, avisos globais).
+                Esta instância da Evolution API será usada para envios do sistema (ex: recuperação de senha, avisos globais).
               </p>
             </div>
             
@@ -193,7 +193,7 @@ export default function AdminSettingsPage() {
           <form onSubmit={handleSave} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Nome da InstÃ¢ncia</label>
+                <label className="text-sm font-semibold">Nome da Instância</label>
                 <input
                   type="text"
                   value={instanceName}
@@ -219,11 +219,11 @@ export default function AdminSettingsPage() {
             
             <div className="pt-6 border-t border-border mt-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5" /> InteligÃªncia Artificial Global
+                <Settings className="w-5 h-5" /> Inteligência Artificial Global
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Provedor de IA PadrÃ£o</label>
+                  <label className="text-sm font-semibold">Provedor de IA Padrão</label>
                   <select
                     value={globalAiProvider}
                     onChange={(e) => setGlobalAiProvider(e.target.value)}
@@ -237,7 +237,7 @@ export default function AdminSettingsPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Modelo de IA EspecÃ­fico</label>
+                  <label className="text-sm font-semibold">Modelo de IA Específico</label>
                   <select
                     value={globalAiModel}
                     onChange={(e) => setGlobalAiModel(e.target.value)}
@@ -249,7 +249,7 @@ export default function AdminSettingsPage() {
                     ))}
                   </select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Os modelos disponÃ­veis sÃ£o gerenciados abaixo.
+                    Os modelos disponíveis são gerenciados abaixo.
                   </p>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function AdminSettingsPage() {
                           });
                           if (res.ok) {
                             setAvailableAiModels(prev => prev.filter(m => m.id !== model.id));
-                            toast.success("ExcluÃ­do com sucesso!");
+                            toast.success("Excluído com sucesso!");
                           }
                         }}
                         className="text-xs px-3 py-1 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90"
@@ -352,7 +352,7 @@ export default function AdminSettingsPage() {
             <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg flex items-start gap-3 mt-6">
               <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
               <p className="text-sm text-orange-800">
-                AtenÃ§Ã£o: Modificar estes valores impactarÃ¡ o envio de mensagens de sistema para todos os usuÃ¡rios. Certifique-se de que a instÃ¢ncia esteja conectada na Evolution API.
+                Atenção: Modificar estes valores impactará o envio de mensagens de sistema para todos os usuários. Certifique-se de que a instância esteja conectada na Evolution API.
               </p>
             </div>
 
@@ -363,7 +363,7 @@ export default function AdminSettingsPage() {
                 className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {saving ? "Salvando..." : "Salvar ConfiguraÃ§Ãµes"}
+                {saving ? "Salvando..." : "Salvar Configurações"}
               </button>
             </div>
           </form>
