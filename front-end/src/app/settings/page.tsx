@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Suspense } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Copy, Plus, Trash2, ShieldAlert, MonitorSmartphone, Smartphone, Clock, X, FilePenLine, Camera, Eye, ArrowRight, CheckCircle, Wifi, WifiOff, Trash, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -108,6 +109,8 @@ function SettingsContent() {
   };
 
   const [aiPresets, setAiPresets] = useState<Record<string, { label: string, text: string }[]>>({});
+  const [aiPresetModal, setAiPresetModal] = useState<{ isOpen: boolean; field: string; presetText: string; title: string; }>({ isOpen: false, field: '', presetText: '', title: '' });
+  const [useDomicile, setUseDomicile] = useState(false);
 
   const AiButtons = ({ field }: { field: string }) => {
     const presets = aiPresets[field];
@@ -139,9 +142,97 @@ function SettingsContent() {
         >
           {aiLoadingFields[field] ? "Reescrevendo..." : "🪄 Reescrever"}
         </Button>
-      </div>
-    );
-  };
+      
+      {/* Modal de Configuração de IA (Modelos Prontos) */}
+      <Dialog open={aiPresetModal.isOpen} onOpenChange={(c) => !c && setAiPresetModal({ ...aiPresetModal, isOpen: false })}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Confirmar Modelo: {aiPresetModal.title}</DialogTitle>
+            <DialogDescription>
+              Este modelo usa variáveis dinâmicas. Verifique os dados antes de aplicar.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {(() => {
+              const text = aiPresetModal.presetText;
+              const hasName = text.includes("{{NOME_EMPRESA}}");
+              const hasPhone = text.includes("{{TELEFONE}}");
+              const hasAddress = text.includes("{{ENDERECO}}");
+              
+              const missingName = hasName && !tenant?.name;
+              const missingPhone = hasPhone && !tenant?.phone;
+              const missingAddress = hasAddress && !useDomicile && !tenant?.addressStreet;
+
+              const isBlocked = missingName || missingPhone || missingAddress;
+
+              let replaced = text;
+              if (hasName) replaced = replaced.replace(/{{NOME_EMPRESA}}/g, tenant?.name || "{{NOME_EMPRESA}}");
+              if (hasPhone) replaced = replaced.replace(/{{TELEFONE}}/g, formatPhone(tenant?.phone) || "{{TELEFONE}}");
+              if (hasAddress) {
+                if (useDomicile) {
+                  replaced = replaced.replace(/{{ENDERECO}}/g, "atendimento a domicílio");
+                } else {
+                  const addrParts = [tenant?.addressStreet, tenant?.addressNumber, tenant?.addressCity].filter(Boolean);
+                  replaced = replaced.replace(/{{ENDERECO}}/g, addrParts.length > 0 ? addrParts.join(", ") : "{{ENDERECO}}");
+                }
+              }
+
+              return (
+                <>
+                  {hasAddress && (
+                    <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/50">
+                      <Checkbox 
+                        id="use-domicile" 
+                        checked={useDomicile} 
+                        onCheckedChange={(c) => setUseDomicile(!!c)}
+                      />
+                      <Label htmlFor="use-domicile" className="font-semibold cursor-pointer">
+                        Atendimento a domicílio (Substitui o endereço)
+                      </Label>
+                    </div>
+                  )}
+
+                  {isBlocked ? (
+                    <div className="p-4 bg-orange-50 text-orange-800 border border-orange-200 rounded-md text-sm flex gap-2">
+                      <ShieldAlert className="w-5 h-5 shrink-0" />
+                      <div>
+                        <strong>Atenção:</strong> Faltam dados obrigatórios na aba Empresa para aplicar este modelo.
+                        <ul className="list-disc ml-5 mt-1">
+                          {missingName && <li>Nome do Estabelecimento</li>}
+                          {missingPhone && <li>Telefone (WhatsApp)</li>}
+                          {missingAddress && <li>Endereço (ou marque atendimento a domicílio acima)</li>}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-muted border rounded-md text-sm whitespace-pre-wrap font-mono max-h-60 overflow-y-auto">
+                      {replaced}
+                    </div>
+                  )}
+
+                  <DialogFooter className="mt-4">
+                    <Button variant="outline" onClick={() => setAiPresetModal({ ...aiPresetModal, isOpen: false })}>Cancelar</Button>
+                    <Button 
+                      disabled={isBlocked} 
+                      onClick={() => {
+                        updateAiConfig(aiPresetModal.field, replaced);
+                        setAiPresetModal({ ...aiPresetModal, isOpen: false });
+                        toast.success("Modelo aplicado com sucesso!");
+                      }}
+                    >
+                      Aplicar Modelo
+                    </Button>
+                  </DialogFooter>
+                </>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
   useEffect(() => {
     async function loadData() {
@@ -539,33 +630,21 @@ function SettingsContent() {
         <p className="text-muted-foreground mt-1">Gerencie as preferências, horários e dados do estabelecimento{isSuperAdmin ? " selecionado" : ""}.</p>
       </div>
 
-      <Tabs defaultValue="geral" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-9 mb-4 h-auto md:h-10 gap-2">
-          <TabsTrigger value="geral">Dados Gerais</TabsTrigger>
-          <TabsTrigger value="horarios">Horários</TabsTrigger>
-          <TabsTrigger value="servicos">Serviços</TabsTrigger>
-          <TabsTrigger value="profissionais">Profissionais</TabsTrigger>
-          <TabsTrigger value="consultorios">Salas</TabsTrigger>
-          <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
-          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+            <Tabs defaultValue="empresa" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 h-auto md:h-10 gap-2">
+          <TabsTrigger value="empresa">Empresa</TabsTrigger>
+          <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
           <TabsTrigger value="ia">IA</TabsTrigger>
-          <TabsTrigger value="equipe">Acessos</TabsTrigger>
+          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+          <TabsTrigger value="seguranca">Segurança & Conta</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="equipe">
-          <TeamSettings tenantId={targetTenantId} />
-        </TabsContent>
-
-        <TabsContent value="profissionais">
-          <ProfessionalsSettings tenantId={targetTenantId} />
-        </TabsContent>
-
-        <TabsContent value="consultorios">
-          <RoomsSettings tenantId={targetTenantId} />
-        </TabsContent>
-
-        <TabsContent value="geral">
-          <Card>
+        <TabsContent value="empresa" className="space-y-6">
+          <div className="space-y-8">
+            <TeamSettings tenantId={targetTenantId} />
+            <ProfessionalsSettings tenantId={targetTenantId} />
+            <RoomsSettings tenantId={targetTenantId} />
+            <Card>
             <CardHeader>
               <CardTitle>Dados do Estabelecimento</CardTitle>
               <CardDescription>Essas informações serão exibidas para seus clientes.</CardDescription>
@@ -818,9 +897,231 @@ function SettingsContent() {
               <Button onClick={handleSaveWithValidation} disabled={saving || docValidating}>{saving ? "Salvando..." : "Salvar Alterações"}</Button>
             </CardFooter>
           </Card>
+            <Card>
+            <CardHeader>
+              <CardTitle>Horário de Funcionamento</CardTitle>
+              <CardDescription>Defina seus dias de atendimento e duração dos agendamentos (minutos).</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {schedules.map((sched, idx) => (
+                <div key={idx} className="flex flex-col gap-3 p-4 border rounded-md">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2 w-32 shrink-0">
+                      <Checkbox 
+                        checked={sched.isActive} 
+                        onCheckedChange={(c) => {
+                          const s = [...schedules]; s[idx].isActive = !!c; setSchedules(s);
+                        }}
+                      />
+                      <Label className="font-semibold">{days[sched.dayOfWeek]}</Label>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Label className="text-muted-foreground text-xs w-14">Abertura</Label>
+                      <Input 
+                        type="time" 
+                        value={sched.startTime || "09:00"} 
+                        onChange={e => { const s = [...schedules]; s[idx].startTime = e.target.value; setSchedules(s); }}
+                        disabled={!sched.isActive}
+                      />
+                      <span className="text-muted-foreground text-sm">até</span>
+                      <Input 
+                        type="time" 
+                        value={sched.endTime || "18:00"} 
+                        onChange={e => { const s = [...schedules]; s[idx].endTime = e.target.value; setSchedules(s); }}
+                        disabled={!sched.isActive}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-auto">
+                      <Label className="text-muted-foreground text-xs">Duração</Label>
+                      <Input 
+                        type="time" 
+                        className="w-[100px]" 
+                        value={minsToTime(sched.slotDuration)} 
+                        onChange={e => { 
+                          const s = [...schedules]; 
+                          s[idx].slotDuration = timeToMins(e.target.value); 
+                          setSchedules(s); 
+                        }}
+                        disabled={!sched.isActive}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pl-[150px]">
+                    <Label className="text-muted-foreground text-xs w-12">Pausa</Label>
+                    <Input 
+                      type="time" 
+                      className="w-[100px]"
+                      value={sched.intervalStartTime || ""} 
+                      onChange={e => { const s = [...schedules]; s[idx].intervalStartTime = e.target.value; setSchedules(s); }}
+                      disabled={!sched.isActive}
+                    />
+                    <span className="text-muted-foreground text-sm">até</span>
+                    <Input 
+                      type="time" 
+                      className="w-[100px]"
+                      value={sched.intervalEndTime || ""} 
+                      onChange={e => { const s = [...schedules]; s[idx].intervalEndTime = e.target.value; setSchedules(s); }}
+                      disabled={!sched.isActive}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="flex justify-end border-t p-6">
+              <Button onClick={saveSchedules} disabled={saving}>{saving ? "Salvando..." : "Salvar Horários"}</Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="mt-6">
+            <CardContent className="pt-6">
+              <ExceptionsSettings tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
+            </CardContent>
+          </Card>
+            <Card>
+            <CardHeader>
+              <CardTitle>Serviços e Preços</CardTitle>
+              <CardDescription>Cadastre os serviços oferecidos e configure preços e durações.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ServicesSettings tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
+            </CardContent>
+          </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="ia">
+        <TabsContent value="notificacoes" className="space-y-6">
+          <Card>
+              <CardHeader>
+                <CardTitle>WhatsApp API</CardTitle>
+                <CardDescription>Conecte o número do seu estabelecimento para enviar e receber mensagens automaticamente.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Uso de Instâncias</span>
+                  <Badge variant="outline">1 permitida, {tenant?.evolutionInstanceStatus ? "1" : "0"} em uso</Badge>
+                </div>
+
+                {tenant && !tenant._isProfileComplete && (
+                  <div className="flex flex-col gap-2 p-4 bg-orange-50 border border-orange-200 text-orange-800 rounded-md text-sm">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <ShieldAlert className="w-4 h-4" />
+                      Complete seu perfil para ativar a IA
+                    </div>
+                    <p>Para conectar o WhatsApp e habilitar o atendimento automático, você precisa preencher:</p>
+                    <ul className="list-disc list-inside ml-2">
+                      {tenant._missingRequirements?.map((req: string, i: number) => (
+                        <li key={i}>{req}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between p-4 border rounded-md">
+                  <div>
+                    <div className="font-semibold flex items-center gap-2">
+                      WhatsApp Principal (Provedor Atual: {tenant?.whatsappProvider === 'META_CLOUD' ? 'Meta Cloud API' : 'Evolution API'})
+                      {tenant?.whatsappProvider === 'META_CLOUD' ? (
+                        tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId ? (
+                          <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado (Meta)</Badge>
+                        ) : (
+                          <Badge variant="secondary">Desconectado (Meta)</Badge>
+                        )
+                      ) : (
+                        tenant?.evolutionInstanceStatus === "OPEN" ? (
+                          <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
+                        ) : (
+                          <Badge variant="secondary">Desconectado</Badge>
+                        )
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                      {tenant?.whatsappProvider === 'META_CLOUD' ? (
+                        <>
+                          {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
+                          Status: {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? "Pronto para uso (Meta API)" : "Requer configuração de Token e Phone ID"}
+                        </>
+                      ) : (
+                        <>
+                          {tenant?.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
+                          Status: {tenant?.evolutionInstanceStatus || "Sem conexão"}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {tenant?.whatsappProvider === 'META_CLOUD' ? (
+                      <Button onClick={() => saveGeneral()} disabled={saving || !tenant?._isProfileComplete}>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Salvar Configurações Meta
+                      </Button>
+                    ) : (
+                      tenant?.evolutionInstanceStatus === "OPEN" ? (
+                        <Button variant="destructive" onClick={() => setShowDisconnectConfirm(true)}>
+                          <Trash className="w-4 h-4 mr-2" />
+                          Desconectar
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setShowPhoneModal(true)} disabled={!tenant?._isProfileComplete}>
+                          <Smartphone className="w-4 h-4 mr-2" />
+                          Conectar QR Code
+                        </Button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-base">Provedor de WhatsApp</Label>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      A Meta Cloud API é a integração oficial do WhatsApp, indicada para alto volume. Mensagens enviadas dentro de 24h são cobradas pela Meta. A Evolution API utiliza o escaneamento de QR Code com seu número pessoal (sem custo por mensagem).
+                    </div>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                      value={tenant?.whatsappProvider || 'EVOLUTION'}
+                      onChange={(e) => setTenant({ ...tenant, whatsappProvider: e.target.value })}
+                    >
+                      <option value="EVOLUTION">Evolution API (QR Code / Pessoal)</option>
+                      <option value="META_CLOUD">Meta Cloud API (Oficial / Business)</option>
+                    </select>
+                  </div>
+
+                  {tenant?.whatsappProvider === 'META_CLOUD' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 bg-muted/30 p-4 rounded-md border">
+                      <div className="space-y-2">
+                        <Label>Meta Token Permanente</Label>
+                        <Input 
+                          type="password"
+                          value={tenant?.whatsappMetaToken || ''} 
+                          onChange={e => setTenant({...tenant, whatsappMetaToken: e.target.value})} 
+                          placeholder="EAAI..." 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone Number ID (ID do Número de Telefone)</Label>
+                        <Input 
+                          value={tenant?.whatsappMetaPhoneNumberId || ''} 
+                          onChange={e => setTenant({...tenant, whatsappMetaPhoneNumberId: e.target.value})} 
+                          placeholder="1234567890" 
+                        />
+                      </div>
+                      <div className="col-span-1 md:col-span-2 mt-2">
+                        <div className="text-xs text-muted-foreground">
+                          Após salvar o token, certifique-se de configurar a Webhook na Meta Business apontando para: <br />
+                          <code className="bg-muted px-1 rounded select-all">{getBackendUrl('/api/webhooks/whatsapp-meta')}</code>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+        </TabsContent>
+
+        <TabsContent value="ia" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Comportamento da Inteligência Artificial</CardTitle>
@@ -969,105 +1270,7 @@ function SettingsContent() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="horarios">
-          <Card>
-            <CardHeader>
-              <CardTitle>Horário de Funcionamento</CardTitle>
-              <CardDescription>Defina seus dias de atendimento e duração dos agendamentos (minutos).</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {schedules.map((sched, idx) => (
-                <div key={idx} className="flex flex-col gap-3 p-4 border rounded-md">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <div className="flex items-center gap-2 w-32 shrink-0">
-                      <Checkbox 
-                        checked={sched.isActive} 
-                        onCheckedChange={(c) => {
-                          const s = [...schedules]; s[idx].isActive = !!c; setSchedules(s);
-                        }}
-                      />
-                      <Label className="font-semibold">{days[sched.dayOfWeek]}</Label>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Label className="text-muted-foreground text-xs w-14">Abertura</Label>
-                      <Input 
-                        type="time" 
-                        value={sched.startTime || "09:00"} 
-                        onChange={e => { const s = [...schedules]; s[idx].startTime = e.target.value; setSchedules(s); }}
-                        disabled={!sched.isActive}
-                      />
-                      <span className="text-muted-foreground text-sm">até</span>
-                      <Input 
-                        type="time" 
-                        value={sched.endTime || "18:00"} 
-                        onChange={e => { const s = [...schedules]; s[idx].endTime = e.target.value; setSchedules(s); }}
-                        disabled={!sched.isActive}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 ml-auto">
-                      <Label className="text-muted-foreground text-xs">Duração</Label>
-                      <Input 
-                        type="time" 
-                        className="w-[100px]" 
-                        value={minsToTime(sched.slotDuration)} 
-                        onChange={e => { 
-                          const s = [...schedules]; 
-                          s[idx].slotDuration = timeToMins(e.target.value); 
-                          setSchedules(s); 
-                        }}
-                        disabled={!sched.isActive}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pl-[150px]">
-                    <Label className="text-muted-foreground text-xs w-12">Pausa</Label>
-                    <Input 
-                      type="time" 
-                      className="w-[100px]"
-                      value={sched.intervalStartTime || ""} 
-                      onChange={e => { const s = [...schedules]; s[idx].intervalStartTime = e.target.value; setSchedules(s); }}
-                      disabled={!sched.isActive}
-                    />
-                    <span className="text-muted-foreground text-sm">até</span>
-                    <Input 
-                      type="time" 
-                      className="w-[100px]"
-                      value={sched.intervalEndTime || ""} 
-                      onChange={e => { const s = [...schedules]; s[idx].intervalEndTime = e.target.value; setSchedules(s); }}
-                      disabled={!sched.isActive}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="flex justify-end border-t p-6">
-              <Button onClick={saveSchedules} disabled={saving}>{saving ? "Salvando..." : "Salvar Horários"}</Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <ExceptionsSettings tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="servicos">
-          <Card>
-            <CardHeader>
-              <CardTitle>Serviços e Preços</CardTitle>
-              <CardDescription>Cadastre os serviços oferecidos e configure preços e durações.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ServicesSettings tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="pagamentos">
+        <TabsContent value="integracoes" className="space-y-6">
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Opções de Pagamento</CardTitle>
@@ -1120,138 +1323,7 @@ function SettingsContent() {
           </Card>
           
           <PaymentConfig tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
-        </TabsContent>
-
-        <TabsContent value="integracoes">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>WhatsApp API</CardTitle>
-                <CardDescription>Conecte o número do seu estabelecimento para enviar e receber mensagens automaticamente.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Uso de Instâncias</span>
-                  <Badge variant="outline">1 permitida, {tenant?.evolutionInstanceStatus ? "1" : "0"} em uso</Badge>
-                </div>
-
-                {tenant && !tenant._isProfileComplete && (
-                  <div className="flex flex-col gap-2 p-4 bg-orange-50 border border-orange-200 text-orange-800 rounded-md text-sm">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <ShieldAlert className="w-4 h-4" />
-                      Complete seu perfil para ativar a IA
-                    </div>
-                    <p>Para conectar o WhatsApp e habilitar o atendimento automático, você precisa preencher:</p>
-                    <ul className="list-disc list-inside ml-2">
-                      {tenant._missingRequirements?.map((req: string, i: number) => (
-                        <li key={i}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between p-4 border rounded-md">
-                  <div>
-                    <div className="font-semibold flex items-center gap-2">
-                      WhatsApp Principal (Provedor Atual: {tenant?.whatsappProvider === 'META_CLOUD' ? 'Meta Cloud API' : 'Evolution API'})
-                      {tenant?.whatsappProvider === 'META_CLOUD' ? (
-                        tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId ? (
-                          <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado (Meta)</Badge>
-                        ) : (
-                          <Badge variant="secondary">Desconectado (Meta)</Badge>
-                        )
-                      ) : (
-                        tenant?.evolutionInstanceStatus === "OPEN" ? (
-                          <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
-                        ) : (
-                          <Badge variant="secondary">Desconectado</Badge>
-                        )
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                      {tenant?.whatsappProvider === 'META_CLOUD' ? (
-                        <>
-                          {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
-                          Status: {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? "Pronto para uso (Meta API)" : "Requer configuração de Token e Phone ID"}
-                        </>
-                      ) : (
-                        <>
-                          {tenant?.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
-                          Status: {tenant?.evolutionInstanceStatus || "Sem conexão"}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {tenant?.whatsappProvider === 'META_CLOUD' ? (
-                      <Button onClick={() => saveGeneral()} disabled={saving || !tenant?._isProfileComplete}>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Salvar Configurações Meta
-                      </Button>
-                    ) : (
-                      tenant?.evolutionInstanceStatus === "OPEN" ? (
-                        <Button variant="destructive" onClick={() => setShowDisconnectConfirm(true)}>
-                          <Trash className="w-4 h-4 mr-2" />
-                          Desconectar
-                        </Button>
-                      ) : (
-                        <Button onClick={() => setShowPhoneModal(true)} disabled={!tenant?._isProfileComplete}>
-                          <Smartphone className="w-4 h-4 mr-2" />
-                          Conectar QR Code
-                        </Button>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-base">Provedor de WhatsApp</Label>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      A Meta Cloud API é a integração oficial do WhatsApp, indicada para alto volume. Mensagens enviadas dentro de 24h são cobradas pela Meta. A Evolution API utiliza o escaneamento de QR Code com seu número pessoal (sem custo por mensagem).
-                    </div>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                      value={tenant?.whatsappProvider || 'EVOLUTION'}
-                      onChange={(e) => setTenant({ ...tenant, whatsappProvider: e.target.value })}
-                    >
-                      <option value="EVOLUTION">Evolution API (QR Code / Pessoal)</option>
-                      <option value="META_CLOUD">Meta Cloud API (Oficial / Business)</option>
-                    </select>
-                  </div>
-
-                  {tenant?.whatsappProvider === 'META_CLOUD' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 bg-muted/30 p-4 rounded-md border">
-                      <div className="space-y-2">
-                        <Label>Meta Token Permanente</Label>
-                        <Input 
-                          type="password"
-                          value={tenant?.whatsappMetaToken || ''} 
-                          onChange={e => setTenant({...tenant, whatsappMetaToken: e.target.value})} 
-                          placeholder="EAAI..." 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Phone Number ID (ID do Número de Telefone)</Label>
-                        <Input 
-                          value={tenant?.whatsappMetaPhoneNumberId || ''} 
-                          onChange={e => setTenant({...tenant, whatsappMetaPhoneNumberId: e.target.value})} 
-                          placeholder="1234567890" 
-                        />
-                      </div>
-                      <div className="col-span-1 md:col-span-2 mt-2">
-                        <div className="text-xs text-muted-foreground">
-                          Após salvar o token, certifique-se de configurar a Webhook na Meta Business apontando para: <br />
-                          <code className="bg-muted px-1 rounded select-all">{getBackendUrl('/api/webhooks/whatsapp-meta')}</code>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
+          <Card>
               <CardHeader>
                 <CardTitle>Google Calendar</CardTitle>
                 <CardDescription>Sincronize os agendamentos confirmados com sua agenda do Google.</CardDescription>
@@ -1272,8 +1344,7 @@ function SettingsContent() {
                 )}
               </CardContent>
             </Card>
-
-            <Card>
+          <Card>
               <CardHeader>
                 <CardTitle>Gateways de Pagamento</CardTitle>
                 <CardDescription>Conecte ou cadastre chaves de API de processadores de pagamento.</CardDescription>
@@ -1358,7 +1429,10 @@ function SettingsContent() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+        </TabsContent>
+
+        <TabsContent value="seguranca" className="space-y-6">
+          {/* Aba de segurança e conta (perfil foi movido para o menu lateral) */}
         </TabsContent>
       </Tabs>
       

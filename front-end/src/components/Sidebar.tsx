@@ -30,16 +30,16 @@ const navLinks: NavItem[] = [
   { href: "/chats",        label: "Conversas",     icon: MessageSquare,   badgeKey: "chats", requiresTenant: true, category: "Relacionamento" },
   { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Relacionamento" },
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
-  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Administração" },
-  { href: "/admin/users",  label: "Usuários",      icon: Users,           category: "Administração" },
-  { href: "/admin/broadcast", label: "Disparos",   icon: Megaphone,       category: "Administração" },
-  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "Administração" },
-  { href: "/admin/plans",  label: "Planos (SaaS)", icon: CreditCard,      category: "Administração" },
-  { href: "/admin/ai-presets",label: "Templates de IA", icon: Wand2,      category: "Administração" },
   { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
   { href: "/billing",      label: "Faturamento",   icon: CreditCard,      requiresTenant: true, category: "Administração" },
   { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "Administração" },
-  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "Administração" },
+  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Administração (Super)" },
+  { href: "/admin/users",  label: "Usuários",      icon: Users,           category: "Administração (Super)" },
+  { href: "/admin/broadcast", label: "Disparos Globais", icon: Megaphone, category: "Administração (Super)" },
+  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "Administração (Super)" },
+  { href: "/admin/plans",  label: "Planos (SaaS)", icon: CreditCard,      category: "Administração (Super)" },
+  { href: "/admin/ai-presets",label: "Templates IA", icon: Wand2,       category: "Administração (Super)" },
+  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "Minha Conta" },
 ];
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {

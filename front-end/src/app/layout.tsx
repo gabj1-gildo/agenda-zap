@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AgendaZap â€” Painel Administrativo",
+  title: "AgendaZap Painel Administrativo",
   description: "Painel de controle inteligente para gerenciar agendamentos, clientes e pagamentos.",
 };
 
