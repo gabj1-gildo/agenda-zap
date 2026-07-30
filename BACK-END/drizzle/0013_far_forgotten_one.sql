@@ -1,0 +1,1 @@
+ALTER TABLE "appointments" ADD COLUMN "google_event_id" varchar(255);

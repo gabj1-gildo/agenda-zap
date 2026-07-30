@@ -1,0 +1,214 @@
+﻿<USER_REQUEST>
+# Plano de ExecuÃ§Ã£o â€” AgendaZap SaaS
+> Baseado na auditoria de 22/07/2026. Documento para colar diretamente no agente de cÃ³digo (Claude Code, Cursor, etc).
+
+---
+
+## COMO USAR ESTE DOCUMENTO
+
+Este plano tem **5 fases sequenciais com gates de bloqueio**. Cada fase sÃ³ pode comeÃ§ar depois que a anterior for **explicitamente aprovada por vocÃª** (o humano), nÃ£o pelo agente sozinho.
+
+Cole o bloco "PROMPT MESTRE" inteiro na primeira mensagem para o agente. Ele vai executar **apenas a Fase 0** e parar. Depois de vocÃª revisar e aprovar, mande "aprovado, siga para Fase 1" â€” e assim por diante.
+
+**NÃ£o cole todas as fases de uma vez pedindo para o agente "fazer tudo".** Isso Ã© proposital: quanto maior o escopo dado de uma vez, maior a chance do agente pular validaÃ§Ã£o, misturar migraÃ§Ã£o de schema com mudanÃ§a de lÃ³gica de negÃ³cio, ou "otimizar" algo que nÃ£o foi pedido. Uma fase por vez, com revisÃ£o sua no meio, Ã© o que garante que nada importante seja pulado.
+
+---
+
+## PROMPT MESTRE (colar no agente)
+
+```
+VocÃª vai executar um plano de melhorias de seguranÃ§a e arquitetura no meu SaaS 
+de agendamento (AgendaZap). O plano tem 5 fases. VocÃª deve executar SOMENTE UMA 
+FASE POR VEZ, na ordem exata abaixo, e PARAR ao final de cada fase esperando 
+minha aprovaÃ§Ã£o explÃ­cita antes de continuar.
+
+REGRAS OBRIGATÃ“RIAS QUE VOCÃŠ NÃƒO PODE PULAR OU RESUMIR:
+
+1. Antes de escrever qualquer cÃ³digo, vocÃª deve reler os arquivos reais 
+   envolvidos na fase atual (nÃ£o confiar em memÃ³ria de conversas anteriores).
+
+2. Toda mudanÃ§a de schema (Drizzle) precisa ter uma migration gerada e revisada 
+   por mim antes de ser aplicada â€” vocÃª NUNCA roda migration contra o banco 
+   sozinho. Apenas gera o arquivo de migration e me mostra.
+
+3. Nenhuma mudanÃ§a pode remover ou apagar uma coluna/campo existente nesta 
+   rodada. Se um campo antigo for substituÃ­do por um novo, o campo antigo fica 
+   marcado como deprecated (comentÃ¡rio no cÃ³digo + no schema) mas continua 
+   existindo atÃ© eu confirmar que a migraÃ§Ã£o de dados foi validada em produÃ§Ã£o. 
+   DeleÃ§Ã£o de campo antigo Ã© uma fase separada, futura, que nÃ£o estÃ¡ neste plano.
+
+4. Ao final de CADA fase, vocÃª deve me entregar um relatÃ³rio com:
+   a) Lista de arquivos criados/alterados (caminho completo)
+   b) Diff resumido do que mudou em cada um
+   c) Checklist de "CritÃ©rios de Aceite" da fase (definidos abaixo), com cada 
+      item marcado como âœ… feito, âš ï¸ feito parcialmente (explicar o motivo), ou 
+      âŒ nÃ£o feito (explicar o bloqueio)
+   d) Quaisquer riscos ou efeitos colaterais que vocÃª identificou ao longo da 
+      implementaÃ§Ã£o, mesmo que nÃ£o estivessem previstos no plano original
+   e) O que falta para eu considerar a fase 100% concluÃ­da
+
+5. Se em algum momento vocÃª perceber que precisa fazer algo que NÃƒO estÃ¡ 
+   descrito na fase atual (ex: mudar uma rota que nÃ£o estava no escopo, alterar 
+   um schema de outra tabela), vocÃª deve PARAR e me perguntar antes de fazer, 
+   em vez de decidir sozinho e seguir em frente.
+
+6. VocÃª nÃ£o deve iniciar a fase seguinte atÃ© eu responder literalmente algo 
+   como "aprovado, siga para Fase N".
+
+7. Se qualquer critÃ©rio de aceite de uma fase nÃ£o for 100% atingÃ­vel por 
+   limitaÃ§Ã£o tÃ©cnica real, Ã© aceitÃ¡vel entregar parcial â€” mas NUNCA marque 
+   como concluÃ­do algo que nÃ£o foi verificado. "Verificado" significa que 
+   vocÃª rodou/testou, nÃ£o que o cÃ³digo "deveria funcionar".
+
+Confirme que entendeu essas regras e entÃ£o comece EXECUTANDO APENAS A FASE 0 
+abaixo. NÃ£o leia as fases seguintes ainda alÃ©m de saber que elas existem.
+```
+
+---
+
+## FASE 0 â€” SeguranÃ§a crÃ­tica (hotfix, sem tocar em IA/schema)
+
+**Objetivo:** eliminar acesso nÃ£o autenticado a rotas que hoje permitem ler/alterar dados de qualquer empresa.
+
+**Escopo â€” apenas estas rotas:**
+- `GET/PATCH /api/settings/tenant`
+- `GET/PUT /api/settings/schedules`
+- `GET/POST /api/settings/payment-keys`
+- `PATCH/DELETE /api/settings/payment-keys/[id]`
+- `PATCH /api/clients/[id]`
+- `GET /api/tenants/[id]/agenda`
+- `GET/POST /api/tenants/[id]/settings`
+
+**InstruÃ§Ãµes especÃ­ficas para o agente:**
+1. Verifique como `verifyAuth` e `withTenant()` sÃ£o usados hoje nas rotas que JÃ funcionam corretamente (ex: `/api/chats`, `/api/dashboard/*`) e replique o mesmo padrÃ£o â€” nÃ£o crie um padrÃ£o de auth novo.
+2. Para cada rota do escopo, adicione: (a) exigÃªncia de usuÃ¡rio autenticado, (b) verificaÃ§Ã£o de que o usuÃ¡rio autenticado tem vÃ­nculo com o `tenantId`/`tenant-id` sendo acessado (via `user_tenants`).
+3. Para `PATCH /api/clients/[id]`: adicionar tanto autenticaÃ§Ã£o quanto filtro `WHERE id = X AND tenant_id = Y` na query â€” hoje falta os dois.
+4. NÃ£o altere a lÃ³gica de negÃ³cio dessas rotas, apenas a camada de autenticaÃ§Ã£o/autorizaÃ§Ã£o.
+5. Webhook do WhatsApp (`/api/webhooks/whatsapp`) fica **fora do escopo** â€” ele Ã© intencionalmente pÃºblico e usa isolamento via `instanceName`, nÃ£o mexer.
+
+**CritÃ©rios de Aceite (o agente deve verificar um por um):**
+- [ ] Uma requisiÃ§Ã£o sem token vÃ¡lido para cada uma das 7 rotas retorna 401/403 (nÃ£o 200)
+- [ ] Uma requisiÃ§Ã£o autenticada como usuÃ¡rio do Tenant A tentando acessar/alterar dado do Tenant B retorna 403 (nÃ£o sucesso)
+- [ ] `PATCH /api/clients/[id]` valida tenant_id do client contra o tenant do usuÃ¡rio autenticado
+- [ ] Nenhuma rota fora do escopo definido foi alterada
+- [ ] Rotas que jÃ¡ tinham auth funcionando continuam funcionando (nÃ£o quebrou nada existente)
+
+**âš ï¸ Gate de bloqueio:** nÃ£o seguir para Fase 1 sem eu confirmar que testei manualmente pelo menos 2 dessas rotas.
+
+---
+
+## FASE 1 â€” Tabela `services` estruturada
+
+**Objetivo:** parar de depender de texto livre (`aiConfig.servicos_precos`) para preÃ§o e nome de serviÃ§o, que hoje Ã© decidido pela IA por interpretaÃ§Ã£o de texto â€” risco direto de cobranÃ§a errada.
+
+**Escopo:**
+1. Criar tabela `services` (tenantId, name, price, durationMinutes, isActive, timestamps).
+2. Adicionar campo `serviceId` (nullable, FK) em `appointments` â€” **sem remover `serviceName`**.
+3. Criar um script de migraÃ§Ã£o de dados (nÃ£o uma migration de schema â€” um script Ã  parte, rodado manualmente por mim) que:
+   - LÃª `tenants.aiConfig.servicos_precos` de cada tenant
+   - Tenta fazer parse do texto (formato usual: `Nome = R$Valor` separado por `|` ou quebra de linha)
+   - Insere os serviÃ§os encontrados em `services`, com `durationMinutes` default de 30 se nÃ£o especificado
+   - Gera um relatÃ³rio (arquivo texto/CSV) listando: tenant, quantos serviÃ§os foram extraÃ­dos com sucesso, quantos falharam o parse e precisam de revisÃ£o manual
+4. Criar endpoint novo para CRUD de `services` (`GET/POST/PATCH/DELETE /api/settings/services`), seguindo o mesmo padrÃ£o de auth da Fase 0.
+5. **NÃ£o alterar ainda** a tela de "ServiÃ§os e PreÃ§os" no frontend nem a tool `create_appointment` â€” isso Ã© Fase 3.
+
+**CritÃ©rios de Aceite:**
+- [ ] Migration de schema gerada e revisada (nÃ£o aplicada sem minha aprovaÃ§Ã£o)
+- [ ] Script de migraÃ§Ã£o de dados rodado em ambiente de teste/staging (nÃ£o produÃ§Ã£o) e relatÃ³rio de sucesso/falha gerado
+- [ ] Endpoint de CRUD de `services` funcionando com autenticaÃ§Ã£o e filtro de tenant
+- [ ] `serviceName` em `appointments` continua existindo e funcionando (nada quebrado)
+- [ ] RelatÃ³rio mostra claramente quantos tenants tiveram parse 100% automÃ¡tico vs. quantos precisam de revisÃ£o manual antes de irmos para produÃ§Ã£o
+
+**âš ï¸ Gate de bloqueio:** nÃ£o seguir para Fase 2 sem eu revisar o relatÃ³rio de migraÃ§Ã£o de dados e decidir o que fazer com os tenants que falharam o parse automÃ¡tico.
+
+---
+
+## FASE 2 â€” HorÃ¡rios estruturados, antecedÃªncia e exceÃ§Ãµes
+
+**Objetivo:** eliminar a segunda fonte de verdade conflitante (texto livre `horario_funcionamento` vs. tabela `schedules` que jÃ¡ existe mas nÃ£o Ã© usada pela IA), e adicionar regras de antecedÃªncia mÃ­nima/mÃ¡xima.
+
+**Escopo:**
+1. Adicionar campos `minAdvanceMinutes` (default 60) e `maxAdvanceDays` (default 30) â€” decidir com base no schema atual se ficam em `tenants` ou em tabela nova `booking_rules` (o agente deve justificar a escolha no relatÃ³rio, nÃ£o decidir silenciosamente).
+2. Criar tabela `schedule_exceptions` (tenantId, date, isClosed, customStartTime, customEndTime).
+3. Criar endpoint de CRUD para exceÃ§Ãµes de horÃ¡rio, mesmo padrÃ£o de auth.
+4. **NÃ£o conectar ainda** com a IA/prompt â€” isso acontece na Fase 3.
+5. Frontend: pode already trocar a textarea de "HorÃ¡rio de Funcionamento" por formulÃ¡rio estruturado que grava em `schedules` (essa tabela jÃ¡ existe e jÃ¡ estÃ¡ correta), mas manter o campo antigo salvo em paralelo atÃ© a Fase 4.
+
+**CritÃ©rios de Aceite:**
+- [ ] Tabela `schedule_exceptions` criada e testada com pelo menos um caso de feriado bloqueado
+- [ ] Campos de antecedÃªncia mÃ­nima/mÃ¡xima existem e tÃªm valores default sensatos
+- [ ] Endpoint de CRUD funcionando com auth
+- [ ] DecisÃ£o de onde ficam os campos de antecedÃªncia estÃ¡ documentada no relatÃ³rio com justificativa
+
+**âš ï¸ Gate de bloqueio:** nÃ£o seguir para Fase 3 sem confirmar que `schedules` + `schedule_exceptions` juntas conseguem responder corretamente "esse horÃ¡rio estÃ¡ aberto?" para pelo menos 3 cenÃ¡rios de teste que eu vou fornecer (dia normal, dia de exceÃ§Ã£o fechado, exceÃ§Ã£o com horÃ¡rio customizado).
+
+---
+
+## FASE 3 â€” Tools de IA: `check_availability`, `list_services`, revisÃ£o de `create_appointment`
+
+**Objetivo:** a IA para de "decidir" preÃ§o e horÃ¡rio por texto e passa a **consultar o banco** via function calling. Esta Ã© a fase que resolve o risco mais caro (cobranÃ§a errada, agendamento duplicado).
+
+**Escopo:**
+1. Criar tool `check_availability(serviceId, date)`:
+   - Busca `durationMinutes` do serviÃ§o
+   - Cruza com `schedules` do dia da semana
+   - Subtrai `appointments` jÃ¡ existentes (status PENDENTE ou PAGO) naquele dia
+   - Aplica `schedule_exceptions` se houver
+   - Aplica `minAdvanceMinutes`/`maxAdvanceDays`
+   - Retorna lista de slots livres
+2. Criar tool `list_services()`:
+   - Retorna `services` ativos do tenant (nome, preÃ§o, duraÃ§Ã£o)
+3. Revisar `create_appointment`:
+   - Trocar parÃ¢metros de `serviceName + price` (texto livre decidido pela IA) para `serviceId` apenas
+   - O handler busca o preÃ§o real em `services` pelo `serviceId` â€” a IA nunca envia preÃ§o
+   - Antes de inserir, o handler deve re-checar disponibilidade (mesma lÃ³gica de `check_availability`) para evitar condiÃ§Ã£o de corrida entre dois clientes pedindo o mesmo slot ao mesmo tempo
+4. Atualizar o system prompt para instruir a IA a **sempre** chamar `list_services` e `check_availability` antes de propor serviÃ§o/horÃ¡rio, nunca decidir por texto do `aiConfig`.
+5. **Manter** `servicos_precos` e `horario_funcionamento` no `aiConfig` por enquanto (deprecated, nÃ£o removidos) â€” a remoÃ§Ã£o definitiva Ã© decisÃ£o sua, fora deste plano.
+
+**CritÃ©rios de Aceite:**
+- [ ] `check_availability` testada com um tenant real de staging, retornando slots corretos considerando conflitos existentes
+- [ ] `list_services` retorna exatamente os dados da tabela `services`, sem depender de texto do `aiConfig`
+- [ ] `create_appointment` nÃ£o aceita mais preÃ§o vindo da IA â€” preÃ§o sempre lido do banco
+- [ ] Teste manual de condiÃ§Ã£o de corrida: duas requisiÃ§Ãµes simultÃ¢neas para o mesmo slot â€” apenas uma deve ter sucesso
+- [ ] Prompt atualizado instruindo a IA a usar as tools antes de responder sobre disponibilidade/preÃ§o
+
+**âš ï¸ Gate de bloqueio:** nÃ£o seguir para Fase 4 sem eu validar em uma conversa de teste real via WhatsApp (staging) que a IA estÃ¡ de fato chamando as tools e nÃ£o inventando horÃ¡rio/preÃ§o.
+
+---
+
+## FASE 4 â€” Hardening do prompt e reduÃ§Ã£o de superfÃ­cie de texto livre
+
+**Objetivo:** com serviÃ§os e horÃ¡rios jÃ¡ estruturados (saÃ­ram do prompt), reduzir o que resta de texto livre e mitigar risco de prompt injection vindo da configuraÃ§Ã£o do lojista.
+
+**Escopo:**
+1. Reestruturar o prompt para delimitar claramente blocos de configuraÃ§Ã£o do lojista (tom, restriÃ§Ãµes, transbordo, pagamento, encerramento) com marcadores explÃ­citos, deixando claro no prompt principal que instruÃ§Ãµes dentro desses blocos nÃ£o sobrepÃµem regras de seguranÃ§a/fluxo.
+2. Adicionar limite de tamanho de caracteres nos campos de texto livre restantes (defina um nÃºmero e justifique).
+3. Adicionar validaÃ§Ã£o bÃ¡sica no endpoint de salvamento do `aiConfig` (hoje aceita qualquer JSON sem checagem) â€” validar que as chaves esperadas existem e respeitam o limite de tamanho.
+4. Remover do prompt as seÃ§Ãµes `servicos_precos` e `horario_funcionamento` (jÃ¡ nÃ£o sÃ£o mais necessÃ¡rias, pois a IA consulta via tools) â€” mas manter os campos no banco/JSON como deprecated, nÃ£o apagar dado do cliente.
+
+**CritÃ©rios de Aceite:**
+- [ ] Prompt final nÃ£o injeta mais texto livre de serviÃ§os/horÃ¡rios
+- [ ] Teste de prompt injection: escrever algo adversarial em "RestriÃ§Ãµes" (ex: instruÃ§Ã£o para ignorar regras de seguranÃ§a) e confirmar que o comportamento da IA nÃ£o muda
+- [ ] ValidaÃ§Ã£o de tamanho/formato ativa no endpoint de salvamento
+- [ ] RelatÃ³rio final resumindo o que ainda ficou como texto livre por decisÃ£o consciente (tom, restriÃ§Ãµes, transbordo) e por quÃª
+
+**âš ï¸ Este Ã© o fim do plano.** Ao final da Fase 4, peÃ§a ao agente um relatÃ³rio consolidado geral (todas as 5 fases) para vocÃª arquivar como documentaÃ§Ã£o do que foi feito.
+
+---
+
+## ObservaÃ§Ã£o final para vocÃª (fora do prompt do agente)
+
+Os itens de prioridade ðŸŸ¢ MÃ©dia do relatÃ³rio de auditoria (tabela `messages` separada, lembretes automÃ¡ticos, campo `email` em clients, campo `notes` em appointments) **nÃ£o estÃ£o neste plano de propÃ³sito** â€” eles nÃ£o bloqueiam nada crÃ­tico e podem ser tratados depois, como fases 6+, sem pressa. Incluir tudo de uma vez sÃ³ aumentaria o risco de o agente perder foco nas partes que realmente importam agora (seguranÃ§a e alucinaÃ§Ã£o de preÃ§o/horÃ¡rio).
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-22T08:10:41-03:00.
+
+The user's current state is as follows:
+Active Document: c:\Users\jferr\Desktop\agenda_zap\front-end\src\components\Sidebar.tsx (LANGUAGE_TSX)
+Cursor is on line: 260
+Other open documents:
+- c:\Users\jferr\Desktop\agenda_zap\front-end\src\components\Sidebar.tsx (LANGUAGE_TSX)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Claude Opus 4.6 (Thinking) to Gemini 3.1 Pro (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
