@@ -10,6 +10,7 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   // Restrito SUPERADMIN e ADMIN
   '/admin/users': ['SUPERADMIN', 'ADMIN'],
   '/settings': ['SUPERADMIN', 'ADMIN'],
+  '/team': ['SUPERADMIN', 'ADMIN'],
   '/reports': ['SUPERADMIN', 'ADMIN'],
 
   // Aberto para todos

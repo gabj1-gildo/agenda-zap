@@ -27,9 +27,7 @@ import { PaymentConfig } from "@/components/PaymentConfig";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { ServicesSettings } from "@/components/ServicesSettings";
 import { ExceptionsSettings } from "@/components/ExceptionsSettings";
-import { TeamSettings } from "@/components/TeamSettings";
-import { ProfessionalsSettings } from "@/components/ProfessionalsSettings";
-import { RoomsSettings } from "@/components/RoomsSettings";
+
 import { env } from '@/config/env';
 
 function minsToTime(m: number) {
@@ -641,9 +639,7 @@ function SettingsContent() {
 
         <TabsContent value="empresa" className="space-y-6">
           <div className="space-y-8">
-            <TeamSettings tenantId={targetTenantId} />
-            <ProfessionalsSettings tenantId={targetTenantId} />
-            <RoomsSettings tenantId={targetTenantId} />
+
             <Card>
             <CardHeader>
               <CardTitle>Dados do Estabelecimento</CardTitle>

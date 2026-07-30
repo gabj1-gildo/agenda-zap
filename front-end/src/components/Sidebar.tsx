@@ -31,6 +31,7 @@ const navLinks: NavItem[] = [
   { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Relacionamento" },
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
   { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
+  { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "Administração" },
   { href: "/billing",      label: "Faturamento",   icon: CreditCard,      requiresTenant: true, category: "Administração" },
   { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "Administração" },
   { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Administração (Super)" },
@@ -128,6 +129,9 @@ export function Sidebar() {
       const activeTenantId = (session as any)?.tenantId;
       const activeTenant = tenants.find((t: any) => t.id === activeTenantId);
       const permissions = activeTenant?.permissions || [];
+
+      // Ocultar categoria Superadmin para não-superadmins, independentemente de rotas
+      if (item.category === "Administração (Super)" && role !== "SUPERADMIN") return acc;
 
       if (!hasRouteAccess(item.href, role, permissions)) return acc;
       
