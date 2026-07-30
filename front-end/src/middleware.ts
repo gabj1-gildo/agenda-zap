@@ -55,6 +55,6 @@ export const config = {
      * - login
      * - forgot-password
      */
-    "/((?!api/auth|api/backend|_next/static|_next/image|favicon.ico|login|forgot-password).*)",
+    "/((?!api/auth|api/backend|_next/static|_next/image|favicon.ico|login|forgot-password|$).*)",
   ],
 };

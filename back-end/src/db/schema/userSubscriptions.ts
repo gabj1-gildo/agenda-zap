@@ -13,6 +13,10 @@ export const userSubscriptions = pgTable('user_subscriptions', {
   // ID da assinatura no Mercado Pago
   mpSubscriptionId: varchar('mp_subscription_id', { length: 255 }),
 
+  // IDs do Asaas para o SAAS
+  asaasCustomerId: varchar('asaas_customer_id', { length: 255 }),
+  asaasSubscriptionId: varchar('asaas_subscription_id', { length: 255 }),
+
   // Data de fim do trial (período de testes de 3 dias gerido internamente)
   trialEnd: timestamp('trial_end'),
   

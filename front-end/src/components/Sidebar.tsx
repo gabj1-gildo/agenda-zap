@@ -22,7 +22,7 @@ type NavItem = {
 };
 
 const navLinks: NavItem[] = [
-  { href: "/",             label: "Painel",        icon: LayoutDashboard, category: "Principal" },
+  { href: "/dashboard",    label: "Painel",        icon: LayoutDashboard, category: "Principal" },
   { href: "/agenda",       label: "Agenda",        icon: CalendarDays,    requiresTenant: true, category: "Principal" },
   { href: "/appointments", label: "Agendamentos",  icon: CalendarCheck,   requiresTenant: true, category: "Principal" },
   { href: "/clients",      label: "Clientes",      icon: Contact,         requiresTenant: true, category: "Relacionamento" },
@@ -96,7 +96,7 @@ export function Sidebar() {
     let activeCat = "Principal";
     for (const [cat, items] of Object.entries(categoriesMap)) {
       const hasActive = items.some(item => {
-        if (item.href === "/") return pathname === "/";
+        if (item.href === "/dashboard") return pathname === "/dashboard";
         return pathname.startsWith(item.href);
       });
       if (hasActive) {
@@ -110,7 +110,7 @@ export function Sidebar() {
   if (pathname === "/login") return null;
 
   const isActive = (href: string) => {
-    if (href === "/" || href === "/admin") return pathname === href;
+    if (href === "/dashboard" || href === "/admin") return pathname === href;
     return pathname.startsWith(href);
   };
 

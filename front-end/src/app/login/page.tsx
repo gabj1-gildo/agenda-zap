@@ -33,8 +33,8 @@ export default function LoginPage() {
       toast.success("Acesso autorizado!");
       // Always redirect to home; ignore any callbackUrl from API routes
       const params = new URLSearchParams(window.location.search);
-      const callbackUrl = params.get("callbackUrl") || "/";
-      const safeRedirect = callbackUrl.startsWith("/api") ? "/" : callbackUrl;
+      const callbackUrl = params.get("callbackUrl") || "/dashboard";
+      const safeRedirect = (callbackUrl.startsWith("/api") || callbackUrl === "/") ? "/dashboard" : callbackUrl;
       window.location.href = safeRedirect;
     }
   };
