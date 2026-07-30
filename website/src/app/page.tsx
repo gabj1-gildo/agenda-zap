@@ -9,6 +9,7 @@ import {
 import { getBackendUrl } from "@/lib/api";
 import { toast } from "sonner";
 import { formatPhone } from "@/lib/utils";
+import { FadeIn } from "@/components/FadeIn";
 
 // --- FAQ Component ---
 function FaqItem({ question, answer }: { question: string, answer: string }) {

@@ -8,12 +8,8 @@ export default async function middleware(req: NextRequest) {
   const hostname = req.headers.get("host") || "";
   const path = url.pathname;
 
-  // 1. Roteamento de Subdomínio e Redirecionamento da Raiz
+  // 1. Redirecionamento da Raiz
   if (path === "/") {
-    if (hostname.startsWith("planos.")) {
-      return NextResponse.rewrite(new URL("/planos", req.url));
-    }
-    // Domínio principal -> redireciona para login
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
@@ -71,6 +67,6 @@ export const config = {
      * - forgot-password
      * - planos (landing page path)
      */
-    "/((?!api/auth|api/backend|_next/static|_next/image|favicon.ico|login|forgot-password|planos).*)",
+    "/((?!api/auth|api/backend|_next/static|_next/image|favicon.ico|login|forgot-password).*)",
   ],
 };
