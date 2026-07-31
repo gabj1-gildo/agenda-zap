@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Syne } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -9,9 +9,18 @@ const inter = Inter({
   display: "swap",
 });
 
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "AgendaZap - Automação de Agendamentos",
-  description: "Atenda clientes 24h por dia com Inteligência Artificial.",
+  title: "AgendaZap — Automatize Agendamentos com IA no WhatsApp",
+  description:
+    "Atenda clientes 24h por dia com Inteligência Artificial, automatize agendamentos e escale suas vendas sem contratar mais pessoas. Experimente grátis.",
+  keywords: "agendamento whatsapp, IA atendimento, bot agendamento, automação whatsapp",
 };
 
 export default function RootLayout({
@@ -20,14 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} antialiased`}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="pt-BR" className={`${inter.variable} ${syne.variable} antialiased`}>
       <body>
         {children}
         <Toaster richColors position="top-right" />
