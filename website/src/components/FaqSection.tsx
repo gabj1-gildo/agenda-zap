@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { FadeIn } from "./FadeIn";
 
 const faqs = [
   {
@@ -44,15 +45,17 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between py-5 text-left gap-6 group"
       >
-        <span className={`text-sm font-medium transition-colors ${open ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>
+        <span className={`text-sm font-medium transition-colors duration-200 ${open ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>
           {question}
         </span>
-        <ChevronDown
-          className={`w-4 h-4 shrink-0 transition-all duration-300 ${open ? "rotate-180 text-primary" : "text-muted-foreground"}`}
-        />
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 ${open ? "bg-primary/10 rotate-180" : "bg-muted"}`}>
+          <ChevronDown className={`w-4 h-4 transition-colors ${open ? "text-primary" : "text-muted-foreground"}`} />
+        </div>
       </button>
-      <div className={`overflow-hidden transition-all duration-300 ${open ? "max-h-48 pb-5 opacity-100" : "max-h-0 opacity-0"}`}>
-        <p className="text-sm text-muted-foreground leading-relaxed">{answer}</p>
+      <div className={`faq-answer ${open ? "open" : ""}`}>
+        <div>
+          <p className="text-sm text-muted-foreground leading-relaxed pb-5 pr-12">{answer}</p>
+        </div>
       </div>
     </div>
   );
@@ -60,24 +63,30 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 
 export function FaqSection() {
   return (
-    <section id="faq" className="w-full py-24 px-6 bg-white">
+    <section id="faq" className="w-full py-24 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-[1fr_1.8fr] gap-16 items-start">
-          <div className="md:sticky md:top-28">
-            <p className="section-label">FAQ</p>
-            <h2 className="font-display font-bold text-3xl md:text-4xl tracking-tight leading-snug text-foreground">
-              Perguntas frequentes
-            </h2>
-            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              Não encontrou o que procura?{" "}
-              <a href="mailto:suporte@agendazap.com.br" className="text-primary hover:underline">
-                Fale com nosso time.
-              </a>
-            </p>
-          </div>
-          <div className="border-t border-border">
-            {faqs.map((faq) => <FaqItem key={faq.question} {...faq} />)}
-          </div>
+          <FadeIn>
+            <div className="md:sticky md:top-28">
+              <p className="section-label">FAQ</p>
+              <h2 className="font-display font-bold text-3xl md:text-4xl tracking-tight leading-snug text-foreground">
+                Perguntas frequentes
+              </h2>
+              <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+                Não encontrou o que procura?{" "}
+                <a href="mailto:suporte@agendazap.com.br" className="text-primary font-semibold hover:underline underline-offset-2">
+                  Fale com nosso time.
+                </a>
+              </p>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <div className="card-surface p-1 sm:p-2">
+              <div className="px-5 sm:px-6">
+                {faqs.map((faq) => <FaqItem key={faq.question} {...faq} />)}
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </div>
     </section>

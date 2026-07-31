@@ -154,20 +154,20 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
   };
 
   // ─── Styles ───────────────────────────────────────────────────────────────
-  const inputCls = "w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50";
+  const inputCls = "w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-muted-foreground/50";
   const labelCls = "block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5";
 
   const intervalLabel = (iv: string) =>
     iv === "yearly" ? "ano" : iv === "semiannual" ? "semestre" : "mês";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 overflow-y-auto pt-16">
-      <div className="bg-white border border-border rounded-2xl w-full max-w-xl shadow-xl relative my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto pt-16">
+      <div className="bg-card border border-border rounded-2xl w-full max-w-xl shadow-2xl relative my-auto">
 
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
         >
           <X className="w-4 h-4" />
         </button>
@@ -176,14 +176,14 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
           {/* ── Success ── */}
           {paymentSuccess ? (
             <div className="text-center py-6">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <Check className="w-8 h-8" />
               </div>
               <h2 className="font-display font-bold text-2xl text-foreground mb-2">Pagamento Aprovado!</h2>
               <p className="text-sm text-muted-foreground mb-8">
                 Sua assinatura do plano <strong>{plan.name}</strong> foi ativada com sucesso.
               </p>
-              <a href={loginUrl} className="block w-full py-3.5 btn-primary text-center font-semibold rounded-lg">
+              <a href={loginUrl} className="block w-full py-3.5 btn-primary text-center font-semibold rounded-xl">
                 Acessar Painel
               </a>
             </div>
@@ -191,17 +191,17 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
           /* ── PIX ── */
           ) : pixData ? (
             <div className="text-center py-4">
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <QrCode className="w-7 h-7" />
               </div>
               <h2 className="font-display font-bold text-2xl text-foreground mb-1">PIX Gerado</h2>
               <p className="text-xs text-muted-foreground mb-6">Escaneie o QR Code ou copie o código para pagar.</p>
-              <div className="bg-white border border-border p-4 rounded-xl inline-block mb-5">
+              <div className="bg-card border border-border p-4 rounded-xl inline-block mb-5">
                 <img src={`data:image/png;base64,${pixData.qrCodeBase64}`} alt="QR Code PIX" className="w-44 h-44" />
               </div>
-              <div className="bg-muted/60 border border-border p-4 rounded-xl flex items-center gap-3 text-left">
+              <div className="bg-muted border border-border p-4 rounded-xl flex items-center gap-3 text-left">
                 <p className="text-xs font-mono break-all line-clamp-2 flex-1 text-muted-foreground">{pixData.qrCodeString}</p>
-                <button onClick={copyPix} className="p-2.5 bg-primary text-white rounded-lg hover:opacity-90 shrink-0">
+                <button onClick={copyPix} className="p-2.5 bg-primary text-primary-foreground rounded-xl hover:opacity-90 shrink-0 transition-opacity">
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
@@ -210,7 +210,7 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
           /* ── OTP ── */
           ) : otpStep ? (
             <form onSubmit={handleFinalCheckout} className="text-center">
-              <div className="w-14 h-14 bg-primary/8 text-primary rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <MessageSquare className="w-7 h-7" />
               </div>
               <h2 className="font-display font-bold text-2xl text-foreground mb-2">Confirme seu WhatsApp</h2>
@@ -221,13 +221,13 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                 required type="text" maxLength={6}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                className="w-full text-center tracking-[1em] font-mono font-bold text-2xl bg-background border border-border rounded-xl px-4 py-4 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none mb-6 transition-all"
+                className="w-full text-center tracking-[1em] font-mono font-bold text-2xl bg-muted border border-border rounded-xl px-4 py-4 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none mb-6 transition-all text-foreground"
                 placeholder="000000"
               />
               <button
                 type="submit"
                 disabled={checkoutLoading || otpCode.length < 6}
-                className="w-full btn-primary py-3.5 rounded-lg flex items-center justify-center gap-2"
+                className="w-full btn-primary py-3.5 rounded-xl flex items-center justify-center gap-2"
               >
                 {checkoutLoading
                   ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -303,7 +303,7 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                       <button
                         key={method} type="button"
                         onClick={() => setForm({ ...form, method })}
-                        className={`flex items-center justify-center gap-2 py-3 rounded-lg border text-sm font-medium transition-all ${
+                        className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${
                           form.method === method
                             ? "border-primary/40 bg-primary/5 text-primary"
                             : "border-border text-muted-foreground hover:border-primary/20"
@@ -365,7 +365,7 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                 <button
                   type="submit"
                   disabled={checkoutLoading || validatingDoc || validatingCep}
-                  className="w-full btn-primary py-3.5 rounded-lg flex items-center justify-center gap-2 mt-2"
+                  className="w-full btn-primary py-3.5 rounded-xl flex items-center justify-center gap-2 mt-2"
                 >
                   {checkoutLoading
                     ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

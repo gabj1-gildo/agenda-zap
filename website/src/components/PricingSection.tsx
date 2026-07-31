@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, XCircle, ArrowRight, Sparkles } from "lucide-react";
+import { FadeIn, StaggerContainer, StaggerItem } from "./FadeIn";
 
 interface Plan {
   id: string;
@@ -47,27 +48,28 @@ function PlanCard({ planVariations, isRecommended, onSelectPlan }: PlanCardProps
 
   return (
     <div
-      className={`relative flex flex-col rounded-xl border p-7 transition-all duration-200 ${
+      className={`relative flex flex-col rounded-2xl border p-7 transition-all duration-300 ${
         isRecommended
-          ? "border-primary/40 bg-white shadow-lg shadow-primary/8"
-          : "border-border bg-white hover:border-primary/20 hover:shadow-sm"
+          ? "border-primary/40 bg-card shadow-lg ring-1 ring-primary/10"
+          : "border-border bg-card hover:border-primary/20 hover:shadow-md"
       }`}
+      style={isRecommended ? { boxShadow: "0 8px 40px var(--glow-primary)" } : undefined}
     >
       {/* Recommended badge */}
       {isRecommended && (
-        <div className="absolute -top-3.5 left-6 bg-primary text-white text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-          <Sparkles className="w-2.5 h-2.5" /> Mais popular
+        <div className="absolute -top-3.5 left-6 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+          <Sparkles className="w-3 h-3" /> Mais popular
         </div>
       )}
 
       {/* Header */}
-      <h3 className="font-semibold text-base text-foreground">{plan.name}</h3>
+      <h3 className="font-display font-semibold text-lg text-foreground">{plan.name}</h3>
       <p className="text-xs text-muted-foreground mt-1.5 min-h-[2.5rem] leading-relaxed">
         {plan.description}
       </p>
 
       {/* Per-plan interval toggle */}
-      <div className="mt-5 mb-5 flex p-1 rounded-lg bg-muted gap-0.5">
+      <div className="mt-5 mb-5 flex p-1 rounded-xl bg-muted gap-0.5">
         {INTERVALS.map(({ value, label, badge }) => {
           const available = !!planVariations[value];
           if (!available) return null;
@@ -75,21 +77,15 @@ function PlanCard({ planVariations, isRecommended, onSelectPlan }: PlanCardProps
             <button
               key={value}
               onClick={() => setInterval(value)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
                 interval === value
-                  ? "bg-white text-primary shadow-sm border border-border"
+                  ? "bg-card text-primary shadow-sm border border-border"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {label}
               {badge && (
-                <span
-                  className={`text-[9px] px-1 py-0.5 rounded font-semibold ${
-                    interval === value
-                      ? "bg-emerald-50 text-emerald-600"
-                      : "bg-emerald-50 text-emerald-600"
-                  }`}
-                >
+                <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
                   {badge}
                 </span>
               )}
@@ -100,18 +96,18 @@ function PlanCard({ planVariations, isRecommended, onSelectPlan }: PlanCardProps
 
       {/* Price */}
       <div className="mb-6">
-        <div className="flex items-end gap-1">
-          <span className="font-display font-bold text-3xl tracking-tight text-foreground">
+        <div className="flex items-end gap-1.5">
+          <span className="font-display font-extrabold text-4xl tracking-tight text-foreground">
             R$ {Number(plan.price).toFixed(2).replace(".", ",")}
           </span>
-          <span className="text-muted-foreground text-xs mb-1">
+          <span className="text-muted-foreground text-sm mb-1.5 font-medium">
             /{INTERVAL_LABELS[plan.interval] ?? "mês"}
           </span>
         </div>
       </div>
 
       {/* Features */}
-      <ul className="space-y-2.5 mb-7 flex-1">
+      <ul className="space-y-3 mb-7 flex-1">
         <li className="flex items-start gap-2.5">
           <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <span className="text-sm">Até <strong>{plan.maxUsers}</strong> usuários</span>
@@ -145,10 +141,10 @@ function PlanCard({ planVariations, isRecommended, onSelectPlan }: PlanCardProps
       <button
         onClick={() => onSelectPlan(plan)}
         id={`plan-cta-${plan.name.toLowerCase().replace(/\s/g, "-")}`}
-        className={`w-full py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+        className={`w-full py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
           isRecommended
             ? "btn-primary"
-            : "border border-border text-muted-foreground hover:border-primary/30 hover:text-primary"
+            : "btn-secondary"
         }`}
       >
         Assinar {plan.name} <ArrowRight className="w-3.5 h-3.5" />
@@ -173,25 +169,27 @@ export function PricingSection({ plans, loading, onSelectPlan }: PricingSectionP
   const planNames = Object.keys(grouped);
 
   return (
-    <section id="planos" className="w-full py-24 px-6 bg-muted/50">
+    <section id="planos" className="w-full py-24 px-6 bg-muted/40">
       <div className="max-w-6xl mx-auto">
-        <div className="max-w-xl mb-12">
-          <p className="section-label">Planos</p>
-          <h2 className="font-display font-bold text-3xl md:text-4xl tracking-tight leading-snug text-foreground">
-            Preço transparente.{" "}
-            <span className="text-muted-foreground">Sem taxas surpresas.</span>
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Escolha o período de cobrança individualmente em cada plano. Cancele quando quiser.
-          </p>
-        </div>
+        <FadeIn>
+          <div className="max-w-xl mb-12">
+            <p className="section-label">Planos</p>
+            <h2 className="font-display font-bold text-3xl md:text-4xl tracking-tight leading-snug text-foreground">
+              Preço transparente.{" "}
+              <span className="text-muted-foreground">Sem taxas surpresas.</span>
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Escolha o período de cobrança individualmente em cada plano. Cancele quando quiser.
+            </p>
+          </div>
+        </FadeIn>
 
         {loading ? (
           <div className="flex justify-center p-16">
-            <div className="w-7 h-7 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start" staggerDelay={0.12}>
             {planNames.map((name) => {
               const variations = grouped[name];
               const isRecommended =
@@ -200,15 +198,16 @@ export function PricingSection({ plans, loading, onSelectPlan }: PricingSectionP
                   name === planNames[1] &&
                   !planNames.some((n) => n.toLowerCase().includes("pro")));
               return (
-                <PlanCard
-                  key={name}
-                  planVariations={variations}
-                  isRecommended={isRecommended}
-                  onSelectPlan={onSelectPlan}
-                />
+                <StaggerItem key={name}>
+                  <PlanCard
+                    planVariations={variations}
+                    isRecommended={isRecommended}
+                    onSelectPlan={onSelectPlan}
+                  />
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         )}
       </div>
     </section>

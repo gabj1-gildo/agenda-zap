@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
 
+import { ThemeProvider }    from "@/components/ThemeProvider";
 import { Header }           from "@/components/Header";
 import { HeroSection }      from "@/components/HeroSection";
+import { SocialProof }      from "@/components/SocialProof";
 import { PainSection }      from "@/components/PainSection";
 import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { BenefitsSection }  from "@/components/BenefitsSection";
@@ -40,32 +42,35 @@ export default function LandingPage() {
     document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
-      <Header loginUrl={loginUrl} />
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+        <Header loginUrl={loginUrl} />
 
-      <main className="flex-1 flex flex-col w-full">
-        <HeroSection      onScrollToPricing={scrollToPricing} />
-        <PainSection />
-        <HowItWorksSection />
-        <BenefitsSection />
-        <PricingSection
-          plans={plans}
-          loading={loading}
-          onSelectPlan={(plan) => setSelectedPlan(plan)}
-        />
-        <FaqSection />
-        <CtaSection onScrollToPricing={scrollToPricing} />
-      </main>
+        <main className="flex-1 flex flex-col w-full">
+          <HeroSection      onScrollToPricing={scrollToPricing} />
+          <SocialProof />
+          <PainSection />
+          <HowItWorksSection />
+          <BenefitsSection />
+          <PricingSection
+            plans={plans}
+            loading={loading}
+            onSelectPlan={(plan) => setSelectedPlan(plan)}
+          />
+          <FaqSection />
+          <CtaSection onScrollToPricing={scrollToPricing} />
+        </main>
 
-      <Footer />
+        <Footer />
 
-      {selectedPlan && (
-        <CheckoutModal
-          plan={selectedPlan}
-          loginUrl={loginUrl}
-          onClose={() => setSelectedPlan(null)}
-        />
-      )}
-    </div>
+        {selectedPlan && (
+          <CheckoutModal
+            plan={selectedPlan}
+            loginUrl={loginUrl}
+            onClose={() => setSelectedPlan(null)}
+          />
+        )}
+      </div>
+    </ThemeProvider>
   );
 }
