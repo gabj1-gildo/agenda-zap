@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, Sun, Moon, Calendar } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,10 +22,22 @@ export function Header({ loginUrl }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeId, setActiveId]     = useState<string>("");
   const { theme, toggleTheme }      = useTheme();
+  const [hidden, setHidden]         = useState(false);
+  const lastScrollY                 = useRef(0);
 
   /* Scroll detection */
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 10);
+      
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+      lastScrollY.current = currentScrollY;
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -59,6 +71,8 @@ export function Header({ loginUrl }: HeaderProps) {
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      } ${
         scrolled
           ? "backdrop-blur-xl border-b border-border shadow-sm"
           : "bg-transparent"
