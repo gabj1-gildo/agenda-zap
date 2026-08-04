@@ -20,7 +20,7 @@ import { CheckoutModal }    from "@/components/CheckoutModal";
 export default function LandingPage() {
   const [plans,       setPlans]       = useState<any[]>([]);
   const [loading,     setLoading]     = useState(true);
-  const [loginUrl,    setLoginUrl]    = useState("/login");
+  const [loginUrl,    setLoginUrl]    = useState(process.env.NEXT_PUBLIC_LOGIN_URL || "/login");
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function LandingPage() {
       .catch(() => toast.error("Falha ao carregar planos"))
       .finally(() => setLoading(false));
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_LOGIN_URL) {
       const host = window.location.host;
       if (host.startsWith("planos.")) {
         setLoginUrl(`${window.location.protocol}//${host.replace("planos.", "")}/login`);
