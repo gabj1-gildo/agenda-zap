@@ -166,7 +166,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      data: { instanceName, status: state, qrCode },
+      data: { instanceName, status: state.toUpperCase(), qrCode },
     });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Erro ao checar status' }, { status: 500 });
