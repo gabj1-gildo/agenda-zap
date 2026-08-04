@@ -17,8 +17,11 @@ export async function GET(req: NextRequest) {
   try {
     const parsedUrl = new URL(urlParam);
 
-    // Basic SSRF protection: Apenas aceitar requisições para a rota de media
-    if (!parsedUrl.pathname.startsWith("/api/media/")) {
+    // Basic SSRF protection: Apenas aceitar requisições para a rota de media ou caminhos do R2
+    const isApiMedia = parsedUrl.pathname.startsWith("/api/media/");
+    const isR2Path = /^\/(users|tenants|misc)\//.test(parsedUrl.pathname);
+    
+    if (!isApiMedia && !isR2Path) {
       return new NextResponse("Invalid image URL", { status: 403 });
     }
 

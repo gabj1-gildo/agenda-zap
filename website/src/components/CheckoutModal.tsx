@@ -57,6 +57,9 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
         const res = await fetch(getBackendUrl(`/api/validate/cpf?cpf=${doc}`));
         const data = await res.json();
         if (!data.success) toast.error(data.error || "CPF Inválido");
+        else if (data.data && data.data.nome && !form.name) {
+          setForm(prev => ({ ...prev, name: data.data.nome }));
+        }
       } catch { toast.error("Erro ao validar CPF"); }
       finally { setValidatingDoc(false); }
     } else if (doc.length === 14) {
@@ -64,6 +67,12 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
       try {
         const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${doc}`);
         if (!res.ok) toast.error("CNPJ Inválido ou não encontrado");
+        else {
+          const data = await res.json();
+          if (data.razao_social && !form.name) {
+            setForm(prev => ({ ...prev, name: data.razao_social }));
+          }
+        }
       } catch { toast.error("Erro ao validar CNPJ"); }
       finally { setValidatingDoc(false); }
     }

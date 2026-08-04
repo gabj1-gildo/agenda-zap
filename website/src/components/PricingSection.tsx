@@ -166,7 +166,11 @@ export function PricingSection({ plans, loading, onSelectPlan }: PricingSectionP
     if (!grouped[p.name]) grouped[p.name] = {};
     grouped[p.name][p.interval] = p;
   });
-  const planNames = Object.keys(grouped);
+  const planNames = Object.keys(grouped).sort((a, b) => {
+    const planA = grouped[a].monthly || Object.values(grouped[a])[0];
+    const planB = grouped[b].monthly || Object.values(grouped[b])[0];
+    return Number(planA.price) - Number(planB.price);
+  });
 
   return (
     <section id="planos" className="w-full py-24 px-6 bg-muted/40">
