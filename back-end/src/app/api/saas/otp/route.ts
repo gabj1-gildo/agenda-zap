@@ -26,11 +26,17 @@ export async function POST(request: Request) {
     // Enviar via WhatsApp global
     const text = `Olá${name ? ' ' + name : ''}! Seu código de confirmação para finalizar a assinatura no *AgendaZap* é:\n\n*${otpCode}*\n\nEste código é válido por 10 minutos.`;
     
-    // Passando undefined no terceiro parâmetro faz a função usar a instância global (env.EVOLUTION_INSTANCE_NAME)
     const sent = await sendWhatsAppMessage(phone, text);
 
     if (!sent) {
-      return NextResponse.json({ success: false, error: 'Falha ao enviar o código de confirmação pelo WhatsApp.' }, { status: 500 });
+      // Fallback para testes: se a Evolution API não estiver configurada, permitimos seguir com o fluxo
+      // O código ficará no Redis e será impresso no log do servidor
+      console.warn(`[OTP FALLBACK] Evolution API falhou. O código gerado para ${phone} foi: ${otpCode}`);
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Código mockado (Evolution API falhou/não configurada). Verifique os logs do servidor.',
+        isMock: true
+      });
     }
 
     return NextResponse.json({ success: true, message: 'Código enviado com sucesso' });

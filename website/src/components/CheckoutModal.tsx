@@ -118,7 +118,14 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
         body: JSON.stringify({ phone: form.phone, name: form.name }),
       });
       const data = await res.json();
-      if (data.success) { setOtpStep(true); toast.success("Código enviado para o seu WhatsApp!"); }
+      if (data.success) { 
+        setOtpStep(true); 
+        if (data.isMock) {
+          toast.info("Atenção: Evolution API falhou. O código foi impresso nos logs do back-end no Easypanel para testes.", { duration: 6000 });
+        } else {
+          toast.success("Código enviado para o seu WhatsApp!"); 
+        }
+      }
       else toast.error(data.error || "Erro ao enviar código");
     } catch { toast.error("Erro de conexão"); }
     finally { setCheckoutLoading(false); }
@@ -380,12 +387,21 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                         onChange={(e) => setAddress({ ...address, number: e.target.value })}
                         className={inputCls} placeholder="Número" />
                     </div>
-                    {address.street && (
-                      <div className="bg-muted/50 p-3 rounded-xl border border-border mt-2 animate-in fade-in slide-in-from-top-2 text-left">
-                        <p className="text-xs font-medium text-foreground">{address.street}, {address.number || "S/N"}</p>
-                        <p className="text-xs text-muted-foreground">{address.neighborhood} - {address.city} / {address.state}</p>
-                      </div>
-                    )}
+                    <div className="grid grid-cols-3 gap-4 mt-4 animate-in fade-in slide-in-from-top-2">
+                      <input required type="text" value={address.street}
+                        onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                        className={`col-span-3 ${inputCls}`} placeholder="Rua / Logradouro" />
+                      <input required type="text" value={address.neighborhood}
+                        onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
+                        className={`col-span-1 ${inputCls}`} placeholder="Bairro" />
+                      <input required type="text" value={address.city}
+                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                        className={`col-span-1 ${inputCls}`} placeholder="Cidade" />
+                      <input required type="text" value={address.state}
+                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                        maxLength={2}
+                        className={`col-span-1 ${inputCls} text-center`} placeholder="UF" />
+                    </div>
                   </div>
                 )}
 
