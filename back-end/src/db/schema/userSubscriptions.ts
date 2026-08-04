@@ -6,6 +6,7 @@ export const userSubscriptions = pgTable('user_subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   planId: uuid('plan_id').notNull().references(() => plans.id, { onDelete: 'restrict' }),
+  nextPlanId: uuid('next_plan_id').references(() => plans.id, { onDelete: 'set null' }),
   
   // Status da Assinatura: 'ACTIVE', 'CANCELED', 'PAST_DUE'
   status: varchar('status', { length: 50 }).notNull().default('ACTIVE'),

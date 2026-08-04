@@ -300,6 +300,7 @@ export default function BillingPage() {
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showPlanChange, setShowPlanChange] = useState<{show: boolean, plan: any, isUpgrade: boolean}>({ show: false, plan: null, isUpgrade: false });
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", document: "", phone: "", method: "CREDIT_CARD" });
 
@@ -368,6 +369,10 @@ export default function BillingPage() {
       const data = await res.json();
       if (res.ok && data.success && data.data.paymentUrl) {
         window.location.href = data.data.paymentUrl;
+      } else if (res.ok && data.success && data.data.pix) {
+        // Lógica de PIX
+        toast.success("PIX gerado. O código foi enviado por e-mail/WhatsApp.");
+        setShowCheckout(false);
       } else {
         toast.error(data.error || "Erro ao realizar assinatura.");
       }
@@ -375,6 +380,49 @@ export default function BillingPage() {
       toast.error("Falha ao processar assinatura.");
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handlePlanChange = async (isInstant: boolean) => {
+    if (!showPlanChange.plan) return;
+    setCheckoutLoading(true);
+    try {
+      const token = (session?.user as any)?.accessToken;
+      const res = await fetch(getBackendUrl('/api/saas/subscription/change'), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          planId: showPlanChange.plan.id,
+          isInstant
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || "Plano alterado com sucesso.");
+        setShowPlanChange({ show: false, plan: null, isUpgrade: false });
+        // Recarregar a página para atualizar os dados
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        toast.error(data.message || "Erro ao alterar o plano.");
+      }
+    } catch (e) {
+      toast.error("Falha ao processar alteração de plano.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  const onPlanActionClick = (plan: any) => {
+    if (activeSub && activeSub.plan) {
+      const isUpgrade = Number(plan.price) > Number(activeSub.plan.price);
+      setShowPlanChange({ show: true, plan, isUpgrade });
+    } else {
+      setSelectedPlanId(plan.id);
+      setShowCheckout(true);
     }
   };
 
@@ -416,6 +464,7 @@ export default function BillingPage() {
     );
   }
 
+
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6 max-w-6xl mx-auto min-h-0">
       {/* Header — compact */}
@@ -424,17 +473,7 @@ export default function BillingPage() {
           Planos que acompanham seu crescimento
         </h1>
         <p className="text-sm text-muted-foreground">
-          Gerencie sua assinatura e escale suas operações de IA com facilidade.
-        </p>
-      </div>
-
-      {/* Active Subscription — inline bar instead of big card */}
-      <ActiveSubscriptionBar activeSub={activeSub} trialDaysRemaining={trialDaysRemaining} />
-
-      {/* Pending Invoices — compact */}
-      <PendingInvoicesSection pendingInvoices={pendingInvoices} activeSub={activeSub} />
-
-      {/* Plans or Checkout */}
+          Gerencie sua assinatur      {/* Plans or Checkout */}
       {showCheckout ? (
         <Card className="max-w-md mx-auto w-full shadow-2xl border-primary/20 animate-in fade-in zoom-in-95 duration-300 relative">
           <button onClick={() => setShowCheckout(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
@@ -470,10 +509,10 @@ export default function BillingPage() {
               <div className="pt-2">
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Forma de Pagamento</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                  <button type="button" onClick={() => setForm({...form, method: 'CREDIT_CARD'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors ${form.method === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
                     <CreditCard className="w-4 h-4" /> Cartão
                   </button>
-                  <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors \${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                  <button type="button" onClick={() => setForm({...form, method: 'PIX'})} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors ${form.method === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
                     <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-[10px]">P</div> PIX
                   </button>
                 </div>
@@ -484,8 +523,79 @@ export default function BillingPage() {
             </form>
           </CardContent>
         </Card>
+      ) : showPlanChange.show && showPlanChange.plan ? (
+        <Card className="max-w-lg mx-auto w-full shadow-2xl border-primary/20 animate-in fade-in zoom-in-95 duration-300 relative mt-4">
+          <button onClick={() => setShowPlanChange({ show: false, plan: null, isUpgrade: false })} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+            <XCircle className="w-5 h-5" />
+          </button>
+          <CardHeader className="text-center pb-3">
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+              <Sparkles className="w-6 h-6 text-primary" />
+            </div>
+            <CardTitle className="text-xl">
+              {showPlanChange.isUpgrade ? 'Fazer Upgrade' : 'Fazer Downgrade'}
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Você está alterando seu plano para <strong>{showPlanChange.plan.name}</strong>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {showPlanChange.isUpgrade ? (
+              <div className="space-y-4">
+                <p className="text-sm text-center text-muted-foreground">
+                  Como você deseja fazer o upgrade para o plano <strong>{showPlanChange.plan.name}</strong>?
+                </p>
+                <div className="grid gap-4 mt-4">
+                  <div className="border border-border rounded-xl p-4 flex flex-col gap-3">
+                    <h4 className="font-bold text-foreground">Upgrade Imediato</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Pague a diferença de valor agora mesmo e libere os novos limites instantaneamente. A próxima fatura já virá com o novo valor total.
+                    </p>
+                    <Button 
+                      onClick={() => handlePlanChange(true)} 
+                      disabled={checkoutLoading}
+                      className="w-full bg-primary text-primary-foreground font-bold"
+                    >
+                      {checkoutLoading ? "Processando..." : "Mudar Agora (Recomendado)"}
+                    </Button>
+                  </div>
+                  <div className="border border-border rounded-xl p-4 flex flex-col gap-3">
+                    <h4 className="font-bold text-foreground">Upgrade Programado</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Agende o upgrade para o próximo mês. Nenhuma cobrança é feita hoje. Os novos limites serão liberados somente após o pagamento da próxima fatura.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => handlePlanChange(false)} 
+                      disabled={checkoutLoading}
+                      className="w-full font-bold"
+                    >
+                      {checkoutLoading ? "Processando..." : "Mudar no Próximo Mês"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-center text-muted-foreground">
+                  Você está agendando um downgrade para o plano <strong>{showPlanChange.plan.name}</strong>.
+                </p>
+                <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-xs p-4 rounded-xl text-center">
+                  <strong>Atenção:</strong> Os limites atuais da sua conta continuarão válidos até o fechamento da fatura já paga. As reduções de limite e de preço só entrarão em vigor no próximo mês.
+                </div>
+                <Button 
+                  onClick={() => handlePlanChange(false)} 
+                  disabled={checkoutLoading}
+                  className="w-full font-bold mt-4"
+                >
+                  {checkoutLoading ? "Processando..." : "Confirmar Downgrade"}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <div className="flex-1 flex flex-col justify-center min-h-0">
+        <div className="flex-1 flex flex-col justify-center min-h-0 mt-4">
           <div className={cn(
             "grid gap-4 items-stretch",
             planNames.length === 1 && "max-w-sm mx-auto",
@@ -498,10 +608,7 @@ export default function BillingPage() {
                 variations={groupedPlans[planName]}
                 activeSub={activeSub}
                 isRecommended={planName === recommendedPlanName}
-                onSubscribe={(id) => {
-                  setSelectedPlanId(id);
-                  setShowCheckout(true);
-                }}
+                onSubscribe={onPlanActionClick}
               />
             ))}
           </div>

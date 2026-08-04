@@ -80,8 +80,12 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
     const existingSub = await db.query.userSubscriptions.findFirst({ where: eq(userSubscriptions.userId, user.id) });
     
     if (existingSub) {
+      // Se houver um downgrade/upgrade programado (nextPlanId), nós o efetivamos na renovação
+      const finalPlanId = existingSub.nextPlanId ? existingSub.nextPlanId : (isNewUser ? plan.id : existingSub.planId);
+      
       await db.update(userSubscriptions).set({
-        planId: plan.id,
+        planId: finalPlanId,
+        nextPlanId: null,
         status: 'ACTIVE',
         currentPeriodEnd: validUntil,
         asaasCustomerId: customerId || existingSub.asaasCustomerId,

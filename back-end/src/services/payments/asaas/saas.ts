@@ -157,3 +157,29 @@ export async function createAsaasSaasCreditCardPayment(
 
   return data;
 }
+
+export async function updateAsaasSaasSubscription(subscriptionId: string, amount: number, description: string) {
+  const token = env.ASAAS_API_KEY;
+  const baseUrl = env.ASAAS_API_URL;
+  if (!token) throw new Error('ASAAS_API_KEY não configurada');
+
+  // Atualiza a assinatura. O Asaas atualizará as próximas cobranças a serem geradas.
+  // As cobranças já geradas e pendentes não serão alteradas por padrão, a menos que especificado.
+  const res = await fetch(`${baseUrl}/subscriptions/${subscriptionId}`, {
+    method: 'POST', // Asaas costuma aceitar POST para edição na rota do ID
+    headers: { 'Content-Type': 'application/json', 'access_token': token },
+    body: JSON.stringify({
+      value: amount,
+      description,
+      updatePendingPayments: false // Garante que faturas já geradas (do ciclo atual) não mudem
+    })
+  });
+
+  const data = await res.json();
+  if (data.errors) {
+    console.error('Erro Asaas Update Subscription:', data.errors);
+    throw new Error('Falha ao atualizar assinatura no Asaas: ' + data.errors[0].description);
+  }
+
+  return data;
+}
