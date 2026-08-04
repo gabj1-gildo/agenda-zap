@@ -21,7 +21,9 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
   const [creditCard, setCreditCard] = useState({
     number: "", holderName: "", expiryMonth: "", expiryYear: "", ccv: "",
   });
-  const [address, setAddress] = useState({ cep: "", number: "" });
+  const [address, setAddress] = useState({ 
+    cep: "", number: "", street: "", neighborhood: "", city: "", state: "" 
+  });
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [validatingDoc,   setValidatingDoc]   = useState(false);
@@ -57,8 +59,8 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
         const res = await fetch(getBackendUrl(`/api/validate/cpf?cpf=${doc}`));
         const data = await res.json();
         if (!data.success) toast.error(data.error || "CPF Inválido");
-        else if (data.data && data.data.nome && !form.name) {
-          setForm(prev => ({ ...prev, name: data.data.nome }));
+        else if (data.data?.data?.nome && !form.name) {
+          setForm(prev => ({ ...prev, name: data.data.data.nome }));
         }
       } catch { toast.error("Erro ao validar CPF"); }
       finally { setValidatingDoc(false); }
@@ -85,7 +87,17 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
       try {
         const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
         if (!res.ok) toast.error("CEP não encontrado");
-        else toast.success("CEP localizado.");
+        else {
+          const data = await res.json();
+          setAddress(prev => ({
+            ...prev,
+            street: data.street || "",
+            neighborhood: data.neighborhood || "",
+            city: data.city || "",
+            state: data.state || ""
+          }));
+          toast.success("CEP localizado.");
+        }
       } catch { toast.error("Erro ao buscar CEP"); }
       finally { setValidatingCep(false); }
     }
@@ -368,6 +380,12 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                         onChange={(e) => setAddress({ ...address, number: e.target.value })}
                         className={inputCls} placeholder="Número" />
                     </div>
+                    {address.street && (
+                      <div className="bg-muted/50 p-3 rounded-xl border border-border mt-2 animate-in fade-in slide-in-from-top-2 text-left">
+                        <p className="text-xs font-medium text-foreground">{address.street}, {address.number || "S/N"}</p>
+                        <p className="text-xs text-muted-foreground">{address.neighborhood} - {address.city} / {address.state}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
