@@ -1,0 +1,32 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY . .
+
+# Receber ARGs de ambiente do Easypanel para o build do Next.js
+ARG AUTH_TRUST_HOST
+ARG BACKEND_INTERNAL_URL
+ARG NEXTAUTH_SECRET
+ARG NEXTAUTH_URL
+ARG NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_MP_PUBLIC_KEY
+ARG GIT_SHA
+
+# Exportar como variáveis de ambiente para a fase de build e runtime
+ENV AUTH_TRUST_HOST=$AUTH_TRUST_HOST \
+    BACKEND_INTERNAL_URL=$BACKEND_INTERNAL_URL \
+    NEXTAUTH_SECRET=$NEXTAUTH_SECRET \
+    NEXTAUTH_URL=$NEXTAUTH_URL \
+    NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL \
+    NEXT_PUBLIC_MP_PUBLIC_KEY=$NEXT_PUBLIC_MP_PUBLIC_KEY \
+    GIT_SHA=$GIT_SHA
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
