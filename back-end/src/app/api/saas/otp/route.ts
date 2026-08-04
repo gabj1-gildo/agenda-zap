@@ -23,10 +23,20 @@ export async function POST(request: Request) {
     const key = `checkout_otp:${phone}`;
     await redis.set(key, otpCode, { ex: 600 });
 
-    // Enviar via WhatsApp global
+    // Buscar instância padrão configurada no banco (painel admin)
+    const { db } = await import('@/db');
+    const { systemSettings } = await import('@/db/schema');
+    const { eq } = await import('drizzle-orm');
+    
+    const instanceSetting = await db.query.systemSettings.findFirst({
+      where: eq(systemSettings.key, 'whatsapp_default_instance_name')
+    });
+    const instanceName = instanceSetting?.value || undefined;
+
+    // Enviar via WhatsApp
     const text = `Olá${name ? ' ' + name : ''}! Seu código de confirmação para finalizar a assinatura no *AgendaZap* é:\n\n*${otpCode}*\n\nEste código é válido por 10 minutos.`;
     
-    const sent = await sendWhatsAppMessage(phone, text);
+    const sent = await sendWhatsAppMessage(phone, text, instanceName);
 
     if (!sent) {
       // Fallback para testes: se a Evolution API não estiver configurada, permitimos seguir com o fluxo

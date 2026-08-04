@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
     const message = `Olá ${user.name},\n\nVocê solicitou a alteração do seu número de telefone de acesso na AgendaZap.\n\nSeu código de confirmação é: *${otp}*\n\nEste código expira em 15 minutos. Se você não solicitou esta alteração, desconsidere esta mensagem.`;
     // Uses system wide whatsapp service, since tenant may not exist
-    const sent = await sendWhatsAppMessage(`${cleanPhone}@s.whatsapp.net`, message, undefined);
+    const sent = await sendWhatsAppMessage(`${cleanPhone}@s.whatsapp.net`, message, instanceName);
 
     if (!sent) {
       return NextResponse.json({ success: false, error: 'Erro ao enviar mensagem via WhatsApp. Verifique se o número está correto e se o sistema está conectado.' }, { status: 500 });
