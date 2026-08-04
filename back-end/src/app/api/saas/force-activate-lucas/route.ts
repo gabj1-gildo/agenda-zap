@@ -4,6 +4,8 @@ import { tenants, tenantUsers, users, plans, userSubscriptions } from '@/db/sche
 import { eq, ilike } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const foundTenants = await db.query.tenants.findMany({
