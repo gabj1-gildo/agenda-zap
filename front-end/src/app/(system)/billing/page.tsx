@@ -473,7 +473,17 @@ export default function BillingPage() {
           Planos que acompanham seu crescimento
         </h1>
         <p className="text-sm text-muted-foreground">
-          Gerencie sua assinatur      {/* Plans or Checkout */}
+          Gerencie sua assinatura e escale suas operações de IA com facilidade.
+        </p>
+      </div>
+
+      {/* Active Subscription — inline bar instead of big card */}
+      <ActiveSubscriptionBar activeSub={activeSub} trialDaysRemaining={trialDaysRemaining} />
+
+      {/* Pending Invoices — compact */}
+      <PendingInvoicesSection pendingInvoices={pendingInvoices} activeSub={activeSub} />
+
+      {/* Plans or Checkout */}
       {showCheckout ? (
         <Card className="max-w-md mx-auto w-full shadow-2xl border-primary/20 animate-in fade-in zoom-in-95 duration-300 relative">
           <button onClick={() => setShowCheckout(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
