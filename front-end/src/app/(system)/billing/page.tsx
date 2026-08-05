@@ -53,7 +53,12 @@ export default function BillingPage() {
     <div className="flex flex-col gap-4 p-4 md:p-6 max-w-5xl mx-auto min-h-0">
       <BillingHeader 
         onChangeCard={() => setShowChangeCardModal(true)} 
-        onViewPlans={() => setShowPlansModal(true)} 
+        onViewPlans={() => {
+          setShowPlansModal(true);
+          setTimeout(() => {
+            document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }} 
       />
 
       <ActiveSubscription 
@@ -109,17 +114,23 @@ export default function BillingPage() {
         />
       )}
 
-      <Dialog open={showPlansModal} onOpenChange={setShowPlansModal}>
-        <DialogContent className="max-w-6xl w-[95vw] h-auto max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Escolha um plano</DialogTitle>
-            <DialogDescription>
+      {showPlansModal && (
+        <div className="mt-8 pt-8 border-t border-border animate-in fade-in slide-in-from-bottom-8 duration-500" id="planos">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold">Escolha um plano</h2>
+            <p className="text-muted-foreground mt-2">
               Selecione o plano ideal para a sua empresa.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4 pb-8">
+            </p>
+            <button 
+              onClick={() => setShowPlansModal(false)}
+              className="mt-4 text-sm font-semibold text-primary hover:underline"
+            >
+              Cancelar e ocultar planos
+            </button>
+          </div>
+          <div className="pb-8">
             <div className={cn(
-              "grid gap-4 items-stretch",
+              "grid gap-6 items-stretch",
               planNames.length === 1 && "max-w-sm mx-auto",
               planNames.length === 2 && "md:grid-cols-2 max-w-3xl mx-auto",
               planNames.length >= 3 && "md:grid-cols-2 lg:grid-cols-3"
@@ -135,8 +146,8 @@ export default function BillingPage() {
               ))}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

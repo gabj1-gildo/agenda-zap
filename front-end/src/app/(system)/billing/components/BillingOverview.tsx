@@ -12,7 +12,7 @@ export function BillingOverview({ subscription, invoices, usage }: BillingOvervi
   if (!subscription || !subscription.plan) return null;
 
   const plan = subscription.plan;
-  const cycleName = cycleLabels[plan.interval] || 'Mensal';
+  const cycleName = cycleLabels[plan.interval.toLowerCase()] || 'Mensal';
   
   // Extra costs
   const chatsLimit = plan.includedChats;

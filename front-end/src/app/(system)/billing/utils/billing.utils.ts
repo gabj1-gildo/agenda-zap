@@ -43,20 +43,29 @@ export function calculateTrialRemainingDays(trialEnd: string | null): number | n
  */
 export const cycleLabels: Record<string, string> = {
   monthly: 'Mensal',
+  mensal: 'Mensal',
   quarterly: 'Trimestral',
+  trimestral: 'Trimestral',
   semiannual: 'Semestral',
+  semestral: 'Semestral',
   yearly: 'Anual',
+  anual: 'Anual',
 };
 
 export const intervalLabels: Record<string, string> = {
   yearly: 'ano',
+  anual: 'ano',
   semiannual: 'semestre',
+  semestral: 'semestre',
   quarterly: 'trimestre',
+  trimestral: 'trimestre',
   monthly: 'mês',
+  mensal: 'mês',
 };
 
-export function formatInterval(interval: BillingInterval): string {
-  return intervalLabels[interval] || 'mês';
+export function formatInterval(interval: BillingInterval | string): string {
+  if (!interval) return 'mês';
+  return intervalLabels[interval.toLowerCase()] || 'mês';
 }
 
 /**
