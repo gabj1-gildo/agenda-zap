@@ -18,6 +18,10 @@ export const userSubscriptions = pgTable('user_subscriptions', {
   asaasCustomerId: varchar('asaas_customer_id', { length: 255 }),
   asaasSubscriptionId: varchar('asaas_subscription_id', { length: 255 }),
 
+  // Cartão (se existir)
+  cardLast4: varchar('card_last4', { length: 4 }),
+  cardBrand: varchar('card_brand', { length: 50 }),
+
   // Data de fim do trial (período de testes de 3 dias gerido internamente)
   trialEnd: timestamp('trial_end'),
   

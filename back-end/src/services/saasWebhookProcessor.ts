@@ -16,7 +16,7 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
       return { success: false, reason: 'externalReference inválido' };
     }
 
-    const { e: email, n: name, d: document, p: phone, pl: planId } = payload;
+    const { e: email, n: name, d: document, p: phone, pl: planId, c4: cardLast4, cb: cardBrand } = payload;
     if (!email || !planId) return { success: false, reason: 'Faltam dados no payload' };
 
     // Verifica Idempotência / Verifica se usuário existe
@@ -90,7 +90,9 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
         currentPeriodEnd: validUntil,
         asaasCustomerId: customerId || existingSub.asaasCustomerId,
         asaasSubscriptionId: subscriptionId || existingSub.asaasSubscriptionId,
-        mpSubscriptionId: gateway === 'MERCADOPAGO' ? paymentId : existingSub.mpSubscriptionId
+        mpSubscriptionId: gateway === 'MERCADOPAGO' ? paymentId : existingSub.mpSubscriptionId,
+        cardLast4: cardLast4 || existingSub.cardLast4,
+        cardBrand: cardBrand || existingSub.cardBrand
       }).where(eq(userSubscriptions.id, existingSub.id));
     } else {
       await db.insert(userSubscriptions).values({
@@ -100,7 +102,9 @@ export async function processSaasPayment(externalReference: string, gateway: 'AS
         currentPeriodEnd: validUntil,
         asaasCustomerId: customerId,
         asaasSubscriptionId: subscriptionId,
-        mpSubscriptionId: gateway === 'MERCADOPAGO' ? paymentId : null
+        mpSubscriptionId: gateway === 'MERCADOPAGO' ? paymentId : null,
+        cardLast4: cardLast4 || null,
+        cardBrand: cardBrand || null
       });
     }
 

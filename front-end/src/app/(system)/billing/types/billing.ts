@@ -5,7 +5,7 @@ export interface PlanFeature {
 }
 
 export type BillingInterval = 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
-export type PaymentMethod = 'CREDIT_CARD' | 'PIX';
+export type PaymentMethod = 'CREDIT_CARD' | 'PIX' | 'BOLETO';
 export type SubscriptionStatus = 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELED' | string; // LIMITAÇÃO: manter string até confirmar enum real do backend
 
 export interface Plan {
@@ -24,10 +24,20 @@ export interface Plan {
 
 export interface Subscription {
   id: string;
+  userId: string;
   planId: string;
-  plan: Plan;
-  status: SubscriptionStatus;
-  trialEnd: string | null; // ISO date
+  status: 'ACTIVE' | 'CANCELED' | 'PAST_DUE' | 'TRIALING' | 'INACTIVE';
+  paymentMethod: string;
+  externalReference?: string;
+  mpPreapprovalId?: string;
+  asaasSubscriptionId?: string;
+  trialEnd?: string | null;
+  cardLast4?: string | null;
+  cardBrand?: string | null;
+  currentPeriodEnd?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  plan?: Plan;
 }
 
 export type InvoiceType = 'SUBSCRIPTION' | 'USAGE';
@@ -46,9 +56,14 @@ export interface Invoice {
 // DTOs de request/response da API
 export interface BillingStatusResponse {
   success: boolean;
-  data: {
+  data?: {
     subscription: Subscription | null;
     invoices: Invoice[];
+    usage?: {
+      tenants: number;
+      users: number;
+      chats: number;
+    };
   };
   error?: string;
 }
@@ -83,6 +98,8 @@ export interface CheckoutResponse {
 export interface ChangePlanRequest {
   planId: string;
   isInstant: boolean;
+  otpCode?: string;
+  cvv?: string;
 }
 
 export interface ChangePlanResponse {

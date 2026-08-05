@@ -18,12 +18,17 @@ import { UpgradeModal } from "./components/UpgradeModal";
 import { ChangeCardModal } from "./components/ChangeCardModal";
 import type { Plan } from "./types/billing";
 
+import { BillingOverview } from "./components/BillingOverview";
+import { UpgradeBanner } from "./components/UpgradeBanner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 export default function BillingPage() {
   const billing = useBilling();
   const checkout = useCheckout({ onSuccess: billing.refetch });
   const planChange = usePlanChange({ onSuccess: billing.refetch });
   const { data: session } = useSession();
   const [showChangeCardModal, setShowChangeCardModal] = useState(false);
+  const [showPlansModal, setShowPlansModal] = useState(false);
 
   const groupedPlans = useMemo(() => groupPlans(billing.plans), [billing.plans]);
   const planNames = Object.keys(groupedPlans);
@@ -31,11 +36,12 @@ export default function BillingPage() {
   const trialDaysRemaining = calculateTrialRemainingDays(billing.subscription?.trialEnd ?? null);
 
   const onPlanActionClick = (plan: Plan) => {
+    setShowPlansModal(false); // Close plans modal if it's open
     if (billing.subscription && billing.subscription.plan) {
       const upgrade = isUpgrade(billing.subscription.plan, plan);
       planChange.openPlanChange(plan, upgrade);
     } else {
-      checkout.openCheckout(plan.id);
+      checkout.openCheckout(plan);
     }
   };
 
@@ -44,13 +50,16 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6 max-w-6xl mx-auto min-h-0">
-      <BillingHeader />
+    <div className="flex flex-col gap-4 p-4 md:p-6 max-w-5xl mx-auto min-h-0">
+      <BillingHeader 
+        onChangeCard={() => setShowChangeCardModal(true)} 
+        onViewPlans={() => setShowPlansModal(true)} 
+      />
 
       <ActiveSubscription 
         activeSub={billing.subscription} 
         trialDaysRemaining={trialDaysRemaining} 
-        onChangeCard={() => setShowChangeCardModal(true)}
+        usage={billing.usage}
       />
 
       {showChangeCardModal && (
@@ -62,45 +71,72 @@ export default function BillingPage() {
         />
       )}
 
+      {/* Exibir faturas pendentes caso haja (já estava no layout antigo) */}
       <PendingInvoices 
         pendingInvoices={billing.invoices} 
         activeSub={billing.subscription} 
       />
 
-      {checkout.showCheckout ? (
+      <BillingOverview 
+        subscription={billing.subscription} 
+        invoices={billing.invoices} 
+        usage={billing.usage} 
+      />
+
+      <UpgradeBanner 
+        subscription={billing.subscription} 
+        usage={billing.usage} 
+        onUpgradeClick={() => setShowPlansModal(true)}
+      />
+
+      {checkout.showCheckout && (
         <CheckoutForm 
           loading={checkout.loading}
+          plan={checkout.selectedPlan}
           onClose={checkout.closeCheckout}
           onSubmit={checkout.handleCheckout}
         />
-      ) : planChange.state.show && planChange.state.plan ? (
+      )}
+      
+      {planChange.state.show && planChange.state.plan && (
         <UpgradeModal 
           plan={planChange.state.plan}
           isUpgrade={planChange.state.isUpgrade}
           loading={planChange.loading}
+          currentSub={billing.subscription}
           onClose={planChange.closePlanChange}
           onConfirm={planChange.handlePlanChange}
         />
-      ) : (
-        <div className="flex-1 flex flex-col justify-center min-h-0 mt-4">
-          <div className={cn(
-            "grid gap-4 items-stretch",
-            planNames.length === 1 && "max-w-sm mx-auto",
-            planNames.length === 2 && "md:grid-cols-2 max-w-3xl mx-auto",
-            planNames.length >= 3 && "md:grid-cols-2 lg:grid-cols-3"
-          )}>
-            {planNames.map(planName => (
-              <PlanSelector
-                key={planName}
-                variations={groupedPlans[planName]}
-                activeSub={billing.subscription}
-                isRecommended={planName === recommendedPlanName}
-                onSubscribe={onPlanActionClick}
-              />
-            ))}
-          </div>
-        </div>
       )}
+
+      <Dialog open={showPlansModal} onOpenChange={setShowPlansModal}>
+        <DialogContent className="max-w-6xl w-[95vw] h-auto max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Escolha um plano</DialogTitle>
+            <DialogDescription>
+              Selecione o plano ideal para a sua empresa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 pb-8">
+            <div className={cn(
+              "grid gap-4 items-stretch",
+              planNames.length === 1 && "max-w-sm mx-auto",
+              planNames.length === 2 && "md:grid-cols-2 max-w-3xl mx-auto",
+              planNames.length >= 3 && "md:grid-cols-2 lg:grid-cols-3"
+            )}>
+              {planNames.map(planName => (
+                <PlanSelector
+                  key={planName}
+                  variations={groupedPlans[planName]}
+                  activeSub={billing.subscription}
+                  isRecommended={planName === recommendedPlanName}
+                  onSubscribe={onPlanActionClick}
+                />
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -50,7 +50,53 @@ export async function GET(req: Request) {
       )
     });
 
-    return NextResponse.json({ success: true, data: { subscription, invoices: pendingInvoices } });
+    const { chatSessions } = await import('@/db/schema');
+    const { count, gte } = await import('drizzle-orm');
+
+    let usage = {
+      tenants: 1,
+      users: 1,
+      chats: 0
+    };
+
+    if (subscription && subscription.plan) {
+      const userTenantsCount = await db.query.userTenants.findMany({
+        where: eq(userTenants.userId, targetUserId)
+      });
+      usage.tenants = userTenantsCount.length;
+      
+      const userTenantIds = userTenantsCount.map(ut => ut.tenantId);
+
+      if (userTenantIds.length > 0) {
+        const usersInTenants = await db.query.userTenants.findMany({
+          where: inArray(userTenants.tenantId, userTenantIds)
+        });
+        const uniqueUserIds = new Set(usersInTenants.map(ut => ut.userId));
+        usage.users = uniqueUserIds.size;
+
+        let periodStart = new Date();
+        if (subscription.currentPeriodEnd) {
+           periodStart = new Date(subscription.currentPeriodEnd);
+           if (subscription.plan.interval === 'yearly') {
+             periodStart.setFullYear(periodStart.getFullYear() - 1);
+           } else {
+             periodStart.setMonth(periodStart.getMonth() - 1);
+           }
+        } else {
+           periodStart.setDate(periodStart.getDate() - 30);
+        }
+
+        const chatsQuery = await db.select({ value: count() }).from(chatSessions).where(
+          and(
+            inArray(chatSessions.tenantId, userTenantIds),
+            gte(chatSessions.createdAt, periodStart)
+          )
+        );
+        usage.chats = chatsQuery[0].value;
+      }
+    }
+
+    return NextResponse.json({ success: true, data: { subscription, invoices: pendingInvoices, usage } });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }

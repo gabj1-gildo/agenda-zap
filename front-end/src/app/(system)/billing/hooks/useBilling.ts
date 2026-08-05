@@ -7,6 +7,7 @@ import type { Subscription, Invoice, Plan } from "../types/billing";
 interface BillingState {
   subscription: Subscription | null;
   invoices: Invoice[];
+  usage: { tenants: number; users: number; chats: number } | null;
   plans: Plan[];
   loading: boolean;
   error: string | null;
@@ -23,6 +24,7 @@ export function useBilling() {
   const [state, setState] = useState<BillingState>({
     subscription: null,
     invoices: [],
+    usage: null,
     plans: [],
     loading: true,
     error: null,
@@ -44,8 +46,9 @@ export function useBilling() {
       ]);
 
       setState({
-        subscription: statusRes.success ? statusRes.data.subscription : null,
-        invoices: statusRes.success ? statusRes.data.invoices ?? [] : [],
+        subscription: statusRes.success && statusRes.data ? statusRes.data.subscription : null,
+        invoices: statusRes.success && statusRes.data ? statusRes.data.invoices ?? [] : [],
+        usage: statusRes.success && statusRes.data && statusRes.data.usage ? statusRes.data.usage : null,
         plans: plansRes.success ? plansRes.data : [],
         loading: false,
         error: null,

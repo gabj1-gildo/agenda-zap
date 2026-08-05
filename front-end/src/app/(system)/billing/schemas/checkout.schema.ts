@@ -10,11 +10,25 @@ export const checkoutSchema = z.object({
   email: z.string().email("E-mail inválido"),
   document: z.string().refine(isValidCpfOrCnpj, "CPF ou CNPJ inválido"),
   phone: z.string().min(10, "Telefone inválido"),
-  method: z.enum(['CREDIT_CARD', 'PIX']),
+  method: z.enum(['CREDIT_CARD', 'PIX', 'BOLETO']),
+  
+  // Card
   cardNumber: z.string().optional(),
   cardHolderName: z.string().optional(),
   cardExpiry: z.string().optional(),
   cardCvv: z.string().optional(),
+  
+  // Address (For Asaas / Non-monthly)
+  cep: z.string().optional(),
+  street: z.string().optional(),
+  number: z.string().optional(),
+  neighborhood: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  
+  // Installments
+  installments: z.number().optional(),
+
   otpCode: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.method === 'CREDIT_CARD') {

@@ -134,6 +134,13 @@
       "when": 1785854588585,
       "tag": "0018_white_tiger_shark",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785956133583,
+      "tag": "0019_real_scarecrow",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { createCheckout } from "../services/billing.service";
-import type { CheckoutRequest } from "../types/billing";
+import type { CheckoutRequest, Plan } from "../types/billing";
 
 interface UseCheckoutProps {
   onSuccess?: () => void;
@@ -12,20 +12,20 @@ export function useCheckout({ onSuccess }: UseCheckoutProps = {}) {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
-  const openCheckout = (planId: string) => {
-    setSelectedPlanId(planId);
+  const openCheckout = (plan: Plan) => {
+    setSelectedPlan(plan);
     setShowCheckout(true);
   };
 
   const closeCheckout = () => {
     setShowCheckout(false);
-    setSelectedPlanId(null);
+    setSelectedPlan(null);
   };
 
   const handleCheckout = async (formData: Omit<CheckoutRequest, 'planId'>) => {
-    if (!selectedPlanId) return;
+    if (!selectedPlan) return;
 
     setLoading(true);
     try {
@@ -36,7 +36,7 @@ export function useCheckout({ onSuccess }: UseCheckoutProps = {}) {
 
       const res = await createCheckout(auth, {
         ...formData,
-        planId: selectedPlanId
+        planId: selectedPlan.id
       });
 
       if (res.success) {
@@ -64,6 +64,7 @@ export function useCheckout({ onSuccess }: UseCheckoutProps = {}) {
     showCheckout,
     openCheckout,
     closeCheckout,
-    handleCheckout
+    handleCheckout,
+    selectedPlan,
   };
 }

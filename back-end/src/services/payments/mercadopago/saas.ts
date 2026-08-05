@@ -11,11 +11,6 @@ export async function createMercadoPagoSaasPreference(
   const token = env.MP_ACCESS_TOKEN;
   if (!token) throw new Error('MP_ACCESS_TOKEN não configurada globalmente');
 
-  // Cria uma Preferência no Mercado Pago para gerar o checkout
-  // Isso suporta PIX, Boleto e Cartão na tela do MP.
-  // Porém o nosso roteamento vai forçar que, se o usuário escolher Cartão, vá para o Asaas.
-  // Então esse link do MP será usado se o usuário escolheu PIX (abaixo do teto) ou Boleto (se ativado).
-
   const payload = {
     items: [
       {
@@ -109,5 +104,44 @@ export async function createMercadoPagoPixPayment(
     paymentId: data.id,
     qrCodeBase64: data.point_of_interaction.transaction_data.qr_code_base64,
     qrCodeString: data.point_of_interaction.transaction_data.qr_code
+  };
+}
+
+export async function createMercadoPagoSaasSubscription(
+  email: string,
+  cardTokenId: string,
+  preapprovalPlanId: string,
+  externalReference: string
+) {
+  const token = env.MP_ACCESS_TOKEN;
+  if (!token) throw new Error('MP_ACCESS_TOKEN não configurada globalmente');
+
+  const payload = {
+    preapproval_plan_id: preapprovalPlanId,
+    payer_email: email,
+    card_token_id: cardTokenId,
+    external_reference: externalReference,
+    status: "authorized"
+  };
+
+  const res = await fetch('https://api.mercadopago.com/preapproval', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  
+  if (data.error || !data.id) {
+    console.error('Erro MP Subscription:', data);
+    throw new Error(data.message || 'Falha ao criar assinatura no Mercado Pago');
+  }
+
+  return {
+    subscriptionId: data.id,
+    status: data.status,
   };
 }

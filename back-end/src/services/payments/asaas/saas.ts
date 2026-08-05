@@ -114,7 +114,8 @@ export async function createAsaasSaasCreditCardPayment(
   description: string, 
   creditCard: any, 
   creditCardHolderInfo: any,
-  interval: string
+  interval: string,
+  installments: number = 1
 ) {
   const token = env.ASAAS_API_KEY;
   const baseUrl = env.ASAAS_API_URL;
@@ -141,6 +142,11 @@ export async function createAsaasSaasCreditCardPayment(
     endpoint = `${baseUrl}/payments`;
     payload.dueDate = payload.nextDueDate;
     delete payload.nextDueDate;
+    
+    if (installments > 1) {
+      payload.installmentCount = installments;
+      payload.installmentValue = Number((amount / installments).toFixed(2));
+    }
   }
   
   const res = await fetch(endpoint, {

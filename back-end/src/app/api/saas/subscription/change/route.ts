@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { plans, userSubscriptions, invoices } from '@/db/schema';
+import { plans, userSubscriptions, users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { updateAsaasSaasSubscription, createAsaasSaasCharge } from '@/services/payments/asaas/saas';
+import { Redis } from '@upstash/redis';
+import { env } from '@/config/env';
+
+const redis = new Redis({
+  url: env.UPSTASH_REDIS_REST_URL!,
+  token: env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export async function POST(req: Request) {
   try {
@@ -12,11 +19,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'Não autorizado' }, { status: 401 });
     }
 
-    const { planId, isInstant } = await req.json();
+    const { planId, isInstant, otpCode, cvv } = await req.json();
 
     if (!planId) {
       return NextResponse.json({ success: false, message: 'Plano não fornecido' }, { status: 400 });
     }
+
+    if (!otpCode || !cvv) {
+      return NextResponse.json({ success: false, message: 'Código de segurança e código WhatsApp são obrigatórios' }, { status: 400 });
+    }
+
+    // Busca o usuário para pegar o telefone (usado como chave do OTP)
+    const dbUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+    if (!dbUser || !dbUser.phone) {
+      return NextResponse.json({ success: false, message: 'Telefone não encontrado no cadastro do usuário' }, { status: 400 });
+    }
+
+    // Valida o OTP
+    const savedOtp = await redis.get(`checkout_otp:${dbUser.phone}`);
+    if (!savedOtp || String(savedOtp) !== String(otpCode)) {
+      return NextResponse.json({ success: false, message: 'Código de verificação inválido ou expirado' }, { status: 400 });
+    }
+
+    // Apaga o OTP
+    await redis.del(`checkout_otp:${dbUser.phone}`);
 
     const newPlan = await db.query.plans.findFirst({ where: eq(plans.id, planId) });
     if (!newPlan) {

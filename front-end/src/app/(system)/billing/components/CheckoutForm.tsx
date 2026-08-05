@@ -1,4 +1,4 @@
-import { XCircle, CreditCard, Lock, ArrowRight } from "lucide-react";
+import { XCircle, CreditCard, Lock, ArrowRight, MapPin } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useForm, Controller } from "react-hook-form";
@@ -8,11 +8,14 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
+import { initMercadoPago } from "@mercadopago/sdk-react";
+import type { Plan } from "../types/billing";
 
 interface CheckoutFormProps {
   loading: boolean;
+  plan: Plan | null;
   onClose: () => void;
-  onSubmit: (data: CheckoutFormValues) => void;
+  onSubmit: (data: CheckoutFormValues & { creditCardToken?: string; creditCardHolderInfo?: any }) => void;
 }
 
 // Utils de máscara manuais
@@ -54,12 +57,29 @@ const maskCardExpiry = (value: string) => {
   return v;
 };
 
-export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) {
+const maskCep = (value: string) => {
+  let v = value.replace(/\D/g, "");
+  if (v.length > 8) v = v.substring(0, 8);
+  if (v.length > 5) v = `${v.substring(0, 5)}-${v.substring(5)}`;
+  return v;
+};
+
+export function CheckoutForm({ loading, plan, onClose, onSubmit }: CheckoutFormProps) {
   const { data: session } = useSession();
   const [step, setStep] = useState<'form' | 'otp'>('form');
   const [otpLoading, setOtpLoading] = useState(false);
+  const [validatingCep, setValidatingCep] = useState(false);
+  const [creditCardToken, setCreditCardToken] = useState("");
 
-  const { register, handleSubmit, control, formState: { errors }, reset, getValues, watch } = useForm<CheckoutFormValues>({
+  const isMonthly = plan?.interval === "monthly";
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MP_PUBLIC_KEY) {
+      initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
+    }
+  }, []);
+
+  const { register, handleSubmit, control, formState: { errors }, reset, getValues, watch, setValue } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       name: "",
@@ -71,11 +91,19 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
       cardHolderName: "",
       cardExpiry: "",
       cardCvv: "",
-      otpCode: ""
+      otpCode: "",
+      installments: 1,
+      cep: "",
+      street: "",
+      number: "",
+      neighborhood: "",
+      city: "",
+      state: "",
     }
   });
 
   const selectedMethod = watch("method");
+  const currentCep = watch("cep");
 
   useEffect(() => {
     if (session?.user) {
@@ -85,19 +113,80 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
         document: "",
         phone: "",
         method: "CREDIT_CARD",
+        installments: 1,
       });
     }
   }, [session, reset]);
 
+  const handleCepBlur = async () => {
+    if (!currentCep) return;
+    const cep = currentCep.replace(/\D/g, "");
+    if (cep.length === 8) {
+      setValidatingCep(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (data.erro) {
+          toast.error("CEP não encontrado");
+        } else {
+          setValue("street", data.logradouro);
+          setValue("neighborhood", data.bairro);
+          setValue("city", data.localidade);
+          setValue("state", data.uf);
+        }
+      } catch (error) {
+        toast.error("Erro ao buscar CEP");
+      } finally {
+        setValidatingCep(false);
+      }
+    }
+  };
+
   const handleFormSubmit = async (data: CheckoutFormValues) => {
-    if (data.method === 'PIX') {
-      // PIX não requer OTP, vai direto
+    if (data.method === 'PIX' || data.method === 'BOLETO') {
+      // PIX ou BOLETO não requer OTP
       onSubmit(data);
     } else {
-      // Cartão requer OTP
+      // Cartão
+      if (!isMonthly && (!data.cep || !data.number)) {
+        toast.error("Preencha o endereço de cobrança completo.");
+        return;
+      }
+
       if (step === 'form') {
         setOtpLoading(true);
         try {
+          // Token do MP se for mensal
+          let token = "";
+          if (isMonthly) {
+            // @ts-ignore
+            const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
+            const cleanCard = data.cardNumber?.replace(/\D/g, "");
+            const [mm, yy] = (data.cardExpiry || "").split("/");
+            const cleanYear = yy && yy.length === 2 ? `20${yy}` : yy;
+            const doc = data.document.replace(/\D/g, "");
+            
+            const tokenPayload = {
+              cardNumber: cleanCard,
+              cardholderName: data.cardHolderName,
+              cardExpirationMonth: mm,
+              cardExpirationYear: cleanYear,
+              securityCode: data.cardCvv,
+              identificationType: doc.length > 11 ? "CNPJ" : "CPF",
+              identificationNumber: doc
+            };
+
+            const tokenResponse = await mp.createCardToken(tokenPayload);
+            if (tokenResponse.error) {
+              console.error("MP Token Error", tokenResponse.error);
+              toast.error("Falha ao validar o cartão no Mercado Pago.");
+              setOtpLoading(false);
+              return;
+            }
+            token = tokenResponse.id;
+            setCreditCardToken(token);
+          }
+
           const res = await fetch(getBackendUrl('/api/saas/otp'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -121,7 +210,28 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
           toast.error("Por favor, digite o código de 6 dígitos.");
           return;
         }
-        onSubmit(data);
+
+        const payload: any = { ...data };
+        if (isMonthly) {
+          payload.creditCardToken = creditCardToken;
+        } else {
+          payload.creditCardHolderInfo = {
+            name: data.name, email: data.email,
+            cpfCnpj: data.document.replace(/\D/g, ""),
+            postalCode: (data.cep || "").replace(/\D/g, ""),
+            addressNumber: data.number,
+            phone: data.phone.replace(/\D/g, ""),
+          };
+          payload.creditCard = {
+            holderName: data.cardHolderName,
+            number: (data.cardNumber || "").replace(/\D/g, ""),
+            expiryMonth: (data.cardExpiry || "").split("/")[0],
+            expiryYear: `20${(data.cardExpiry || "").split("/")[1]}`,
+            ccv: data.cardCvv,
+          };
+        }
+
+        onSubmit(payload);
       }
     }
   };
@@ -148,7 +258,7 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           
           {step === 'form' && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-left-4">
+            <div className="space-y-4 animate-in fade-in slide-in-from-left-4 h-96 overflow-y-auto pr-2 pb-2 scrollbar-thin">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Nome Completo</label>
                 <input {...register("name")} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
@@ -192,12 +302,15 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
                   control={control}
                   name="method"
                   render={({ field: { onChange, value } }) => (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button type="button" aria-pressed={value === 'CREDIT_CARD'} onClick={() => onChange('CREDIT_CARD')} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors ${value === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
-                        <CreditCard className="w-4 h-4" /> Cartão
+                    <div className="grid grid-cols-3 gap-2">
+                      <button type="button" aria-pressed={value === 'CREDIT_CARD'} onClick={() => onChange('CREDIT_CARD')} className={`flex items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors ${value === 'CREDIT_CARD' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                        <CreditCard className="w-3.5 h-3.5" /> Cartão
                       </button>
-                      <button type="button" aria-pressed={value === 'PIX'} onClick={() => onChange('PIX')} className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-colors ${value === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
-                        <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-[10px]">P</div> PIX
+                      <button type="button" aria-pressed={value === 'PIX'} onClick={() => onChange('PIX')} className={`flex items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors ${value === 'PIX' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                        <div className="w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-[9px]">P</div> PIX
+                      </button>
+                      <button type="button" aria-pressed={value === 'BOLETO'} onClick={() => onChange('BOLETO')} className={`flex items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors ${value === 'BOLETO' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                        Boleto
                       </button>
                     </div>
                   )}
@@ -212,7 +325,7 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
                       control={control}
                       name="cardNumber"
                       render={({ field: { onChange, value } }) => (
-                        <input value={value} onChange={(e) => onChange(maskCardNumber(e.target.value))} placeholder="0000 0000 0000 0000" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none font-mono" />
+                        <input value={value || ""} onChange={(e) => onChange(maskCardNumber(e.target.value))} placeholder="0000 0000 0000 0000" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none font-mono" />
                       )}
                     />
                     {errors.cardNumber && <p className="text-red-500 text-xs mt-1">{errors.cardNumber.message}</p>}
@@ -229,7 +342,7 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
                         control={control}
                         name="cardExpiry"
                         render={({ field: { onChange, value } }) => (
-                          <input value={value} onChange={(e) => onChange(maskCardExpiry(e.target.value))} placeholder="MM/AA" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                          <input value={value || ""} onChange={(e) => onChange(maskCardExpiry(e.target.value))} placeholder="MM/AA" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
                         )}
                       />
                       {errors.cardExpiry && <p className="text-red-500 text-xs mt-1">{errors.cardExpiry.message}</p>}
@@ -240,6 +353,58 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
                       {errors.cardCvv && <p className="text-red-500 text-xs mt-1">{errors.cardCvv.message}</p>}
                     </div>
                   </div>
+
+                  {!isMonthly && plan && (
+                    <div className="pt-2">
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Número de Parcelas</label>
+                      <Controller
+                        control={control}
+                        name="installments"
+                        render={({ field: { onChange, value } }) => (
+                          <select 
+                            value={value} 
+                            onChange={(e) => onChange(Number(e.target.value))}
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                          >
+                            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                              <option key={n} value={n}>
+                                {n}x de R$ {(Number(plan.price) / n).toFixed(2).replace(".", ",")} {n > 1 ? "sem juros" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {!isMonthly && (
+                    <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                      <div className="flex items-center gap-2 mb-2 mt-2">
+                        <MapPin className="w-3.5 h-3.5 text-primary" />
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-0">Endereço de Cobrança</label>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-2 relative">
+                          <Controller
+                            control={control}
+                            name="cep"
+                            render={({ field: { onChange, value } }) => (
+                              <input value={value || ""} onChange={(e) => onChange(maskCep(e.target.value))} onBlur={handleCepBlur} placeholder="CEP" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                            )}
+                          />
+                          {validatingCep && <div className="absolute right-4 top-3 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+                        </div>
+                        <input {...register("number")} placeholder="Nº" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 mt-3">
+                        <input {...register("street")} placeholder="Rua / Logradouro" className="col-span-3 w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                        <input {...register("neighborhood")} placeholder="Bairro" className="col-span-1 w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                        <input {...register("city")} placeholder="Cidade" className="col-span-1 w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                        <input {...register("state")} placeholder="UF" maxLength={2} className="col-span-1 text-center w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
             </div>
@@ -275,7 +440,7 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
             </div>
           )}
           
-          <Button type="submit" disabled={loading || otpLoading} className="w-full mt-2 font-bold py-5 rounded-xl text-[13px] group">
+          <Button type="submit" disabled={loading || otpLoading || validatingCep} className="w-full mt-2 font-bold py-5 rounded-xl text-[13px] group">
             {loading || otpLoading ? (
               "Processando..."
             ) : step === 'otp' ? (
@@ -283,7 +448,7 @@ export function CheckoutForm({ loading, onClose, onSubmit }: CheckoutFormProps) 
             ) : selectedMethod === 'CREDIT_CARD' ? (
               <span className="flex items-center">Avançar para Verificação <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>
             ) : (
-              "Gerar PIX"
+              `Gerar ${selectedMethod === 'PIX' ? 'PIX' : 'Boleto'}`
             )}
           </Button>
         </form>

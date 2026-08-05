@@ -25,7 +25,7 @@ export function usePlanChange({ onSuccess }: UsePlanChangeProps = {}) {
     setState({ show: false, plan: null, isUpgrade: false });
   };
 
-  const handlePlanChange = async (isInstant: boolean) => {
+  const handlePlanChange = async (isInstant: boolean, otpCode: string, cvv: string) => {
     if (!state.plan) return;
 
     setLoading(true);
@@ -37,7 +37,9 @@ export function usePlanChange({ onSuccess }: UsePlanChangeProps = {}) {
       
       const res = await changePlan(auth, {
         planId: state.plan.id,
-        isInstant
+        isInstant,
+        otpCode,
+        cvv
       });
 
       if (res.success) {

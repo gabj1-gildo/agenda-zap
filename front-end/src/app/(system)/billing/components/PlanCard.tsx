@@ -35,16 +35,16 @@ export const PlanCard = memo(function PlanCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col rounded-2xl transition-all duration-300 hover:-translate-y-1 group overflow-hidden border",
+        "relative flex flex-col rounded-xl transition-all duration-300 group overflow-hidden border",
         isRecommended
-          ? "border-primary/60 shadow-xl shadow-primary/15 bg-gradient-to-b from-primary/[0.07] via-background to-background ring-1 ring-primary/20"
-          : "border-border/50 bg-background/60 backdrop-blur-sm hover:shadow-lg hover:border-border/80",
+          ? "border-primary bg-background ring-1 ring-primary/20"
+          : "border-border bg-background/50 hover:border-primary/50",
         isCurrentPlan && "ring-2 ring-primary/30"
       )}
     >
       {/* Recommended badge */}
       {isRecommended && (
-        <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-blue-600 text-primary-foreground text-[10px] font-bold uppercase tracking-widest text-center py-1">
+        <div className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest text-center py-1">
           <Sparkles className="w-3 h-3 inline mr-1 -mt-0.5" />
           Recomendado
         </div>
@@ -53,10 +53,10 @@ export const PlanCard = memo(function PlanCard({
       {/* Trial badge */}
       {plan.trialDays > 0 && (
         <div className={cn(
-          "absolute top-5 right-[-32px] rotate-45 bg-blue-600 text-white text-[10px] font-extrabold py-0.5 w-[110px] text-center shadow-md z-20",
+          "absolute top-4 right-4 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800",
           isRecommended && "top-8"
         )}>
-          {plan.trialDays} DIAS GRÁTIS
+          {plan.trialDays} dias grátis
         </div>
       )}
 
@@ -174,10 +174,10 @@ export const PlanCard = memo(function PlanCard({
         ) : (
           <Button
             className={cn(
-              "w-full text-sm py-2.5 font-semibold transition-all duration-300",
+              "w-full text-sm py-2.5 font-semibold",
               isRecommended
-                ? "bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-lg shadow-primary/25 hover:shadow-primary/40"
-                : "shadow-sm hover:shadow-md"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             )}
             onClick={() => onSubscribe(plan)}
           >

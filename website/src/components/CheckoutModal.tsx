@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  X, Check, CreditCard, Zap, MessageSquare, Copy, QrCode, ArrowRight, Barcode,
+  X, Check, CreditCard, Zap, MessageSquare, Copy, QrCode, ArrowRight, Barcode, MapPin,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -16,15 +16,22 @@ interface CheckoutModalProps {
 }
 
 export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
+  const isMonthly = plan.interval === "monthly";
+
   const [form, setForm] = useState({
     name: "", email: "", document: "", phone: "", method: "CREDIT_CARD", creditCardToken: "",
   });
   const [creditCard, setCreditCard] = useState({
     number: "", holderName: "", expiryMonth: "", expiryYear: "", ccv: "",
   });
+  const [address, setAddress] = useState({
+    cep: "", street: "", number: "", neighborhood: "", city: "", state: "",
+  });
+  const [installments, setInstallments] = useState(1);
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [validatingDoc,   setValidatingDoc]   = useState(false);
+  const [validatingCep,   setValidatingCep]   = useState(false);
 
   const [otpStep,        setOtpStep]        = useState(false);
   const [otpCode,        setOtpCode]        = useState("");
@@ -83,12 +90,44 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
     }
   };
 
+  const handleCepBlur = async () => {
+    const cep = address.cep.replace(/\D/g, "");
+    if (cep.length === 8) {
+      setValidatingCep(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (data.erro) {
+          toast.error("CEP não encontrado");
+        } else {
+          setAddress(prev => ({
+            ...prev,
+            street: data.logradouro,
+            neighborhood: data.bairro,
+            city: data.localidade,
+            state: data.uf,
+          }));
+        }
+      } catch (error) {
+        toast.error("Erro ao buscar CEP");
+      } finally {
+        setValidatingCep(false);
+      }
+    }
+  };
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const doc = form.document.replace(/\D/g, "");
     if (doc.length !== 11 && doc.length !== 14) { toast.error("Documento inválido"); return; }
-    if (form.method === "CREDIT_CARD" && (!creditCard.number || !creditCard.ccv)) {
-      toast.error("Preencha todos os dados do cartão"); return;
+    
+    if (form.method === "CREDIT_CARD") {
+      if (!creditCard.number || !creditCard.ccv) {
+        toast.error("Preencha todos os dados do cartão"); return;
+      }
+      if (!isMonthly && (!address.cep || !address.number)) {
+        toast.error("Preencha o endereço completo para planos não mensais"); return;
+      }
     }
 
     if (form.method === "PIX" || form.method === "BOLETO") {
@@ -98,30 +137,32 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
 
     setCheckoutLoading(true);
     try {
-      // 1. Gerar Token MP
-      // @ts-ignore
-      const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
-      const cleanCard = creditCard.number.replace(/\D/g, "");
-      const cleanYear = creditCard.expiryYear.length === 2 ? `20${creditCard.expiryYear}` : creditCard.expiryYear;
+      if (isMonthly) {
+        // 1. Gerar Token MP apenas para Mensal
+        // @ts-ignore
+        const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
+        const cleanCard = creditCard.number.replace(/\D/g, "");
+        const cleanYear = creditCard.expiryYear.length === 2 ? `20${creditCard.expiryYear}` : creditCard.expiryYear;
 
-      const tokenPayload = {
-        cardNumber: cleanCard,
-        cardholderName: creditCard.holderName,
-        cardExpirationMonth: creditCard.expiryMonth,
-        cardExpirationYear: cleanYear,
-        securityCode: creditCard.ccv,
-        identificationType: doc.length > 11 ? "CNPJ" : "CPF",
-        identificationNumber: doc
-      };
+        const tokenPayload = {
+          cardNumber: cleanCard,
+          cardholderName: creditCard.holderName,
+          cardExpirationMonth: creditCard.expiryMonth,
+          cardExpirationYear: cleanYear,
+          securityCode: creditCard.ccv,
+          identificationType: doc.length > 11 ? "CNPJ" : "CPF",
+          identificationNumber: doc
+        };
 
-      const tokenResponse = await mp.createCardToken(tokenPayload);
-      if (tokenResponse.error) {
-        console.error("MP Token Error", tokenResponse.error);
-        toast.error("Falha ao validar os dados do cartão.");
-        setCheckoutLoading(false);
-        return;
+        const tokenResponse = await mp.createCardToken(tokenPayload);
+        if (tokenResponse.error) {
+          console.error("MP Token Error", tokenResponse.error);
+          toast.error("Falha ao validar os dados do cartão no Mercado Pago.");
+          setCheckoutLoading(false);
+          return;
+        }
+        form.creditCardToken = tokenResponse.id;
       }
-      form.creditCardToken = tokenResponse.id;
 
       // 2. Enviar OTP
       const res = await fetch(getBackendUrl("/api/saas/otp"), {
@@ -153,6 +194,26 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
     setCheckoutLoading(true);
     try {
       const payload: any = { ...form, planId: plan.id, otpCode: otp };
+      
+      // Se for não mensal e for cartão, anexa dados do cartão bruto + endereço para o Asaas
+      if (!isMonthly && form.method === "CREDIT_CARD") {
+        payload.installments = installments;
+        payload.creditCard = {
+          holderName: creditCard.holderName,
+          number: creditCard.number.replace(/\D/g, ""),
+          expiryMonth: creditCard.expiryMonth,
+          expiryYear: creditCard.expiryYear.length === 2 ? `20${creditCard.expiryYear}` : creditCard.expiryYear,
+          ccv: creditCard.ccv,
+        };
+        payload.creditCardHolderInfo = {
+          name: form.name, email: form.email,
+          cpfCnpj: form.document.replace(/\D/g, ""),
+          postalCode: address.cep.replace(/\D/g, ""),
+          addressNumber: address.number,
+          phone: form.phone.replace(/\D/g, ""),
+        };
+      }
+
       const res = await fetch(getBackendUrl("/api/saas/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,7 +272,7 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
               </div>
               <h2 className="font-display font-bold text-2xl text-foreground mb-2">Pagamento Aprovado!</h2>
               <p className="text-sm text-muted-foreground mb-8">
-                Sua assinatura do plano <strong>{plan.name}</strong> foi ativada com sucesso.
+                Sua compra do plano <strong>{plan.name}</strong> foi ativada com sucesso.
               </p>
               <a href={loginUrl} className="block w-full py-3.5 btn-primary text-center font-semibold rounded-xl">
                 Acessar Painel
@@ -372,12 +433,66 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                         onChange={(e) => setCreditCard({ ...creditCard, ccv: e.target.value.replace(/\D/g, "") })}
                         maxLength={4} className={`${inputCls} text-center`} placeholder="CVV" />
                     </div>
+
+                    {!isMonthly && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                        <label className={labelCls}>Número de Parcelas</label>
+                        <select
+                          value={installments}
+                          onChange={(e) => setInstallments(Number(e.target.value))}
+                          className={inputCls}
+                        >
+                          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                            <option key={n} value={n}>
+                              {n}x de R$ {(Number(plan.price) / n).toFixed(2).replace(".", ",")} {n > 1 ? "sem juros" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {!isMonthly && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center gap-2 mb-2 mt-2">
+                          <MapPin className="w-3.5 h-3.5 text-primary" />
+                          <p className={`${labelCls} mb-0`}>Endereço de Cobrança (Obrigatório)</p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="col-span-2 relative">
+                            <input required type="text" value={address.cep}
+                              onChange={(e) => setAddress({ ...address, cep: e.target.value })}
+                              onBlur={handleCepBlur} maxLength={9} className={inputCls} placeholder="CEP" />
+                            {validatingCep && (
+                              <div className="absolute right-4 top-3.5 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            )}
+                          </div>
+                          <input required type="text" value={address.number}
+                            onChange={(e) => setAddress({ ...address, number: e.target.value })}
+                            className={inputCls} placeholder="Número" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                          <input required type="text" value={address.street}
+                            onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                            className={`col-span-3 ${inputCls}`} placeholder="Rua / Logradouro" />
+                          <input required type="text" value={address.neighborhood}
+                            onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
+                            className={`col-span-1 ${inputCls}`} placeholder="Bairro" />
+                          <input required type="text" value={address.city}
+                            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                            className={`col-span-1 ${inputCls}`} placeholder="Cidade" />
+                          <input required type="text" value={address.state}
+                            onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                            maxLength={2}
+                            className={`col-span-1 ${inputCls} text-center`} placeholder="UF" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  disabled={checkoutLoading || validatingDoc}
+                  disabled={checkoutLoading || validatingDoc || validatingCep}
                   className="w-full btn-primary py-3.5 rounded-xl flex items-center justify-center gap-2 mt-2"
                 >
                   {checkoutLoading
