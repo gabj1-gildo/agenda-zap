@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useBilling } from "./hooks/useBilling";
 import { useCheckout } from "./hooks/useCheckout";
 import { usePlanChange } from "./hooks/usePlanChange";
-import { groupPlans, getRecommendedPlanKey, isUpgrade, calculateTrialRemainingDays } from "./utils/billing.utils";
+import { groupPlans, getRecommendedPlanKey, isUpgrade } from "./utils/billing.utils";
 
 import { BillingHeader } from "./components/BillingHeader";
 import { BillingSkeleton } from "./components/BillingSkeleton";
@@ -33,7 +33,6 @@ export default function BillingPage() {
   const groupedPlans = useMemo(() => groupPlans(billing.plans), [billing.plans]);
   const planNames = Object.keys(groupedPlans);
   const recommendedPlanName = getRecommendedPlanKey(groupedPlans);
-  const trialDaysRemaining = calculateTrialRemainingDays(billing.subscription?.trialEnd ?? null);
 
   const onPlanActionClick = (plan: Plan) => {
     setShowPlansModal(false); // Close plans modal if it's open
@@ -63,7 +62,6 @@ export default function BillingPage() {
 
       <ActiveSubscription 
         activeSub={billing.subscription} 
-        trialDaysRemaining={trialDaysRemaining} 
         usage={billing.usage}
       />
 
