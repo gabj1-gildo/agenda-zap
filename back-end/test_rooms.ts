@@ -1,1 +1,0 @@
-﻿import { db } from './src/db'; async function main() { await db.query.rooms.findMany({ limit: 1 }); console.log('Rooms OK'); process.exit(0); } main();
