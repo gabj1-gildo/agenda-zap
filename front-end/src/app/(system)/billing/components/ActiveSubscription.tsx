@@ -55,7 +55,7 @@ export function ActiveSubscription({ activeSub, usage }: ActiveSubscriptionProps
         </div>
       </div>
 
-      <UsageMetrics usage={usage} plan={activeSub.plan} />
+      <UsageMetrics usage={usage} subscription={activeSub} />
     </div>
   );
 }
