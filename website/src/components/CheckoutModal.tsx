@@ -1,12 +1,13 @@
 "use client";
 
 import {
-  X, Check, CreditCard, Zap, MessageSquare, Copy, QrCode, ArrowRight, MapPin,
+  X, Check, CreditCard, Zap, MessageSquare, Copy, QrCode, ArrowRight, Barcode,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
 import { formatPhone } from "@/lib/utils";
+import { initMercadoPago } from "@mercadopago/sdk-react";
 
 interface CheckoutModalProps {
   plan: any;
@@ -16,24 +17,26 @@ interface CheckoutModalProps {
 
 export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
   const [form, setForm] = useState({
-    name: "", email: "", document: "", phone: "", method: "CREDIT_CARD",
+    name: "", email: "", document: "", phone: "", method: "CREDIT_CARD", creditCardToken: "",
   });
   const [creditCard, setCreditCard] = useState({
     number: "", holderName: "", expiryMonth: "", expiryYear: "", ccv: "",
   });
-  const [address, setAddress] = useState({ 
-    cep: "", number: "", street: "", neighborhood: "", city: "", state: "" 
-  });
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [validatingDoc,   setValidatingDoc]   = useState(false);
-  const [validatingCep,   setValidatingCep]   = useState(false);
 
   const [otpStep,        setOtpStep]        = useState(false);
   const [otpCode,        setOtpCode]        = useState("");
   const [pixData,        setPixData]        = useState<{ qrCodeBase64: string; qrCodeString: string } | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [copied,         setCopied]         = useState(false);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MP_PUBLIC_KEY) {
+      initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
+    }
+  }, []);
 
   // ─── Formatters ───────────────────────────────────────────────────────────
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,38 +83,47 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
     }
   };
 
-  const handleCepBlur = async () => {
-    const cep = address.cep.replace(/\D/g, "");
-    if (cep.length === 8) {
-      setValidatingCep(true);
-      try {
-        const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
-        if (!res.ok) toast.error("CEP não encontrado");
-        else {
-          const data = await res.json();
-          setAddress(prev => ({
-            ...prev,
-            street: data.street || "",
-            neighborhood: data.neighborhood || "",
-            city: data.city || "",
-            state: data.state || ""
-          }));
-          toast.success("CEP localizado.");
-        }
-      } catch { toast.error("Erro ao buscar CEP"); }
-      finally { setValidatingCep(false); }
-    }
-  };
-
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const doc = form.document.replace(/\D/g, "");
     if (doc.length !== 11 && doc.length !== 14) { toast.error("Documento inválido"); return; }
-    if (form.method === "CREDIT_CARD" && (address.cep.length < 8 || !address.number || !creditCard.number || !creditCard.ccv)) {
-      toast.error("Preencha todos os dados do cartão e endereço"); return;
+    if (form.method === "CREDIT_CARD" && (!creditCard.number || !creditCard.ccv)) {
+      toast.error("Preencha todos os dados do cartão"); return;
     }
+
+    if (form.method === "PIX" || form.method === "BOLETO") {
+      await executeCheckout();
+      return;
+    }
+
     setCheckoutLoading(true);
     try {
+      // 1. Gerar Token MP
+      // @ts-ignore
+      const mp = new window.MercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY);
+      const cleanCard = creditCard.number.replace(/\D/g, "");
+      const cleanYear = creditCard.expiryYear.length === 2 ? `20${creditCard.expiryYear}` : creditCard.expiryYear;
+
+      const tokenPayload = {
+        cardNumber: cleanCard,
+        cardholderName: creditCard.holderName,
+        cardExpirationMonth: creditCard.expiryMonth,
+        cardExpirationYear: cleanYear,
+        securityCode: creditCard.ccv,
+        identificationType: doc.length > 11 ? "CNPJ" : "CPF",
+        identificationNumber: doc
+      };
+
+      const tokenResponse = await mp.createCardToken(tokenPayload);
+      if (tokenResponse.error) {
+        console.error("MP Token Error", tokenResponse.error);
+        toast.error("Falha ao validar os dados do cartão.");
+        setCheckoutLoading(false);
+        return;
+      }
+      form.creditCardToken = tokenResponse.id;
+
+      // 2. Enviar OTP
       const res = await fetch(getBackendUrl("/api/saas/otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,25 +146,13 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
   const handleFinalCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otpCode || otpCode.length < 6) { toast.error("Digite o código de 6 dígitos"); return; }
+    await executeCheckout(otpCode);
+  };
+
+  const executeCheckout = async (otp?: string) => {
     setCheckoutLoading(true);
     try {
-      const payload: any = { ...form, planId: plan.id, otpCode };
-      if (form.method === "CREDIT_CARD") {
-        payload.creditCard = {
-          holderName: creditCard.holderName,
-          number: creditCard.number.replace(/\D/g, ""),
-          expiryMonth: creditCard.expiryMonth,
-          expiryYear: creditCard.expiryYear,
-          ccv: creditCard.ccv,
-        };
-        payload.creditCardHolderInfo = {
-          name: form.name, email: form.email,
-          cpfCnpj: form.document.replace(/\D/g, ""),
-          postalCode: address.cep.replace(/\D/g, ""),
-          addressNumber: address.number,
-          phone: form.phone.replace(/\D/g, ""),
-        };
-      }
+      const payload: any = { ...form, planId: plan.id, otpCode: otp };
       const res = await fetch(getBackendUrl("/api/saas/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,6 +162,8 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
       if (data.success) {
         if (form.method === "PIX") {
           setPixData({ qrCodeBase64: data.data.pix.qrCodeBase64, qrCodeString: data.data.pix.qrCodeString });
+        } else if (form.method === "BOLETO") {
+          window.location.href = data.data.paymentUrl;
         } else {
           setPaymentSuccess(true);
         }
@@ -323,15 +325,16 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                 {/* Forma de pagamento */}
                 <div>
                   <label className={labelCls}>Forma de Pagamento</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {[
-                      { method: "CREDIT_CARD", icon: <CreditCard className="w-4 h-4" />, label: "Cartão de Crédito" },
+                      { method: "CREDIT_CARD", icon: <CreditCard className="w-4 h-4" />, label: "Cartão" },
                       { method: "PIX",         icon: <Zap className="w-4 h-4" />,        label: "PIX" },
+                      { method: "BOLETO",      icon: <Barcode className="w-4 h-4" />,    label: "Boleto" },
                     ].map(({ method, icon, label }) => (
                       <button
                         key={method} type="button"
                         onClick={() => setForm({ ...form, method })}
-                        className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${
+                        className={`flex items-center justify-center gap-1.5 py-3 rounded-xl border text-xs sm:text-sm font-medium transition-all ${
                           form.method === method
                             ? "border-primary/40 bg-primary/5 text-primary"
                             : "border-border text-muted-foreground hover:border-primary/20"
@@ -361,53 +364,20 @@ export function CheckoutModal({ plan, loginUrl, onClose }: CheckoutModalProps) {
                     <div className="grid grid-cols-3 gap-4">
                       <input required type="text" value={creditCard.expiryMonth}
                         onChange={(e) => setCreditCard({ ...creditCard, expiryMonth: e.target.value.replace(/\D/g, "") })}
-                        maxLength={2} className={`${inputCls} text-center`} placeholder="Mês" />
+                        maxLength={2} className={`${inputCls} text-center`} placeholder="Mês (MM)" />
                       <input required type="text" value={creditCard.expiryYear}
                         onChange={(e) => setCreditCard({ ...creditCard, expiryYear: e.target.value.replace(/\D/g, "") })}
-                        maxLength={4} className={`${inputCls} text-center`} placeholder="Ano" />
+                        maxLength={4} className={`${inputCls} text-center`} placeholder="Ano (AA)" />
                       <input required type="text" value={creditCard.ccv}
                         onChange={(e) => setCreditCard({ ...creditCard, ccv: e.target.value.replace(/\D/g, "") })}
                         maxLength={4} className={`${inputCls} text-center`} placeholder="CVV" />
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-1">
-                      <MapPin className="w-3.5 h-3.5 text-primary" />
-                      <p className={`${labelCls} mb-0`}>Endereço de Cobrança</p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-2 relative">
-                        <input required type="text" value={address.cep}
-                          onChange={(e) => setAddress({ ...address, cep: e.target.value })}
-                          onBlur={handleCepBlur} maxLength={9} className={inputCls} placeholder="CEP" />
-                        {validatingCep && (
-                          <div className="absolute right-4 top-3.5 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        )}
-                      </div>
-                      <input required type="text" value={address.number}
-                        onChange={(e) => setAddress({ ...address, number: e.target.value })}
-                        className={inputCls} placeholder="Número" />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4 mt-4 animate-in fade-in slide-in-from-top-2">
-                      <input required type="text" value={address.street}
-                        onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                        className={`col-span-3 ${inputCls}`} placeholder="Rua / Logradouro" />
-                      <input required type="text" value={address.neighborhood}
-                        onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
-                        className={`col-span-1 ${inputCls}`} placeholder="Bairro" />
-                      <input required type="text" value={address.city}
-                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                        className={`col-span-1 ${inputCls}`} placeholder="Cidade" />
-                      <input required type="text" value={address.state}
-                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                        maxLength={2}
-                        className={`col-span-1 ${inputCls} text-center`} placeholder="UF" />
                     </div>
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  disabled={checkoutLoading || validatingDoc || validatingCep}
+                  disabled={checkoutLoading || validatingDoc}
                   className="w-full btn-primary py-3.5 rounded-xl flex items-center justify-center gap-2 mt-2"
                 >
                   {checkoutLoading
