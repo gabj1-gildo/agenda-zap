@@ -1,4 +1,4 @@
-import { db } from './src/db';
+﻿import { db } from './src/db';
 import { tenants, tenantUsers, users, plans, userSubscriptions } from './src/db/schema';
 import { eq, ilike } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,7 +43,7 @@ async function main() {
 
   console.log('Searching for basic plan...');
   const foundPlans = await db.query.plans.findMany({
-    where: ilike(plans.name, '%Básico%')
+    where: ilike(plans.name, '%BÃ¡sico%')
   });
 
   if (foundPlans.length === 0) {

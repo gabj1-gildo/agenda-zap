@@ -1,4 +1,4 @@
-import { db } from './src/db';
+﻿import { db } from './src/db';
 import { userTenants, userSubscriptions, users, plans } from './src/db/schema';
 async function main() {
   const Gildo = await db.query.users.findFirst({ where: (users, { eq }) => eq(users.email, 'gildoalves794@gmail.com') });
