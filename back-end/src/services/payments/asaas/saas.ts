@@ -183,3 +183,31 @@ export async function updateAsaasSaasSubscription(subscriptionId: string, amount
 
   return data;
 }
+
+export async function updateAsaasSubscriptionCard(
+  subscriptionId: string, 
+  creditCard: any, 
+  creditCardHolderInfo: any
+) {
+  const token = env.ASAAS_API_KEY;
+  const baseUrl = env.ASAAS_API_URL;
+  if (!token) throw new Error('ASAAS_API_KEY não configurada');
+
+  const res = await fetch(`${baseUrl}/subscriptions/${subscriptionId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'access_token': token },
+    body: JSON.stringify({
+      creditCard,
+      creditCardHolderInfo,
+      updatePendingPayments: true // Importante para que a fatura atual também seja atualizada e cobrada no novo cartão
+    })
+  });
+
+  const data = await res.json();
+  if (data.errors) {
+    console.error('Erro Asaas Update Subscription Card:', data.errors);
+    throw new Error('Falha ao atualizar cartão no Asaas: ' + data.errors[0].description);
+  }
+
+  return data;
+}
