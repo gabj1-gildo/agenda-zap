@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { userSubscriptions, plans } from '@/db/schema';
+import { userSubscriptions, plans, userTenants, invoices, chatSessions } from '@/db/schema';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, and, inArray, count, gte, desc } from 'drizzle-orm';
 
 export async function GET(req: Request) {
   try {
@@ -12,9 +12,6 @@ export async function GET(req: Request) {
     const user = verifyAuth(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     if (!canAccessTenant(user, tenantId)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
-
-    const { userTenants, invoices } = await import('@/db/schema');
-    const { and, inArray, desc } = await import('drizzle-orm');
 
     // Para SUPERADMINs ou para qualquer um, a assinatura é ligada ao usuário dono do tenant.
     // Vamos buscar os usuários deste tenant.
@@ -49,9 +46,6 @@ export async function GET(req: Request) {
         eq(invoices.status, 'PENDING')
       )
     });
-
-    const { chatSessions } = await import('@/db/schema');
-    const { count, gte } = await import('drizzle-orm');
 
     let usage = {
       tenants: 1,
@@ -98,6 +92,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, data: { subscription, invoices: pendingInvoices, usage } });
   } catch (error) {
+    console.error('Error in /api/admin/billing/status:', error);
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
