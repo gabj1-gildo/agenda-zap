@@ -1,5 +1,5 @@
 import { CheckCircle, ExternalLink, Receipt } from "lucide-react";
-import { formatMoney } from "../utils/billing.utils";
+import { formatMoney, cycleLabels } from "../utils/billing.utils";
 import type { Subscription, Invoice } from "../types/billing";
 
 interface BillingOverviewProps {
@@ -12,7 +12,7 @@ export function BillingOverview({ subscription, invoices, usage }: BillingOvervi
   if (!subscription || !subscription.plan) return null;
 
   const plan = subscription.plan;
-  const isYearly = plan.interval === 'yearly';
+  const cycleName = cycleLabels[plan.interval] || 'Mensal';
   
   // Extra costs
   const chatsLimit = plan.includedChats;
@@ -34,7 +34,7 @@ export function BillingOverview({ subscription, invoices, usage }: BillingOvervi
         
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Assinatura ({isYearly ? 'Anual' : 'Mensal'})</span>
+            <span className="text-muted-foreground">Assinatura ({cycleName})</span>
             <span className="font-medium text-foreground">R$ {formatMoney(basePrice)}</span>
           </div>
           
