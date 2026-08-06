@@ -631,7 +631,7 @@ function SettingsContent() {
             <Tabs defaultValue="empresa" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 h-auto md:h-10 gap-2">
           <TabsTrigger value="empresa">Empresa</TabsTrigger>
-          <TabsTrigger value="notificacoes">Notificações</TabsTrigger>
+          <TabsTrigger value="notificacoes">WhatsApp</TabsTrigger>
           <TabsTrigger value="ia">IA</TabsTrigger>
           <TabsTrigger value="integracoes">Integrações</TabsTrigger>
           <TabsTrigger value="seguranca">Segurança & Conta</TabsTrigger>

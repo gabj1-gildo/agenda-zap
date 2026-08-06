@@ -137,15 +137,19 @@ export async function POST(req: Request) {
                 let lastMime = null;
                 for (const item of messagesArray) {
                   try {
-                    const parsed = JSON.parse(item);
-                    if (parsed.messageContent) mergedText.push(parsed.messageContent);
-                    if (parsed.mediaBase64) {
+                    // Upstash Redis automatically parses JSON, so 'item' might already be an object
+                    const parsed = typeof item === 'string' ? JSON.parse(item) : item;
+                    
+                    if (parsed && typeof parsed.messageContent === 'string') {
+                      mergedText.push(parsed.messageContent);
+                    }
+                    if (parsed && parsed.mediaBase64) {
                       lastMedia = parsed.mediaBase64;
                       lastMime = parsed.mimeType;
                     }
                   } catch(e) {
                      // Backward compatibility for old raw text strings in Redis
-                     mergedText.push(item);
+                     mergedText.push(typeof item === 'string' ? item : JSON.stringify(item));
                   }
                 }
                 
