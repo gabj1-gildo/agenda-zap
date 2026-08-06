@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { tenants } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -74,7 +74,11 @@ export async function POST(
       evoData = await evoRes.json();
     } else if (!evoRes.ok) {
       console.error('Evolution API erro ao criar:', evoData);
-      return NextResponse.json({ success: false, message: 'Erro na API do WhatsApp. Tente novamente.' }, { status: 500 });
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Erro na API do WhatsApp. Tente novamente.',
+        errorDetails: evoData
+      }, { status: 500 });
     }
 
     const qrCode: string | null = evoData?.qrcode?.base64 || evoData?.base64 || null;

@@ -66,9 +66,15 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess }: Props) {
         setStep("qr");
         setPolling(true);
       } else {
-        alert(data.message || "Erro ao criar instância");
+        console.error("Erro da API:", data);
+        const detailMsg = data.errorDetails?.response?.message || data.errorDetails?.message || "";
+        const msg = detailMsg 
+          ? `${data.message}\n\nDetalhes: ${Array.isArray(detailMsg) ? detailMsg.join(', ') : detailMsg}` 
+          : (data.message || "Erro ao criar instância");
+        alert(msg);
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       alert("Erro de conexão com o servidor");
     } finally {
       setLoading(false);
