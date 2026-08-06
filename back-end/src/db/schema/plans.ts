@@ -10,6 +10,7 @@ export const plans = pgTable('plans', {
   // Limites e Recursos do Plano
   maxTenants: integer('max_tenants').notNull().default(1), // Número de empresas que o usuário pode criar
   maxUsers: integer('max_users').notNull().default(1), // Usuários por empresa
+  maxWhatsAppInstances: integer('max_whatsapp_instances').notNull().default(1), // Números de WhatsApp por empresa
   maxAppointmentsPerMonth: integer('max_appointments_per_month').notNull().default(100),
 
   // Metered Billing e Testes

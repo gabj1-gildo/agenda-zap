@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { clients, chatSessions, tenants } from '@/db/schema';
+import { clients, chatSessions, tenants, tenantPhones } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sendWhatsAppMessage } from '@/services/whatsappService';
 import { getBase64FromMediaMessage } from '@/services/evolutionApi';
@@ -103,7 +103,11 @@ export async function POST(req: Request) {
       
       // O Next.js permite rodar código após a resposta usando waitUntil (para Vercel), mas no Render o event loop continua.
       // O ideal é não bloquear a resposta do webhook se possível, mas aqui aguardaremos para o fallback
-      const tenant = await db.query.tenants.findFirst({ where: eq(tenants.evolutionInstanceName, body.instance) });
+      const phoneRecord = await db.query.tenantPhones.findFirst({ 
+        where: eq(tenantPhones.evolutionInstanceName, body.instance),
+        with: { tenant: true }
+      });
+      const tenant = phoneRecord?.tenant;
       if (tenant) {
         processIncomingMessage(remoteJid, pushName, messageContent, tenant, mediaBase64, mimeType).catch(console.error);
       }
@@ -153,7 +157,11 @@ export async function POST(req: Request) {
                   }
                 }
                 
-                const tenant = await db.query.tenants.findFirst({ where: eq(tenants.evolutionInstanceName, body.instance) });
+                const phoneRecord = await db.query.tenantPhones.findFirst({ 
+                  where: eq(tenantPhones.evolutionInstanceName, body.instance),
+                  with: { tenant: true }
+                });
+                const tenant = phoneRecord?.tenant;
                 if (tenant) {
                   await processIncomingMessage(remoteJid, pushName, mergedText.join('\n'), tenant, lastMedia, lastMime);
                 }

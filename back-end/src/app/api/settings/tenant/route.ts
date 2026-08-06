@@ -71,7 +71,8 @@ export async function PATCH(req: Request) {
     if (body.addressNeighborhood !== undefined) updateData.addressNeighborhood = body.addressNeighborhood;
     if (body.addressCity !== undefined) updateData.addressCity = body.addressCity;
     if (body.addressState !== undefined) updateData.addressState = body.addressState;
-    
+    if (body.serviceLocationType !== undefined) updateData.serviceLocationType = body.serviceLocationType;
+    if (body.servicePerimeter !== undefined) updateData.servicePerimeter = body.servicePerimeter;
     if (body.acceptPaymentOnSite !== undefined) updateData.acceptPaymentOnSite = body.acceptPaymentOnSite;
     if (body.schedulingMode !== undefined) updateData.schedulingMode = body.schedulingMode;
     if (body.whatsappProvider !== undefined) updateData.whatsappProvider = body.whatsappProvider;

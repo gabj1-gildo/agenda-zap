@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { withTenant } from '@/db/withTenant';
-import { clients } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { tenantPlans } from '@/db/schema';
+import { eq, desc, and } from 'drizzle-orm';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 
 export async function GET(req: Request) {
@@ -12,29 +12,20 @@ export async function GET(req: Request) {
 
     const url = new URL(req.url);
     const tenantId = url.searchParams.get('tenantId') || req.headers.get('tenant-id');
-    
-    if (!tenantId) {
-      return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 });
-    }
+    if (!tenantId) return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 });
+    if (!canAccessTenant(user, tenantId)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
-    if (!canAccessTenant(user, tenantId)) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
-    }
-
-
-    const { appointments } = await import('@/db/schema');
-    
-    let allClients: any[] = [];
+    let plans: any[] = [];
     await withTenant(tenantId, async (tx) => {
-      allClients = await tx.query.clients.findMany({
-        where: eq(clients.tenantId, tenantId),
-        orderBy: [desc(clients.createdAt)]
+      plans = await tx.query.tenantPlans.findMany({
+        where: eq(tenantPlans.tenantId, tenantId),
+        orderBy: [desc(tenantPlans.createdAt)]
       });
     });
 
-    return NextResponse.json({ success: true, data: allClients });
+    return NextResponse.json({ success: true, data: plans });
   } catch (error: any) {
-    console.error('Error fetching clients:', error);
+    console.error('Error fetching tenant plans:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -49,26 +40,26 @@ export async function POST(req: Request) {
     if (!canAccessTenant(user, tenantId)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
-    if (!body.phone) {
-      return NextResponse.json({ success: false, error: 'O telefone é obrigatório' }, { status: 400 });
+    if (!body.name || !body.price) {
+      return NextResponse.json({ success: false, error: 'Nome e Preço são obrigatórios' }, { status: 400 });
     }
 
-    let newClient: any = null;
+    let newPlan: any = null;
     await withTenant(tenantId, async (tx) => {
-      const inserted = await tx.insert(clients).values({
+      const inserted = await tx.insert(tenantPlans).values({
         tenantId,
-        phone: body.phone,
-        name: body.name || null,
-        whatsappName: body.name || null,
-        status: body.status || 'Ativo',
-        funnelStage: body.funnelStage || 'espera',
+        name: body.name,
+        description: body.description || null,
+        type: body.type || 'RECURRING',
+        durationDays: body.durationDays ? parseInt(body.durationDays, 10) : null,
+        price: body.price.toString()
       }).returning();
-      newClient = inserted[0];
+      newPlan = inserted[0];
     });
 
-    return NextResponse.json({ success: true, data: newClient });
+    return NextResponse.json({ success: true, data: newPlan });
   } catch (error: any) {
-    console.error('Error fetching clients:', error);
+    console.error('Error creating tenant plan:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }

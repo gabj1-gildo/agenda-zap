@@ -307,6 +307,8 @@ function SettingsContent() {
           addressNeighborhood: tenant.addressNeighborhood,
           addressCity: tenant.addressCity,
           addressState: tenant.addressState,
+          serviceLocationType: tenant.serviceLocationType,
+          servicePerimeter: tenant.servicePerimeter,
           acceptPaymentOnSite: tenant.acceptPaymentOnSite,
           schedulingMode: tenant.schedulingMode,
           whatsappProvider: tenant.whatsappProvider,
@@ -629,12 +631,11 @@ function SettingsContent() {
       </div>
 
             <Tabs defaultValue="empresa" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 h-auto md:h-10 gap-2">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto md:h-10 gap-2">
           <TabsTrigger value="empresa">Empresa</TabsTrigger>
           <TabsTrigger value="notificacoes">WhatsApp</TabsTrigger>
           <TabsTrigger value="ia">IA</TabsTrigger>
           <TabsTrigger value="integracoes">Integrações</TabsTrigger>
-          <TabsTrigger value="seguranca">Segurança & Conta</TabsTrigger>
         </TabsList>
 
         <TabsContent value="empresa" className="space-y-6">
@@ -886,6 +887,31 @@ function SettingsContent() {
                       placeholder="SP"
                     />
                   </div>
+                  
+                  <div className="space-y-2 md:col-span-6 mt-4">
+                    <Label>Tipo de Atendimento</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                      value={tenant?.serviceLocationType || 'FISICO'}
+                      onChange={(e) => setTenant({ ...tenant, serviceLocationType: e.target.value })}
+                    >
+                      <option value="FISICO">Somente no Local (Físico)</option>
+                      <option value="DOMICILIO">Somente a Domicílio</option>
+                      <option value="AMBOS">Ambos (Físico e Domicílio)</option>
+                    </select>
+                  </div>
+
+                  {(tenant?.serviceLocationType === 'DOMICILIO' || tenant?.serviceLocationType === 'AMBOS') && (
+                    <div className="space-y-2 md:col-span-6 mt-4">
+                      <Label>Perímetro de Atendimento a Domicílio</Label>
+                      <Input 
+                        value={tenant?.servicePerimeter || ""} 
+                        onChange={e => setTenant({...tenant, servicePerimeter: e.target.value})} 
+                        placeholder="Ex: Raio de 15km ou lista de bairros"
+                      />
+                      <p className="text-xs text-muted-foreground">A IA usará esta informação para validar o endereço enviado pelo cliente.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -1165,99 +1191,173 @@ function SettingsContent() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Tom de Atendimento</Label>
-                  <AiButtons field="tom_atendimento" />
+              <div className="space-y-6">
+                <div>
+                  <Label className="text-base font-semibold">Modelo de Negócio (IA)</Label>
+                  <p className="text-xs text-muted-foreground mb-4">Escolha o modelo que melhor descreve o seu negócio. A IA será configurada automaticamente com as melhores práticas.</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      {
+                        id: "salao_beleza",
+                        label: "Salão / Barbearia",
+                        desc: "Tom amigável. Regras de atraso flexíveis.",
+                        config: {
+                          tom_atendimento: "Amigável, acolhedor e descontraído. Use emojis ocasionalmente.",
+                          informacoes_gerais: "Somos um salão focado em beleza e bem-estar. Oferecemos um ambiente relaxante.",
+                          regras_agendamento: "Tolerância de atraso: 10 minutos. Caso atrase mais, precisaremos reagendar.",
+                          instrucoes_pagamento: "Aceitamos Pix e cartões. O pagamento pode ser feito no local.",
+                          restricoes: "NUNCA ofereça descontos. Só ofereça os serviços listados.",
+                          regras_transbordo: "Se o cliente insistir muito, diga: 'Vou chamar alguém para te ajudar.' e pare o atendimento automático.",
+                          mensagem_encerramento: "Agradecemos o agendamento! Te esperamos. Siga nosso Instagram."
+                        }
+                      },
+                      {
+                        id: "clinica",
+                        label: "Clínica (Saúde)",
+                        desc: "Tom formal e sério. Foco em saúde.",
+                        config: {
+                          tom_atendimento: "Profissional, acolhedor, formal e empático. Evite gírias.",
+                          informacoes_gerais: "Somos uma clínica focada na saúde e bem-estar do paciente.",
+                          regras_agendamento: "Pedimos que chegue com 15 min de antecedência. Atrasos podem gerar cancelamento.",
+                          instrucoes_pagamento: "Pagamento particular via Pix ou cartão no local.",
+                          restricoes: "Nunca dê diagnósticos médicos. Não ofereça descontos.",
+                          regras_transbordo: "Para dúvidas complexas ou sintomas, transfira para um atendente humano.",
+                          mensagem_encerramento: "Agradecemos seu contato. Estamos à disposição para cuidar de você."
+                        }
+                      },
+                      {
+                        id: "generico",
+                        label: "Geral / Varejo",
+                        desc: "Tom direto ao ponto para prestação de serviços genérica.",
+                        config: {
+                          tom_atendimento: "Cordial e prestativo. Direto ao ponto.",
+                          informacoes_gerais: "Somos uma empresa comprometida com a qualidade e satisfação do cliente.",
+                          regras_agendamento: "Agendamentos conforme disponibilidade de agenda.",
+                          instrucoes_pagamento: "Trabalhamos com Pix ou Cartão.",
+                          restricoes: "Atenha-se apenas aos serviços que oferecemos.",
+                          regras_transbordo: "Se o cliente solicitar humano, transfira o atendimento.",
+                          mensagem_encerramento: "Obrigado pelo contato! Até breve."
+                        }
+                      }
+                    ].map(preset => (
+                      <div 
+                        key={preset.id}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${tenant?.aiConfig?.preset_id === preset.id ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'hover:border-primary/50'}`}
+                        onClick={() => {
+                          setTenant((prev: any) => ({
+                            ...prev,
+                            aiConfig: {
+                              ...prev.aiConfig,
+                              preset_id: preset.id,
+                              ...preset.config
+                            }
+                          }));
+                          toast.success(`Modelo "${preset.label}" aplicado! Lembre-se de salvar.`);
+                        }}
+                      >
+                        <div className="font-semibold">{preset.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{preset.desc}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Input 
-                  value={tenant?.aiConfig?.tom_atendimento || ""} 
-                  onChange={e => updateAiConfig('tom_atendimento', e.target.value)} 
-                  placeholder="Ex: Cordial, direto e amigável. Use emojis curtos."
-                />
-                <p className="text-xs text-muted-foreground">Descreve a personalidade da IA durante a conversa.</p>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Informações Gerais da Empresa</Label>
-                  <AiButtons field="informacoes_gerais" />
+                <div className="border border-border rounded-lg overflow-hidden mt-6">
+                  <details className="group">
+                    <summary className="flex justify-between items-center font-medium cursor-pointer list-none p-4 bg-muted/30">
+                      <span>Modo Avançado (Personalização Manual)</span>
+                      <span className="transition group-open:rotate-180">
+                        <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                      </span>
+                    </summary>
+                    <div className="p-4 bg-background border-t space-y-6">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Tom de Atendimento</Label>
+                          <AiButtons field="tom_atendimento" />
+                        </div>
+                        <Input 
+                          value={tenant?.aiConfig?.tom_atendimento || ""} 
+                          onChange={e => updateAiConfig('tom_atendimento', e.target.value)} 
+                          placeholder="Ex: Cordial, direto e amigável. Use emojis curtos."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Informações Gerais da Empresa</Label>
+                          <AiButtons field="informacoes_gerais" />
+                        </div>
+                        <textarea 
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                          value={tenant?.aiConfig?.informacoes_gerais || ""} 
+                          onChange={e => updateAiConfig('informacoes_gerais', e.target.value)} 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Regras de Agendamento</Label>
+                          <AiButtons field="regras_agendamento" />
+                        </div>
+                        <textarea 
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                          value={tenant?.aiConfig?.regras_agendamento || ""} 
+                          onChange={e => updateAiConfig('regras_agendamento', e.target.value)} 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Instruções de Pagamento</Label>
+                          <AiButtons field="instrucoes_pagamento" />
+                        </div>
+                        <textarea 
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                          value={tenant?.aiConfig?.instrucoes_pagamento || ""} 
+                          onChange={e => updateAiConfig('instrucoes_pagamento', e.target.value)} 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Restrições (O que a IA NÃO deve fazer)</Label>
+                          <AiButtons field="restricoes" />
+                        </div>
+                        <textarea 
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                          value={tenant?.aiConfig?.restricoes || ""} 
+                          onChange={e => updateAiConfig('restricoes', e.target.value)} 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Regras de Transbordo (Humano)</Label>
+                          <AiButtons field="regras_transbordo" />
+                        </div>
+                        <textarea 
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                          value={tenant?.aiConfig?.regras_transbordo || ""} 
+                          onChange={e => updateAiConfig('regras_transbordo', e.target.value)} 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <Label>Mensagem Padrão de Encerramento (Opcional)</Label>
+                          <AiButtons field="mensagem_encerramento" />
+                        </div>
+                        <textarea 
+                          className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                          value={tenant?.aiConfig?.mensagem_encerramento || ""} 
+                          onChange={e => updateAiConfig('mensagem_encerramento', e.target.value)} 
+                        />
+                      </div>
+                    </div>
+                  </details>
                 </div>
-                <textarea 
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={tenant?.aiConfig?.informacoes_gerais || ""} 
-                  onChange={e => updateAiConfig('informacoes_gerais', e.target.value)} 
-                  placeholder="Ex: Nome da loja, endereço completo e outras dúvidas comuns (não coloque horário aqui)."
-                />
-              </div>
-
-              <div className="space-y-4 pt-4 border-t">
-                {/* Services foi movido para uma aba própria */}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Regras de Agendamento</Label>
-                  <AiButtons field="regras_agendamento" />
-                </div>
-                <textarea 
-                  className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={tenant?.aiConfig?.regras_agendamento || ""} 
-                  onChange={e => updateAiConfig('regras_agendamento', e.target.value)} 
-                  placeholder="Ex: Tolerância de atraso 10 min. Escreva do seu jeito, depois clique em Reescrever com IA para padronizar."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Instruções de Pagamento</Label>
-                  <AiButtons field="instrucoes_pagamento" />
-                </div>
-                <textarea 
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={tenant?.aiConfig?.instrucoes_pagamento || ""} 
-                  onChange={e => updateAiConfig('instrucoes_pagamento', e.target.value)} 
-                  placeholder="Ex: Chave PIX: 00.000.000/0001-00. Peça sempre o comprovante após enviar a chave."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Restrições (O que a IA NÃO deve fazer)</Label>
-                  <AiButtons field="restricoes" />
-                </div>
-                <textarea 
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={tenant?.aiConfig?.restricoes || ""} 
-                  onChange={e => updateAiConfig('restricoes', e.target.value)} 
-                  placeholder="Ex: Nunca ofereça descontos. Não invente serviços fora da lista."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Regras de Transbordo (Humano)</Label>
-                  <AiButtons field="regras_transbordo" />
-                </div>
-                <textarea 
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={tenant?.aiConfig?.regras_transbordo || ""} 
-                  onChange={e => updateAiConfig('regras_transbordo', e.target.value)} 
-                  placeholder="Ex: Se o cliente pedir para falar com um humano, diga 'Vou transferir você' e mude o funil."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <Label>Mensagem Padrão de Encerramento (Opcional)</Label>
-                  <AiButtons field="mensagem_encerramento" />
-                </div>
-                <textarea 
-                  className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={tenant?.aiConfig?.mensagem_encerramento || ""} 
-                  onChange={e => updateAiConfig('mensagem_encerramento', e.target.value)} 
-                  placeholder="Ex: Sempre finalize agradecendo e pedindo para seguir nosso Instagram @loja."
-                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-end border-t p-6">

@@ -30,6 +30,7 @@ const navLinks: NavItem[] = [
   { href: "/chats",        label: "Conversas",     icon: MessageSquare,   badgeKey: "chats", requiresTenant: true, category: "Relacionamento" },
   { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Relacionamento" },
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
+  { href: "/planos",       label: "Planos de Venda", icon: Coins,         requiresTenant: true, category: "Financeiro" },
   { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
   { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "Administração" },
   { href: "/billing",      label: "Plano",         icon: CreditCard,      requiresTenant: true, category: "Administração" },
@@ -315,7 +316,7 @@ export function Sidebar() {
                 </button>
               ))}
               <Link
-                href="/settings"
+                href="/empresas"
                 onClick={() => setIsTenantDropdownOpen(false)}
                 className="w-full text-left px-3 py-2 text-xs font-bold text-primary hover:bg-muted block border-t"
               >

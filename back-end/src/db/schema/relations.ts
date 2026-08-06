@@ -71,6 +71,8 @@ export const tenantsRelations = relations(tenants, ({ many, one }) => ({
   services: many(services),
   professionals: many(professionals),
   rooms: many(rooms),
+  tenantPhones: many(tenantPhones),
+  tenantPlans: many(tenantPlans),
 }));
 
 import { invoices } from './invoices';
@@ -110,6 +112,7 @@ export const clientsRelations = relations(clients, ({ many }) => ({
   appointments: many(appointments),
   chatSessions: many(chatSessions),
   clientTags: many(clientTags),
+  clientSubscriptions: many(clientSubscriptions),
 }));
 
 export const appointmentsRelations = relations(appointments, ({ one }) => ({
@@ -238,6 +241,36 @@ export const userSubscriptionsRelations = relations(userSubscriptions, ({ one })
   plan: one(plans, {
     fields: [userSubscriptions.planId],
     references: [plans.id],
+  }),
+}));
+
+import { tenantPhones } from './tenantPhones';
+import { tenantPlans } from './tenantPlans';
+import { clientSubscriptions } from './clientSubscriptions';
+
+export const tenantPhonesRelations = relations(tenantPhones, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantPhones.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+export const tenantPlansRelations = relations(tenantPlans, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [tenantPlans.tenantId],
+    references: [tenants.id],
+  }),
+  clientSubscriptions: many(clientSubscriptions),
+}));
+
+export const clientSubscriptionsRelations = relations(clientSubscriptions, ({ one }) => ({
+  client: one(clients, {
+    fields: [clientSubscriptions.clientId],
+    references: [clients.id],
+  }),
+  tenantPlan: one(tenantPlans, {
+    fields: [clientSubscriptions.tenantPlanId],
+    references: [tenantPlans.id],
   }),
 }));
 

@@ -141,6 +141,13 @@
       "when": 1785956133583,
       "tag": "0019_real_scarecrow",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786049855043,
+      "tag": "0020_stale_tarantula",
+      "breakpoints": true
     }
   ]
 }

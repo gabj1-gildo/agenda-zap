@@ -25,36 +25,35 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Edit2, Plus, Search } from "lucide-react";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { formatPhone } from "@/lib/utils";
 
-export default function ClientsPage() {
+export default function PlanosPage() {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
   const tenantId = (session as any)?.tenantId;
 
-  const [clients, setClients] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingClient, setEditingClient] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: "", phone: "", status: "Ativo" });
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [formData, setFormData] = useState({ name: "", description: "", type: "RECURRING", durationDays: "", price: "" });
   const [saving, setSaving] = useState(false);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const fetchClients = async () => {
+  const fetchPlans = async () => {
     setLoading(true);
     try {
-      const res = await fetch(getBackendUrl(`/api/dashboard/clients?tenantId=${tenantId}`), {
+      const res = await fetch(getBackendUrl(`/api/tenant-plans?tenantId=${tenantId}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success) {
-        setClients(data.data);
+        setPlans(data.data);
       }
     } catch (e) {
-      toast.error("Erro ao carregar clientes.");
+      toast.error("Erro ao carregar planos.");
     } finally {
       setLoading(false);
     }
@@ -62,30 +61,36 @@ export default function ClientsPage() {
 
   useEffect(() => {
     if (token && tenantId) {
-      fetchClients();
+      fetchPlans();
     }
   }, [token, tenantId]);
 
   const openNewModal = () => {
-    setEditingClient(null);
-    setFormData({ name: "", phone: "", status: "Ativo" });
+    setEditingPlan(null);
+    setFormData({ name: "", description: "", type: "RECURRING", durationDays: "", price: "" });
     setIsModalOpen(true);
   };
 
-  const openEditModal = (client: any) => {
-    setEditingClient(client);
-    setFormData({ name: client.name || "", phone: client.phone || "", status: client.status || "Ativo" });
+  const openEditModal = (plan: any) => {
+    setEditingPlan(plan);
+    setFormData({ 
+      name: plan.name || "", 
+      description: plan.description || "", 
+      type: plan.type || "RECURRING", 
+      durationDays: plan.durationDays?.toString() || "", 
+      price: plan.price?.toString() || "" 
+    });
     setIsModalOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formData.phone) return toast.error("O telefone é obrigatório.");
+    if (!formData.name || !formData.price) return toast.error("Nome e Preço são obrigatórios.");
     setSaving(true);
     try {
-      const url = editingClient
-        ? getBackendUrl(`/api/dashboard/clients/${editingClient.id}`)
-        : getBackendUrl(`/api/dashboard/clients`);
-      const method = editingClient ? "PUT" : "POST";
+      const url = editingPlan
+        ? getBackendUrl(`/api/tenant-plans/${editingPlan.id}`)
+        : getBackendUrl(`/api/tenant-plans`);
+      const method = editingPlan ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -99,11 +104,11 @@ export default function ClientsPage() {
       const data = await res.json();
       
       if (data.success) {
-        toast.success(editingClient ? "Cliente atualizado!" : "Cliente cadastrado!");
+        toast.success(editingPlan ? "Plano atualizado!" : "Plano cadastrado!");
         setIsModalOpen(false);
-        fetchClients();
+        fetchPlans();
       } else {
-        toast.error(data.error || "Erro ao salvar cliente.");
+        toast.error(data.error || "Erro ao salvar plano.");
       }
     } catch (e) {
       toast.error("Erro na conexão.");
@@ -115,7 +120,7 @@ export default function ClientsPage() {
   const confirmDelete = async () => {
     if (!deleteId) return;
     try {
-      const res = await fetch(getBackendUrl(`/api/dashboard/clients/${deleteId}`), {
+      const res = await fetch(getBackendUrl(`/api/tenant-plans/${deleteId}`), {
         method: "DELETE",
         headers: {
           "tenant-id": tenantId,
@@ -124,8 +129,8 @@ export default function ClientsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Cliente excluído.");
-        fetchClients();
+        toast.success("Plano excluído.");
+        fetchPlans();
       } else {
         toast.error(data.error || "Erro ao excluir.");
       }
@@ -136,31 +141,25 @@ export default function ClientsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "-";
-    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(dateString));
-  };
-
-  const filteredClients = clients.filter(c => 
-    (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (c.phone || "").includes(searchTerm)
+  const filteredPlans = plans.filter(p => 
+    (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Gerencie a base de clientes do seu estabelecimento.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Planos e Assinaturas</h1>
+          <p className="text-muted-foreground mt-1">Crie planos para vender aos seus clientes via IA.</p>
         </div>
-        <Button onClick={openNewModal}><Plus className="w-4 h-4 mr-2"/> Novo Cliente</Button>
+        <Button onClick={openNewModal}><Plus className="w-4 h-4 mr-2"/> Novo Plano</Button>
       </div>
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden p-6 space-y-4">
         <div className="flex items-center gap-2 max-w-sm">
           <Search className="w-5 h-5 text-muted-foreground" />
           <Input 
-            placeholder="Buscar por nome ou telefone..." 
+            placeholder="Buscar plano..." 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -171,9 +170,9 @@ export default function ClientsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Telefone / WhatsApp</TableHead>
-                <TableHead>Data de Cadastro</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Duração (Dias)</TableHead>
+                <TableHead>Preço (R$)</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -182,24 +181,22 @@ export default function ClientsPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Carregando...</TableCell>
                 </TableRow>
-              ) : filteredClients.length > 0 ? (
-                filteredClients.map((client: any) => (
-                  <TableRow key={client.id} className="hover:bg-muted/50">
+              ) : filteredPlans.length > 0 ? (
+                filteredPlans.map((plan: any) => (
+                  <TableRow key={plan.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium text-primary">
-                      {client.name || "Sem nome"}
+                      {plan.name}
                     </TableCell>
-                    <TableCell>{client.phone || "-"}</TableCell>
-                    <TableCell>{formatDate(client.createdAt)}</TableCell>
                     <TableCell>
-                      <Badge className={client.status === "Ativo" ? "bg-green-600" : "bg-gray-500"}>
-                        {client.status || "Ativo"}
-                      </Badge>
+                      <Badge variant="outline">{plan.type === 'RECURRING' ? 'Recorrente' : 'Produto/Venda Única'}</Badge>
                     </TableCell>
+                    <TableCell>{plan.durationDays || "-"}</TableCell>
+                    <TableCell>R$ {Number(plan.price).toFixed(2).replace('.', ',')}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => openEditModal(client)}>
+                      <Button variant="outline" size="icon" onClick={() => openEditModal(plan)}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="destructive" size="icon" onClick={() => setDeleteId(client.id)}>
+                      <Button variant="destructive" size="icon" onClick={() => setDeleteId(plan.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
@@ -208,7 +205,7 @@ export default function ClientsPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    Nenhum cliente encontrado.
+                    Nenhum plano encontrado.
                   </TableCell>
                 </TableRow>
               )}
@@ -220,35 +217,55 @@ export default function ClientsPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingClient ? "Editar Cliente" : "Novo Cliente"}</DialogTitle>
+            <DialogTitle>{editingPlan ? "Editar Plano" : "Novo Plano"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome Completo</Label>
+              <Label>Nome do Plano</Label>
               <Input 
                 value={formData.name} 
                 onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                placeholder="Ex: João Silva" 
+                placeholder="Ex: Assinatura Mensal VIP" 
               />
             </div>
             <div className="space-y-2">
-              <Label>Telefone (WhatsApp)</Label>
+              <Label>Descrição (Opcional)</Label>
               <Input 
-                value={formData.phone} 
-                onChange={(e) => setFormData({...formData, phone: formatPhone(e.target.value)})} 
-                placeholder="+55 (00) 00000-0000" 
+                value={formData.description} 
+                onChange={(e) => setFormData({...formData, description: e.target.value})} 
+                placeholder="Ex: Acesso a todos os serviços" 
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={formData.type} 
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                >
+                  <option value="RECURRING">Recorrente (Assinatura)</option>
+                  <option value="SINGLE">Venda Única (Produto)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Duração em Dias</Label>
+                <Input 
+                  type="number"
+                  value={formData.durationDays} 
+                  onChange={(e) => setFormData({...formData, durationDays: e.target.value})} 
+                  placeholder="Ex: 30" 
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label>Status</Label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                value={formData.status} 
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
-              >
-                <option value="Ativo">Ativo</option>
-                <option value="Inativo">Inativo</option>
-              </select>
+              <Label>Preço (R$)</Label>
+              <Input 
+                type="number" step="0.01"
+                value={formData.price} 
+                onChange={(e) => setFormData({...formData, price: e.target.value})} 
+                placeholder="0.00" 
+              />
             </div>
           </div>
           <DialogFooter>
@@ -261,8 +278,8 @@ export default function ClientsPage() {
       <ConfirmModal
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
-        title="Excluir Cliente"
-        description="Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita."
+        title="Excluir Plano"
+        description="Tem certeza que deseja excluir este plano? Clientes vinculados a ele não perderão o acesso imediatamente, mas ele não será mais oferecido."
         onConfirm={confirmDelete}
       />
     </div>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { tenants } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { env } from '@/config/env';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 
@@ -26,6 +26,39 @@ export async function POST(
 
     if (!phone) {
       return NextResponse.json({ success: false, message: 'Número obrigatório' }, { status: 400 });
+    }
+
+    if (user.role !== 'SUPERADMIN') {
+      const { userSubscriptions, userTenants } = await import('@/db/schema');
+      const { inArray, isNotNull } = await import('drizzle-orm');
+      
+      const subscription = await db.query.userSubscriptions.findFirst({
+        where: eq(userSubscriptions.userId, user.id),
+        with: { plan: true }
+      });
+      
+      if (subscription && subscription.plan) {
+        // Obter todos os tenants do usuário
+        const myTenants = await db.query.userTenants.findMany({
+          where: eq(userTenants.userId, user.id)
+        });
+        const myTenantIds = myTenants.map(ut => ut.tenantId);
+        
+        if (myTenantIds.length > 0) {
+          // Contar quantas instâncias ativas ele tem
+          const activeInstances = await db.select({ id: tenants.id }).from(tenants)
+            .where(
+              and(
+                inArray(tenants.id, myTenantIds),
+                isNotNull(tenants.evolutionInstanceName)
+              )
+            );
+            
+          if (activeInstances.length >= subscription.plan.maxWhatsAppInstances) {
+            return NextResponse.json({ success: false, message: `Seu plano permite no máximo ${subscription.plan.maxWhatsAppInstances} conexão(ões) de WhatsApp. Faça upgrade para adicionar mais.` }, { status: 403 });
+          }
+        }
+      }
     }
 
     // Verificar se o telefone já está em uso por outra empresa

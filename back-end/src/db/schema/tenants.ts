@@ -24,6 +24,8 @@ export const tenants = pgTable('tenants', {
   minAdvanceMinutes: integer('min_advance_minutes').default(60).notNull(),
   maxAdvanceDays: integer('max_advance_days').default(30).notNull(),
   schedulingMode: varchar('scheduling_mode', { length: 20 }).default('GERAL').notNull(),
+  serviceLocationType: varchar('service_location_type', { length: 20 }).default('ON_SITE').notNull(), // ON_SITE, DOMICILE, BOTH
+  servicePerimeter: text('service_perimeter'), // Bairros, cidades, etc.
 
   // IA
   aiConfig: jsonb('ai_config'),
