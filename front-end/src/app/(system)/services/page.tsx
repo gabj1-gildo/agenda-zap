@@ -30,7 +30,9 @@ function timeToMins(t: string) {
 
 const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
-export default function ServicesPage() {
+import { Suspense } from "react";
+
+function ServicesPageContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const queryTenantId = searchParams?.get("tenant");
@@ -203,5 +205,13 @@ export default function ServicesPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-muted-foreground animate-pulse">Carregando serviços...</div>}>
+      <ServicesPageContent />
+    </Suspense>
   );
 }

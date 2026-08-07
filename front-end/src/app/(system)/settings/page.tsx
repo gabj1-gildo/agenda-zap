@@ -61,6 +61,7 @@ function SettingsContent() {
   const [newLogoUrl, setNewLogoUrl] = useState<string | null>(null);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [availableAiModels, setAvailableAiModels] = useState<any[]>([]);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState<string | null>(null);
 
   const numberInputRef = useRef<HTMLInputElement>(null);
   const [docValidating, setDocValidating] = useState(false);
