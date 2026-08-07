@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, description, prices, maxTenants, maxUsers, maxAppointmentsPerMonth, includedChats, extraChatPrice, features, trialDays } = body;
+    const { name, description, prices, maxTenants, maxUsers, maxWhatsAppInstances, maxAppointmentsPerMonth, includedChats, extraChatPrice, features, trialDays } = body;
 
     if (!name || !prices || Object.keys(prices).length === 0) {
       return NextResponse.json({ success: false, error: 'Missing name or prices' }, { status: 400 });
@@ -92,6 +92,7 @@ export async function POST(req: Request) {
         interval,
         maxTenants: maxTenants || 1,
         maxUsers: maxUsers || 1,
+        maxWhatsAppInstances: maxWhatsAppInstances || 1,
         maxAppointmentsPerMonth: maxAppointmentsPerMonth || 100,
         includedChats: includedChats || 150,
         extraChatPrice: extraChatPrice || '0.15',
@@ -118,7 +119,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { id: originalName, name, description, prices, maxTenants, maxUsers, maxAppointmentsPerMonth, includedChats, extraChatPrice, features, trialDays } = body;
+    const { id: originalName, name, description, prices, maxTenants, maxUsers, maxWhatsAppInstances, maxAppointmentsPerMonth, includedChats, extraChatPrice, features, trialDays } = body;
 
     if (!originalName || !name || !prices || Object.keys(prices).length === 0) {
       return NextResponse.json({ success: false, error: 'Missing originalName, name or prices' }, { status: 400 });
@@ -202,6 +203,7 @@ export async function PUT(req: Request) {
             price: numPrice.toString(),
             maxTenants: maxTenants || 1,
             maxUsers: maxUsers || 1,
+            maxWhatsAppInstances: maxWhatsAppInstances || 1,
             maxAppointmentsPerMonth: maxAppointmentsPerMonth || 100,
             includedChats: includedChats || 150,
             extraChatPrice: extraChatPrice || '0.15',
@@ -244,7 +246,7 @@ export async function PUT(req: Request) {
 
         const [newPlan] = await db.insert(plans).values({
           name, description, price: numPrice.toString(), interval,
-          maxTenants: maxTenants || 1, maxUsers: maxUsers || 1,
+          maxTenants: maxTenants || 1, maxUsers: maxUsers || 1, maxWhatsAppInstances: maxWhatsAppInstances || 1,
           maxAppointmentsPerMonth: maxAppointmentsPerMonth || 100,
           includedChats: includedChats || 150, extraChatPrice: extraChatPrice || '0.15',
           trialDays: trialDays || 0, features: features || [], mpPlanId

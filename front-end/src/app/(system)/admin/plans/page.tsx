@@ -26,7 +26,7 @@ export default function AdminPlansPage() {
     name: "", description: "", 
     prices: {} as Record<string, string>,
     intervals: [] as string[],
-    maxUsers: 1, maxTenants: 1, includedChats: 150, extraChatPrice: "0,15",
+    maxUsers: 1, maxTenants: 1, maxWhatsAppInstances: 1, includedChats: 150, extraChatPrice: "0,15",
     trialDays: 0,
     features: [] as Feature[]
   });
@@ -105,7 +105,7 @@ export default function AdminPlansPage() {
     setNewPlan({
       name: "", description: "", 
       prices: { monthly: "0,00" }, intervals: ["monthly"],
-      maxUsers: 1, maxTenants: 1, includedChats: 150, extraChatPrice: "0,15",
+      maxUsers: 1, maxTenants: 1, maxWhatsAppInstances: 1, includedChats: 150, extraChatPrice: "0,15",
       trialDays: 0,
       features: defaultFeatures
     });
@@ -138,6 +138,7 @@ export default function AdminPlansPage() {
       intervals,
       maxUsers: firstPlan.maxUsers,
       maxTenants: firstPlan.maxTenants,
+      maxWhatsAppInstances: firstPlan.maxWhatsAppInstances || 1,
       includedChats: firstPlan.includedChats,
       extraChatPrice: Number(firstPlan.extraChatPrice).toFixed(2).replace('.', ','),
       trialDays: firstPlan.trialDays || 0,
@@ -309,12 +310,23 @@ export default function AdminPlansPage() {
                       </div>
 
                       {/* Limits summary */}
-                      <div className="mt-3 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-                        <span>{firstPlan.maxTenants} {firstPlan.maxTenants === 1 ? 'filial' : 'filiais'}</span>
-                        <span>•</span>
-                        <span>{firstPlan.maxUsers} {firstPlan.maxUsers === 1 ? 'usuário' : 'usuários'}/filial</span>
-                        <span>•</span>
-                        <span>{firstPlan.includedChats} chats IA/mês</span>
+                      <div className="mt-3 text-xs text-muted-foreground flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                          <span>{firstPlan.maxTenants} {firstPlan.maxTenants === 1 ? 'filial' : 'filiais'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                          <span>{firstPlan.maxUsers} {firstPlan.maxUsers === 1 ? 'usuário' : 'usuários'}/filial</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                          <span>{firstPlan.maxWhatsAppInstances || 1} {firstPlan.maxWhatsAppInstances === 1 ? 'número' : 'números'} de WhatsApp/filial</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                          <span>{firstPlan.includedChats} chats IA/mês</span>
+                        </div>
                       </div>
                     </div>
                     
@@ -434,6 +446,17 @@ export default function AdminPlansPage() {
                 <div className="space-y-1">
                   <Label>Lim. Usuários / Filial</Label>
                   <Input type="number" value={newPlan.maxUsers} onChange={e => setNewPlan({...newPlan, maxUsers: parseInt(e.target.value) || 1})} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div className="space-y-1">
+                  <Label>Lim. Números de WhatsApp</Label>
+                  <Input type="number" value={newPlan.maxWhatsAppInstances} onChange={e => setNewPlan({...newPlan, maxWhatsAppInstances: parseInt(e.target.value) || 1})} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Dias de Teste Grátis</Label>
+                  <Input type="number" value={newPlan.trialDays} onChange={e => setNewPlan({...newPlan, trialDays: parseInt(e.target.value) || 0})} />
                 </div>
               </div>
 
