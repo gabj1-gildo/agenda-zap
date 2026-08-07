@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Megaphone, Send, Image as ImageIcon, CheckCircle, Tag, Users, FileText, Smartphone, X, Loader2 } from "lucide-react";
+import { Megaphone, Send, Image as ImageIcon, CheckCircle, Tag, Users, FileText, Smartphone, X, Loader2, User } from "lucide-react";
 import { getBackendUrl } from "@/lib/api";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { TenantPhoneModal } from "@/components/TenantPhoneModal";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 export default function BroadcastPage() {
   const { data: session } = useSession();
@@ -224,7 +225,6 @@ export default function BroadcastPage() {
             setShowPhoneModal(false);
             loadData();
           }} 
-          token={token} 
         />
       )}
 

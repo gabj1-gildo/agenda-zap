@@ -107,7 +107,6 @@ function SettingsContent() {
 
         if (tenantData.success) setTenant(tenantData.data);
         if (keysData.success) setKeys(keysData.data);
-        if (presetsData.success && presetsData.data) setAiPresets(presetsData.data);
         if (schedData.success) {
           if (schedData.data.length > 0) {
             setSchedules(schedData.data.map((s: any) => ({ 
