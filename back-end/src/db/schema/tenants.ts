@@ -8,6 +8,8 @@ export const tenants = pgTable('tenants', {
   phone: varchar('phone', { length: 30 }).unique(),
   email: varchar('email', { length: 255 }),
   document: varchar('document', { length: 30 }),
+  cpfBirthDate: varchar('cpf_birth_date', { length: 20 }),
+  cpfGender: varchar('cpf_gender', { length: 20 }),
   description: text('description'),
   cep: varchar('cep', { length: 15 }),
   addressStreet: varchar('address_street', { length: 255 }),
@@ -38,6 +40,7 @@ export const tenants = pgTable('tenants', {
   whatsappProvider: varchar('whatsapp_provider', { length: 50 }).default('EVOLUTION').notNull(),
   whatsappMetaToken: text('whatsapp_meta_token'),
   whatsappMetaPhoneNumberId: varchar('whatsapp_meta_phone_number_id', { length: 50 }),
+  customMaxWhatsAppInstances: integer('custom_max_whatsapp_instances'),
 
   activePlan: varchar('active_plan', { length: 50 }).default('FREE').notNull(),
   paymentStatus: varchar('payment_status', { length: 50 }).default('ACTIVE').notNull(),

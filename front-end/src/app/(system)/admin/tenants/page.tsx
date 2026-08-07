@@ -28,6 +28,7 @@ export default function TenantsPage() {
     maxUsers: 1,
     activePlan: "FREE",
     paymentStatus: "ACTIVE",
+    customMaxWhatsAppInstances: "",
     superAdminPin: "",
   });
 
@@ -72,6 +73,7 @@ export default function TenantsPage() {
         maxUsers: Number(formData.maxUsers),
         activePlan: formData.activePlan,
         paymentStatus: formData.paymentStatus,
+        customMaxWhatsAppInstances: formData.customMaxWhatsAppInstances ? Number(formData.customMaxWhatsAppInstances) : null,
         superAdminPin: formData.superAdminPin,
       };
 
@@ -179,11 +181,12 @@ export default function TenantsPage() {
         maxUsers: tenant.maxUsers,
         activePlan: tenant.activePlan || "FREE",
         paymentStatus: tenant.paymentStatus || "ACTIVE",
+        customMaxWhatsAppInstances: tenant.customMaxWhatsAppInstances?.toString() || "",
         superAdminPin: "",
       });
     } else {
       setEditingId(null);
-      setFormData({ name: "", phone: "", maxUsers: 1, activePlan: "FREE", paymentStatus: "ACTIVE", superAdminPin: "" });
+      setFormData({ name: "", phone: "", maxUsers: 1, activePlan: "FREE", paymentStatus: "ACTIVE", customMaxWhatsAppInstances: "", superAdminPin: "" });
     }
     setIsModalOpen(true);
   };
@@ -191,7 +194,7 @@ export default function TenantsPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({ name: "", phone: "", maxUsers: 1, activePlan: "FREE", paymentStatus: "ACTIVE", superAdminPin: "" });
+    setFormData({ name: "", phone: "", maxUsers: 1, activePlan: "FREE", paymentStatus: "ACTIVE", customMaxWhatsAppInstances: "", superAdminPin: "" });
   };
 
   if (role !== "SUPERADMIN") {
@@ -468,6 +471,21 @@ export default function TenantsPage() {
                     <option value="SUSPENDED">Suspenso</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1">
+                  Limite Personalizado de Instâncias do WhatsApp (Opcional)
+                </label>
+                <input 
+                  type="number"
+                  min="1"
+                  value={formData.customMaxWhatsAppInstances || ""}
+                  onChange={e => setFormData({...formData, customMaxWhatsAppInstances: e.target.value})}
+                  placeholder="Deixe em branco para usar o limite do plano"
+                  className="w-full bg-[var(--background)] dark:bg-background border rounded-xl px-4 py-2.5 text-sm text-foreground focus:ring-2 focus:ring-foreground/20 outline-none transition-all font-mono-custom"
+                  style={{ borderColor: "var(--border)" }}
+                />
               </div>
 
               <div>

@@ -32,3 +32,4 @@ export * from './metaMessageLogs';
 export * from './tenantPhones';
 export * from './tenantPlans';
 export * from './clientSubscriptions';
+export * from './message_templates';

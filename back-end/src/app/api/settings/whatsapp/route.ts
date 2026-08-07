@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { withTenant } from '@/db/withTenant';
-import { tenantPhones, userSubscriptions } from '@/db/schema';
+import { tenantPhones, userSubscriptions, tenants } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 
@@ -44,6 +44,8 @@ export async function POST(req: Request) {
       with: { plan: true }
     });
 
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+
     if (!subscription || !subscription.plan) {
       return NextResponse.json({ success: false, error: 'Assinatura não encontrada' }, { status: 403 });
     }
@@ -52,8 +54,10 @@ export async function POST(req: Request) {
       where: eq(tenantPhones.tenantId, tenantId)
     });
 
-    if (currentPhones.length >= subscription.plan.maxWhatsAppInstances) {
-      return NextResponse.json({ success: false, error: `Seu plano (${subscription.plan.name}) permite no máximo ${subscription.plan.maxWhatsAppInstances} instância(s) de WhatsApp. Faça upgrade para adicionar mais.` }, { status: 403 });
+    const maxInstances = tenant?.customMaxWhatsAppInstances ?? subscription.plan.maxWhatsAppInstances;
+
+    if (currentPhones.length >= maxInstances) {
+      return NextResponse.json({ success: false, error: `Seu plano/limite permite no máximo ${maxInstances} instância(s) de WhatsApp. Faça upgrade para adicionar mais.` }, { status: 403 });
     }
 
     const body = await req.json();

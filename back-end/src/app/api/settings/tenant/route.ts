@@ -61,6 +61,8 @@ export async function PATCH(req: Request) {
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.email !== undefined) updateData.email = body.email;
     if (body.document !== undefined) updateData.document = body.document;
+    if (body.cpfBirthDate !== undefined) updateData.cpfBirthDate = body.cpfBirthDate;
+    if (body.cpfGender !== undefined) updateData.cpfGender = body.cpfGender;
     if (body.description !== undefined) updateData.description = body.description;
     
     // Address fields

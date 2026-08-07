@@ -28,6 +28,11 @@ export async function POST(
       return NextResponse.json({ success: false, message: 'Número obrigatório' }, { status: 400 });
     }
 
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+    if (!tenant) {
+      return NextResponse.json({ success: false, message: 'Empresa não encontrada' }, { status: 404 });
+    }
+
     if (user.role !== 'SUPERADMIN') {
       const { userSubscriptions, userTenants } = await import('@/db/schema');
       const { inArray, isNotNull } = await import('drizzle-orm');
@@ -54,8 +59,10 @@ export async function POST(
               )
             );
             
-          if (activeInstances.length >= subscription.plan.maxWhatsAppInstances) {
-            return NextResponse.json({ success: false, message: `Seu plano permite no máximo ${subscription.plan.maxWhatsAppInstances} conexão(ões) de WhatsApp. Faça upgrade para adicionar mais.` }, { status: 403 });
+          const maxInstances = tenant.customMaxWhatsAppInstances ?? subscription.plan.maxWhatsAppInstances;
+
+          if (activeInstances.length >= maxInstances) {
+            return NextResponse.json({ success: false, message: `Seu plano/limite permite no máximo ${maxInstances} conexão(ões) de WhatsApp. Faça upgrade para adicionar mais.` }, { status: 403 });
           }
         }
       }
@@ -75,10 +82,7 @@ export async function POST(
       );
     }
 
-    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
-    if (!tenant) {
-      return NextResponse.json({ success: false, message: 'Empresa não encontrada' }, { status: 404 });
-    }
+    // (Already verified tenant exists)
 
     // Nome da instância: slug da empresa + _AgendaZap
     const instanceName = `${tenant.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20)}_AgendaZap`;

@@ -73,165 +73,6 @@ function SettingsContent() {
   });
 
   const [deleteKeyId, setDeleteKeyId] = useState<string | null>(null);
-  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState<string | null>(null);
-  const [aiLoadingFields, setAiLoadingFields] = useState<Record<string, boolean>>({});
-
-  const handleAiAction = async (field: string, action: 'rewrite' | 'generate') => {
-    const currentRules = tenant?.aiConfig?.[field];
-    if (action === 'rewrite' && (!currentRules || currentRules.trim() === "")) {
-      toast.error("Escreva algo primeiro para a IA reescrever.");
-      return;
-    }
-    setAiLoadingFields(prev => ({ ...prev, [field]: true }));
-    try {
-      const token = (session?.user as any)?.accessToken;
-      const res = await fetch(getBackendUrl('/api/ai/rewrite'), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ text: currentRules || "", field, action, tenantId: tenant?.id })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        updateAiConfig(field, data.data);
-        toast.success(action === 'rewrite' ? "Texto reescrito com sucesso!" : "Texto gerado com sucesso!");
-      } else {
-        toast.error(data.error || "Erro ao processar com IA.");
-      }
-    } catch (e) {
-      toast.error("Falha na conexão com a IA.");
-    } finally {
-      setAiLoadingFields(prev => ({ ...prev, [field]: false }));
-    }
-  };
-
-  const [aiPresets, setAiPresets] = useState<Record<string, { label: string, text: string }[]>>({});
-  const [aiPresetModal, setAiPresetModal] = useState<{ isOpen: boolean; field: string; presetText: string; title: string; }>({ isOpen: false, field: '', presetText: '', title: '' });
-  const [useDomicile, setUseDomicile] = useState(false);
-
-  const AiButtons = ({ field }: { field: string }) => {
-    const presets = aiPresets[field];
-    return (
-      <div className="flex items-center gap-2">
-        {presets && presets.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="secondary" size="sm" className="h-7 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 gap-1" />}>
-              Modelos Prontos <ChevronDown className="w-3 h-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {presets.map((preset, idx) => (
-                <DropdownMenuItem 
-                  key={idx} 
-                  onClick={() => updateAiConfig(field, preset.text)}
-                >
-                  {preset.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        <Button 
-          variant="secondary" 
-          size="sm" 
-          onClick={() => handleAiAction(field, 'rewrite')} 
-          disabled={aiLoadingFields[field] || !tenant?.aiConfig?.[field]}
-          className="h-7 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 hover:text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50"
-        >
-          {aiLoadingFields[field] ? "Reescrevendo..." : "🪄 Reescrever"}
-        </Button>
-      
-      {/* Modal de Configuração de IA (Modelos Prontos) */}
-      <Dialog open={aiPresetModal.isOpen} onOpenChange={(c) => !c && setAiPresetModal({ ...aiPresetModal, isOpen: false })}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Confirmar Modelo: {aiPresetModal.title}</DialogTitle>
-            <DialogDescription>
-              Este modelo usa variáveis dinâmicas. Verifique os dados antes de aplicar.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {(() => {
-              const text = aiPresetModal.presetText;
-              const hasName = text.includes("{{NOME_EMPRESA}}");
-              const hasPhone = text.includes("{{TELEFONE}}");
-              const hasAddress = text.includes("{{ENDERECO}}");
-              
-              const missingName = hasName && !tenant?.name;
-              const missingPhone = hasPhone && !tenant?.phone;
-              const missingAddress = hasAddress && !useDomicile && !tenant?.addressStreet;
-
-              const isBlocked = missingName || missingPhone || missingAddress;
-
-              let replaced = text;
-              if (hasName) replaced = replaced.replace(/{{NOME_EMPRESA}}/g, tenant?.name || "{{NOME_EMPRESA}}");
-              if (hasPhone) replaced = replaced.replace(/{{TELEFONE}}/g, formatPhone(tenant?.phone) || "{{TELEFONE}}");
-              if (hasAddress) {
-                if (useDomicile) {
-                  replaced = replaced.replace(/{{ENDERECO}}/g, "atendimento a domicílio");
-                } else {
-                  const addrParts = [tenant?.addressStreet, tenant?.addressNumber, tenant?.addressCity].filter(Boolean);
-                  replaced = replaced.replace(/{{ENDERECO}}/g, addrParts.length > 0 ? addrParts.join(", ") : "{{ENDERECO}}");
-                }
-              }
-
-              return (
-                <>
-                  {hasAddress && (
-                    <div className="flex items-center space-x-2 border p-3 rounded-md bg-muted/50">
-                      <Checkbox 
-                        id="use-domicile" 
-                        checked={useDomicile} 
-                        onCheckedChange={(c) => setUseDomicile(!!c)}
-                      />
-                      <Label htmlFor="use-domicile" className="font-semibold cursor-pointer">
-                        Atendimento a domicílio (Substitui o endereço)
-                      </Label>
-                    </div>
-                  )}
-
-                  {isBlocked ? (
-                    <div className="p-4 bg-orange-50 text-orange-800 border border-orange-200 rounded-md text-sm flex gap-2">
-                      <ShieldAlert className="w-5 h-5 shrink-0" />
-                      <div>
-                        <strong>Atenção:</strong> Faltam dados obrigatórios na aba Empresa para aplicar este modelo.
-                        <ul className="list-disc ml-5 mt-1">
-                          {missingName && <li>Nome do Estabelecimento</li>}
-                          {missingPhone && <li>Telefone (WhatsApp)</li>}
-                          {missingAddress && <li>Endereço (ou marque atendimento a domicílio acima)</li>}
-                        </ul>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-muted border rounded-md text-sm whitespace-pre-wrap font-mono max-h-60 overflow-y-auto">
-                      {replaced}
-                    </div>
-                  )}
-
-                  <DialogFooter className="mt-4">
-                    <Button variant="outline" onClick={() => setAiPresetModal({ ...aiPresetModal, isOpen: false })}>Cancelar</Button>
-                    <Button 
-                      disabled={isBlocked} 
-                      onClick={() => {
-                        updateAiConfig(aiPresetModal.field, replaced);
-                        setAiPresetModal({ ...aiPresetModal, isOpen: false });
-                        toast.success("Modelo aplicado com sucesso!");
-                      }}
-                    >
-                      Aplicar Modelo
-                    </Button>
-                  </DialogFooter>
-                </>
-              );
-            })()}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
 
   useEffect(() => {
     async function loadData() {
@@ -321,6 +162,8 @@ function SettingsContent() {
           whatsappProvider: tenant.whatsappProvider,
           whatsappMetaToken: tenant.whatsappMetaToken,
           whatsappMetaPhoneNumberId: tenant.whatsappMetaPhoneNumberId,
+          cpfBirthDate: tenant.cpfBirthDate,
+          cpfGender: tenant.cpfGender,
           logoUrl: newLogoUrl || tenant.logoUrl,
           aiConfig: tenant.aiConfig || {}
         })
@@ -402,6 +245,25 @@ function SettingsContent() {
           setDocError(data.error || "CPF não encontrado na Receita");
           return false;
         }
+        
+        if (data.data) {
+          const apiPayload = data.data?.data || data.data;
+          let birth = apiPayload?.data_nascimento || apiPayload?.nascimento || tenant?.cpfBirthDate;
+          if (birth && birth.includes('-') && birth.length === 10) {
+            const [y, m, d] = birth.split('-');
+            birth = `${d}/${m}/${y}`;
+          }
+          const newGender = apiPayload?.genero === 'M' ? 'Masculino' : apiPayload?.genero === 'F' ? 'Feminino' : apiPayload?.genero || tenant?.cpfGender;
+          
+          setTenant((prev: any) => ({
+            ...prev,
+            name: apiPayload?.nome || prev.name,
+            cpfBirthDate: birth,
+            cpfGender: newGender
+          }));
+          toast.success("CPF Validado e dados preenchidos.");
+        }
+        
         return true;
       } catch (e) {
         setDocError("Erro de conexão ao validar CPF");
@@ -426,6 +288,19 @@ function SettingsContent() {
           setDocError(`CNPJ inativo (${data.descricao_situacao_cadastral})`);
           return false;
         }
+        
+        setTenant((prev: any) => ({
+          ...prev,
+          name: data.nome_fantasia || data.razao_social || prev.name,
+          cep: data.cep || prev.cep,
+          addressStreet: data.logradouro || prev.addressStreet,
+          addressNumber: data.numero || prev.addressNumber,
+          addressComplement: data.complemento || prev.addressComplement,
+          addressNeighborhood: data.bairro || prev.addressNeighborhood,
+          addressCity: data.municipio || prev.addressCity,
+          addressState: data.uf || prev.addressState
+        }));
+        toast.success("CNPJ Validado e dados preenchidos.");
         return true;
       } catch (e) {
         setDocError("Erro ao validar CNPJ");
@@ -460,6 +335,13 @@ function SettingsContent() {
 
   const handleSaveWithValidation = async () => {
     if (tenant?.document) {
+      const raw = tenant.document.replace(/\D/g, '');
+      if (raw.length > 11) { // CNPJ
+        if (!tenant.addressStreet || !tenant.addressNumber || !tenant.addressNeighborhood || !tenant.addressCity || !tenant.addressState || !tenant.cep) {
+          toast.error("Para contas PJ (CNPJ), o endereço completo é obrigatório.");
+          return;
+        }
+      }
       const isValid = await validateDocument(tenant.document);
       if (!isValid) {
         toast.error("Corrija os erros no documento antes de salvar.");
@@ -770,27 +652,58 @@ function SettingsContent() {
                 
                 <div className="space-y-2">
                   <Label>Documento (CNPJ/CPF)</Label>
-                  <div className="relative">
-                    <Input 
-                      value={tenant?.document || ""} 
-                      onChange={e => {
-                        const formatted = formatDocument(e.target.value);
-                        setTenant({...tenant, document: formatted});
-                        setDocError(null);
-                      }} 
-                      onBlur={(e) => {
-                        if (e.target.value) validateDocument(e.target.value);
-                      }}
-                      placeholder="00.000.000/0000-00"
-                      className={docError ? "border-red-500 pr-10" : "pr-10"}
-                    />
-                    {docValidating && (
-                      <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    )}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input 
+                        value={tenant?.document || ""} 
+                        onChange={e => {
+                          const formatted = formatDocument(e.target.value);
+                          setTenant({...tenant, document: formatted});
+                          setDocError(null);
+                        }}
+                        placeholder="00.000.000/0000-00"
+                        className={docError ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      {docValidating && (
+                        <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      )}
+                    </div>
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => tenant?.document && validateDocument(tenant.document)}
+                      disabled={docValidating || !tenant?.document}
+                    >
+                      Validar
+                    </Button>
                   </div>
                   {docError && <p className="text-xs text-red-500 mt-1">{docError}</p>}
                 </div>
               </div>
+
+              {tenant?.document && tenant.document.replace(/\D/g, '').length <= 11 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div className="space-y-2">
+                    <Label>Data de Nascimento (CPF)</Label>
+                    <Input 
+                      value={tenant?.cpfBirthDate || ""} 
+                      onChange={e => setTenant({...tenant, cpfBirthDate: e.target.value})} 
+                      placeholder="DD/MM/AAAA"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sexo (CPF)</Label>
+                    <select
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={tenant?.cpfGender || ''}
+                      onChange={e => setTenant({ ...tenant, cpfGender: e.target.value })}
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Descrição / Bio da Empresa</Label>
@@ -926,98 +839,6 @@ function SettingsContent() {
             <CardFooter className="flex justify-end border-t p-6">
               <Button onClick={handleSaveWithValidation} disabled={saving || docValidating}>{saving ? "Salvando..." : "Salvar Alterações"}</Button>
             </CardFooter>
-          </Card>
-            <Card>
-            <CardHeader>
-              <CardTitle>Horário de Funcionamento</CardTitle>
-              <CardDescription>Defina seus dias de atendimento e duração dos agendamentos (minutos).</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {schedules.map((sched, idx) => (
-                <div key={idx} className="flex flex-col gap-3 p-4 border rounded-md">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <div className="flex items-center gap-2 w-32 shrink-0">
-                      <Checkbox 
-                        checked={sched.isActive} 
-                        onCheckedChange={(c) => {
-                          const s = [...schedules]; s[idx].isActive = !!c; setSchedules(s);
-                        }}
-                      />
-                      <Label className="font-semibold">{days[sched.dayOfWeek]}</Label>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Label className="text-muted-foreground text-xs w-14">Abertura</Label>
-                      <Input 
-                        type="time" 
-                        value={sched.startTime || "09:00"} 
-                        onChange={e => { const s = [...schedules]; s[idx].startTime = e.target.value; setSchedules(s); }}
-                        disabled={!sched.isActive}
-                      />
-                      <span className="text-muted-foreground text-sm">até</span>
-                      <Input 
-                        type="time" 
-                        value={sched.endTime || "18:00"} 
-                        onChange={e => { const s = [...schedules]; s[idx].endTime = e.target.value; setSchedules(s); }}
-                        disabled={!sched.isActive}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 ml-auto">
-                      <Label className="text-muted-foreground text-xs">Duração</Label>
-                      <Input 
-                        type="time" 
-                        className="w-[100px]" 
-                        value={minsToTime(sched.slotDuration)} 
-                        onChange={e => { 
-                          const s = [...schedules]; 
-                          s[idx].slotDuration = timeToMins(e.target.value); 
-                          setSchedules(s); 
-                        }}
-                        disabled={!sched.isActive}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pl-[150px]">
-                    <Label className="text-muted-foreground text-xs w-12">Pausa</Label>
-                    <Input 
-                      type="time" 
-                      className="w-[100px]"
-                      value={sched.intervalStartTime || ""} 
-                      onChange={e => { const s = [...schedules]; s[idx].intervalStartTime = e.target.value; setSchedules(s); }}
-                      disabled={!sched.isActive}
-                    />
-                    <span className="text-muted-foreground text-sm">até</span>
-                    <Input 
-                      type="time" 
-                      className="w-[100px]"
-                      value={sched.intervalEndTime || ""} 
-                      onChange={e => { const s = [...schedules]; s[idx].intervalEndTime = e.target.value; setSchedules(s); }}
-                      disabled={!sched.isActive}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="flex justify-end border-t p-6">
-              <Button onClick={saveSchedules} disabled={saving}>{saving ? "Salvando..." : "Salvar Horários"}</Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <ExceptionsSettings tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
-            </CardContent>
-          </Card>
-            <Card>
-            <CardHeader>
-              <CardTitle>Serviços e Preços</CardTitle>
-              <CardDescription>Cadastre os serviços oferecidos e configure preços e durações.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ServicesSettings tenantId={targetTenantId as string} token={(session?.user as any)?.accessToken} />
-            </CardContent>
           </Card>
           </div>
         </TabsContent>
@@ -1298,10 +1119,7 @@ function SettingsContent() {
                     </summary>
                     <div className="p-4 bg-background border-t space-y-6">
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Tom de Atendimento</Label>
-                          <AiButtons field="tom_atendimento" />
-                        </div>
+                        <Label>Tom de Atendimento</Label>
                         <Input 
                           value={tenant?.aiConfig?.tom_atendimento || ""} 
                           onChange={e => updateAiConfig('tom_atendimento', e.target.value)} 
@@ -1310,10 +1128,7 @@ function SettingsContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Informações Gerais da Empresa</Label>
-                          <AiButtons field="informacoes_gerais" />
-                        </div>
+                        <Label>Informações Gerais da Empresa</Label>
                         <textarea 
                           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           value={tenant?.aiConfig?.informacoes_gerais || ""} 
@@ -1322,10 +1137,7 @@ function SettingsContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Regras de Agendamento</Label>
-                          <AiButtons field="regras_agendamento" />
-                        </div>
+                        <Label>Regras de Agendamento</Label>
                         <textarea 
                           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           value={tenant?.aiConfig?.regras_agendamento || ""} 
@@ -1334,10 +1146,7 @@ function SettingsContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Instruções de Pagamento</Label>
-                          <AiButtons field="instrucoes_pagamento" />
-                        </div>
+                        <Label>Instruções de Pagamento (Valores, Pix, Cartão)</Label>
                         <textarea 
                           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           value={tenant?.aiConfig?.instrucoes_pagamento || ""} 
@@ -1346,10 +1155,7 @@ function SettingsContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Restrições (O que a IA NÃO deve fazer)</Label>
-                          <AiButtons field="restricoes" />
-                        </div>
+                        <Label>Restrições (O que a IA NÃO deve fazer)</Label>
                         <textarea 
                           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           value={tenant?.aiConfig?.restricoes || ""} 
@@ -1358,10 +1164,7 @@ function SettingsContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Regras de Transbordo (Humano)</Label>
-                          <AiButtons field="regras_transbordo" />
-                        </div>
+                        <Label>Regras de Transbordo (Quando chamar humano)</Label>
                         <textarea 
                           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           value={tenant?.aiConfig?.regras_transbordo || ""} 
@@ -1370,10 +1173,7 @@ function SettingsContent() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Label>Mensagem Padrão de Encerramento (Opcional)</Label>
-                          <AiButtons field="mensagem_encerramento" />
-                        </div>
+                        <Label>Mensagem Padrão de Encerramento (Opcional)</Label>
                         <textarea 
                           className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                           value={tenant?.aiConfig?.mensagem_encerramento || ""} 

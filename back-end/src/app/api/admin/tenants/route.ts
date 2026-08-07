@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { tenants, users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { tenants, users, userTenants, userSubscriptions, plans } from '@/db/schema';
+import { eq, inArray } from 'drizzle-orm';
 import crypto from 'crypto';
 import { verifyAuth } from '@/lib/auth';
 import { verifyPin } from '@/lib/password';
@@ -20,9 +20,45 @@ export async function GET(req: Request) {
       maxUsers: tenants.maxUsers,
       activePlan: tenants.activePlan,
       paymentStatus: tenants.paymentStatus,
+      customMaxWhatsAppInstances: tenants.customMaxWhatsAppInstances,
       createdAt: tenants.createdAt,
       deletedAt: tenants.deletedAt,
     }).from(tenants);
+
+    // Mapear o plano real
+    const tenantIds = allTenants.map(t => t.id);
+    let tenantRealPlans: Record<string, string> = {};
+    if (tenantIds.length > 0) {
+      const uts = await db.select({
+        tenantId: userTenants.tenantId,
+        userId: userTenants.userId
+      }).from(userTenants).where(inArray(userTenants.tenantId, tenantIds));
+
+      const userIds = uts.map(u => u.userId);
+      if (userIds.length > 0) {
+        const subs = await db.select({
+          userId: userSubscriptions.userId,
+          planName: plans.name,
+          status: userSubscriptions.status
+        })
+        .from(userSubscriptions)
+        .leftJoin(plans, eq(userSubscriptions.planId, plans.id))
+        .where(inArray(userSubscriptions.userId, userIds));
+
+        for (const ut of uts) {
+          const sub = subs.find(s => s.userId === ut.userId && s.status === 'ACTIVE');
+          if (sub && sub.planName) {
+            tenantRealPlans[ut.tenantId] = sub.planName;
+          }
+        }
+      }
+    }
+
+    allTenants.forEach(t => {
+      if (tenantRealPlans[t.id]) {
+        t.activePlan = tenantRealPlans[t.id].toUpperCase();
+      }
+    });
 
     // If query ?status=deleted, filter deleted
     const url = new URL(req.url);
@@ -50,7 +86,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, phone, maxUsers, activePlan, paymentStatus, superAdminPin } = body;
+    const { name, phone, maxUsers, activePlan, paymentStatus, customMaxWhatsAppInstances, superAdminPin } = body;
 
     // Validar PIN
     if (!superAdminPin) {
@@ -72,7 +108,8 @@ export async function POST(req: Request) {
       phone: phone || null,
       maxUsers: maxUsers || 3,
       activePlan: activePlan || 'FREE',
-      paymentStatus: paymentStatus || 'ACTIVE'
+      paymentStatus: paymentStatus || 'ACTIVE',
+      customMaxWhatsAppInstances: customMaxWhatsAppInstances || null
     }).returning();
 
     return NextResponse.json({ success: true, data: newTenant }, { status: 201 });
@@ -95,7 +132,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { id, name, phone, maxUsers, activePlan, paymentStatus, superAdminPin } = body;
+    const { id, name, phone, maxUsers, activePlan, paymentStatus, customMaxWhatsAppInstances, superAdminPin } = body;
 
     // Validar PIN
     if (!superAdminPin) {
@@ -117,7 +154,8 @@ export async function PUT(req: Request) {
       phone: phone || null,
       maxUsers: maxUsers || 3,
       activePlan: activePlan || 'FREE',
-      paymentStatus: paymentStatus || 'ACTIVE'
+      paymentStatus: paymentStatus || 'ACTIVE',
+      customMaxWhatsAppInstances: customMaxWhatsAppInstances || null
     };
     
     if (restore) {

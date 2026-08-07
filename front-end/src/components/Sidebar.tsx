@@ -32,6 +32,7 @@ const navLinks: NavItem[] = [
   { href: "/payments",     label: "Pagamentos",    icon: CreditCard,      badgeKey: "payments", requiresTenant: true, category: "Financeiro" },
   { href: "/planos",       label: "Planos de Venda", icon: Coins,         requiresTenant: true, category: "Financeiro" },
   { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Administração" },
+  { href: "/services",     label: "Serviços e Horários", icon: Calendar,   requiresTenant: true, category: "Administração" },
   { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "Administração" },
   { href: "/billing",      label: "Plano",         icon: CreditCard,      requiresTenant: true, category: "Administração" },
   { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "Administração" },

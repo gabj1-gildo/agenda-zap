@@ -155,6 +155,20 @@
       "when": 1786112383731,
       "tag": "0021_dashing_frank_castle",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786132661531,
+      "tag": "0022_lonely_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786135480171,
+      "tag": "0023_rapid_slipstream",
+      "breakpoints": true
     }
   ]
 }
