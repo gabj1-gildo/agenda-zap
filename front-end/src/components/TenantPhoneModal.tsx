@@ -20,57 +20,39 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess }: Props) {
 
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
+  const [instanceName, setInstanceName] = useState("");
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [polling, setPolling] = useState(false);
   const [status, setStatus] = useState("PENDING_QR");
-  const [loadingPhone, setLoadingPhone] = useState(true);
-
-  useEffect(() => {
-    async function loadPhone() {
-      try {
-        const res = await fetch(getBackendUrl(`/api/settings/tenant`), {
-          headers: { 
-            'tenant-id': tenantId,
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          }
-        });
-        const data = await res.json();
-        if (data.success && data.data?.phone) {
-          setPhone(formatPhone(data.data.phone));
-        }
-      } catch (e) {
-        console.error("Erro ao buscar telefone salvo:", e);
-      } finally {
-        setLoadingPhone(false);
-      }
-    }
-    loadPhone();
-  }, [tenantId]);
+  const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!instanceName) return alert("Dê um nome para identificar esta conexão");
     setLoading(true);
     try {
-      const res = await fetch(getBackendUrl(`/api/tenants/${tenantId}/phone`), {
+      const res = await fetch(getBackendUrl(`/api/settings/whatsapp`), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
+          "tenant-id": tenantId,
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, evolutionInstanceName: instanceName }),
       });
       const data = await res.json();
       if (data.success) {
         setQrCode(data.data.qrCode);
+        setCurrentPhoneId(data.data.id);
         setStep("qr");
         setPolling(true);
       } else {
         console.error("Erro da API:", data);
-        const detailMsg = data.errorDetails?.response?.message || data.errorDetails?.message || "";
+        const detailMsg = data.details?.response?.message || data.details?.message || "";
         const msg = detailMsg 
-          ? `${data.message}\n\nDetalhes: ${Array.isArray(detailMsg) ? detailMsg.join(', ') : detailMsg}` 
-          : (data.message || "Erro ao criar instância");
+          ? `${data.error}\n\nDetalhes: ${Array.isArray(detailMsg) ? detailMsg.join(', ') : detailMsg}` 
+          : (data.error || "Erro ao criar instância");
         alert(msg);
       }
     } catch (e) {
@@ -82,17 +64,19 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess }: Props) {
   };
 
   const refreshQr = async () => {
+    if (!currentPhoneId) return;
     try {
-      const res = await fetch(getBackendUrl(`/api/tenants/${tenantId}/phone`), {
+      const res = await fetch(getBackendUrl(`/api/settings/whatsapp/${currentPhoneId}`), {
         headers: {
+          "tenant-id": tenantId,
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
       });
       const data = await res.json();
       if (data.success) {
         setQrCode(data.data.qrCode);
-        setStatus(data.data.status);
-        if (data.data.status?.toUpperCase() === "OPEN") {
+        setStatus(data.data.evolutionInstanceStatus);
+        if (data.data.evolutionInstanceStatus?.toUpperCase() === "OPEN") {
           setStep("connected");
           setPolling(false);
         }
@@ -155,23 +139,36 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess }: Props) {
             <form onSubmit={submit} className="space-y-5">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                  Nome da Conexão
+                </label>
+                <input
+                  type="text"
+                  value={instanceName}
+                  onChange={(e) => setInstanceName(e.target.value)}
+                  placeholder="Ex: WhatsApp Vendas"
+                  required
+                  style={{ borderColor: "var(--border)", background: "var(--background)" }}
+                  className="w-full border rounded-xl px-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-[#25D366]/30 text-foreground transition-shadow mb-4"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
                   Número de WhatsApp
                 </label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(formatPhone(e.target.value))}
-                  placeholder={loadingPhone ? "Carregando..." : "+55 (11) 9 9999-9999"}
+                  placeholder={"+55 (11) 9 9999-9999"}
                   maxLength={21}
                   required
-                  disabled={loadingPhone}
                   style={{ borderColor: "var(--border)", background: "var(--background)" }}
                   className="w-full border rounded-xl px-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-[#25D366]/30 text-foreground transition-shadow disabled:opacity-50"
                 />
               </div>
               <button
                 type="submit"
-                disabled={loading || loadingPhone || phone.length < 14}
+                disabled={loading || phone.length < 14}
                 style={{ background: "#25D366", color: "#fff" }}
                 className="w-full py-4 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#25D366]/20 disabled:opacity-60 disabled:shadow-none"
               >

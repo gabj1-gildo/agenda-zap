@@ -78,16 +78,30 @@ export async function processIncomingMessage(
     console.log(`Gerando resposta da IA...`);
     const respostaIA = await generateAiResponse(currentHistory, pushName, session, tenant, client);
     
-    const mensagens = Array.isArray(respostaIA) ? respostaIA : [respostaIA];
-    for (const msg of mensagens) {
-      await sendWhatsAppMessage(phoneJid, msg, tenant.id);
-    }
-
     const joinedResponse = Array.isArray(respostaIA) ? respostaIA.join('\n\n') : respostaIA;
     const updatedHistory = [...currentHistory, { role: 'system', content: joinedResponse }];
     await db.update(chatSessions)
       .set({ history: updatedHistory, updatedAt: new Date(), hasUnread: false })
       .where(eq(chatSessions.id, session.id));
+
+    // Pós-processamento: interceptar link de pagamento (para o WhatsApp)
+    let mensagensFinais = Array.isArray(respostaIA) ? [...respostaIA] : [respostaIA];
+    const { generateCheckoutLink } = await import('@/services/paymentService');
+    
+    for (let i = 0; i < mensagensFinais.length; i++) {
+      let msg = mensagensFinais[i];
+      const match = msg.match(/\[GERAR_PAGAMENTO_PLANO:([^\]]+)\]/);
+      if (match) {
+        const planId = match[1];
+        const checkoutUrl = await generateCheckoutLink(tenant.id, planId, client.id);
+        msg = msg.replace(match[0], checkoutUrl);
+        mensagensFinais[i] = msg;
+      }
+    }
+
+    for (const msg of mensagensFinais) {
+      await sendWhatsAppMessage(phoneJid, msg, tenant.id);
+    }
 
   } catch (error) {
     console.error('Erro ao processar a mensagem no banco:', error);

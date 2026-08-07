@@ -37,7 +37,7 @@ export default function PlanosPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: "", description: "", type: "RECURRING", durationDays: "", price: "" });
+  const [formData, setFormData] = useState({ name: "", description: "", type: "RECURRING", durationDays: "", price: "", maxInstallments: "1", interestAbsorption: "BUYER" });
   const [saving, setSaving] = useState(false);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export default function PlanosPage() {
 
   const openNewModal = () => {
     setEditingPlan(null);
-    setFormData({ name: "", description: "", type: "RECURRING", durationDays: "", price: "" });
+    setFormData({ name: "", description: "", type: "RECURRING", durationDays: "", price: "", maxInstallments: "1", interestAbsorption: "BUYER" });
     setIsModalOpen(true);
   };
 
@@ -78,7 +78,9 @@ export default function PlanosPage() {
       description: plan.description || "", 
       type: plan.type || "RECURRING", 
       durationDays: plan.durationDays?.toString() || "", 
-      price: plan.price?.toString() || "" 
+      price: plan.price?.toString() || "",
+      maxInstallments: plan.maxInstallments?.toString() || "1",
+      interestAbsorption: plan.interestAbsorption || "BUYER"
     });
     setIsModalOpen(true);
   };
@@ -267,6 +269,40 @@ export default function PlanosPage() {
                 placeholder="0.00" 
               />
             </div>
+            {formData.type === "SINGLE" && (
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t mt-2">
+                <div className="space-y-2">
+                  <Label>Parcelamento Máx.</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                    value={formData.maxInstallments} 
+                    onChange={(e) => setFormData({...formData, maxInstallments: e.target.value})}
+                  >
+                    <option value="1">À vista (1x)</option>
+                    <option value="2">2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                    <option value="5">5x</option>
+                    <option value="6">6x</option>
+                    <option value="10">10x</option>
+                    <option value="12">12x</option>
+                  </select>
+                </div>
+                {formData.maxInstallments !== "1" && (
+                  <div className="space-y-2">
+                    <Label>Juros do Parcelamento</Label>
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                      value={formData.interestAbsorption} 
+                      onChange={(e) => setFormData({...formData, interestAbsorption: e.target.value})}
+                    >
+                      <option value="BUYER">Cliente Paga (Repassado)</option>
+                      <option value="SELLER">Lojista Absorve (Sem Juros)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>

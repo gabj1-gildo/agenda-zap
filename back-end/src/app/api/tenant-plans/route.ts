@@ -52,7 +52,9 @@ export async function POST(req: Request) {
         description: body.description || null,
         type: body.type || 'RECURRING',
         durationDays: body.durationDays ? parseInt(body.durationDays, 10) : null,
-        price: body.price.toString()
+        price: body.price.toString(),
+        maxInstallments: body.maxInstallments ? parseInt(body.maxInstallments, 10) : 1,
+        interestAbsorption: body.interestAbsorption || 'BUYER',
       }).returning();
       newPlan = inserted[0];
     });

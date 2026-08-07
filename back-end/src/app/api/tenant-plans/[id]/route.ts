@@ -25,6 +25,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           type: body.type !== undefined ? body.type : undefined,
           durationDays: body.durationDays !== undefined ? (body.durationDays ? parseInt(body.durationDays, 10) : null) : undefined,
           price: body.price !== undefined ? body.price.toString() : undefined,
+          maxInstallments: body.maxInstallments !== undefined ? parseInt(body.maxInstallments, 10) : undefined,
+          interestAbsorption: body.interestAbsorption !== undefined ? body.interestAbsorption : undefined,
           updatedAt: new Date()
         })
         .where(and(eq(tenantPlans.id, params.id), eq(tenantPlans.tenantId, tenantId)))

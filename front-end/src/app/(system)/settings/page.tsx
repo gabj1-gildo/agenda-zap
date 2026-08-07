@@ -54,6 +54,7 @@ function SettingsContent() {
   const [tenant, setTenant] = useState<any>(null);
   const [keys, setKeys] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [whatsappInstances, setWhatsappInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -72,7 +73,7 @@ function SettingsContent() {
   });
 
   const [deleteKeyId, setDeleteKeyId] = useState<string | null>(null);
-  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState<string | null>(null);
   const [aiLoadingFields, setAiLoadingFields] = useState<Record<string, boolean>>({});
 
   const handleAiAction = async (field: string, action: 'rewrite' | 'generate') => {
@@ -239,12 +240,13 @@ function SettingsContent() {
         const token = (session?.user as any)?.accessToken;
         const headers: any = { 'tenant-id': targetTenantId };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const [tenantRes, keysRes, schedRes, presetsRes, modelsRes] = await Promise.all([
+        const [tenantRes, keysRes, schedRes, presetsRes, modelsRes, whatsappRes] = await Promise.all([
           fetch(getBackendUrl('/api/settings/tenant'), { headers }),
           fetch(getBackendUrl('/api/settings/payment-keys'), { headers }),
           fetch(getBackendUrl('/api/settings/schedules'), { headers }),
           fetch(getBackendUrl('/api/settings/ai-presets'), { headers }),
-          fetch(getBackendUrl('/api/admin/ai-models'), { headers: { "Authorization": `Bearer ${token}` } })
+          fetch(getBackendUrl('/api/admin/ai-models'), { headers: { "Authorization": `Bearer ${token}` } }),
+          fetch(getBackendUrl('/api/settings/whatsapp'), { headers })
         ]);
         
         const tenantData = await tenantRes.json();
@@ -252,9 +254,14 @@ function SettingsContent() {
         const schedData = await schedRes.json();
         const presetsData = await presetsRes.json();
         const modelsData = await modelsRes.json();
+        const whatsappData = await whatsappRes.json();
 
         if (modelsData.success) {
           setAvailableAiModels(modelsData.data);
+        }
+
+        if (whatsappData.success) {
+          setWhatsappInstances(whatsappData.data);
         }
 
         if (tenantData.success) setTenant(tenantData.data);
@@ -575,20 +582,21 @@ function SettingsContent() {
   const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
   const confirmDisconnectWhatsApp = async () => {
+    if (!showDisconnectConfirm) return;
     try {
-      const res = await fetch(getBackendUrl(`/api/tenants/${targetTenantId}/phone`), {
-        method: "DELETE", headers: { 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` }
+      const res = await fetch(getBackendUrl(`/api/settings/whatsapp/${showDisconnectConfirm}`), {
+        method: "DELETE", headers: { 'tenant-id': targetTenantId as string, 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` }
       });
       if (res.ok) {
         toast.success("WhatsApp desconectado!");
-        setTenant({ ...tenant, evolutionInstanceStatus: null });
+        setWhatsappInstances(prev => prev.filter(p => p.id !== showDisconnectConfirm));
       } else {
         toast.error("Falha ao desconectar.");
       }
     } catch (e) {
       toast.error("Erro ao desconectar WhatsApp.");
     } finally {
-      setShowDisconnectConfirm(false);
+      setShowDisconnectConfirm(null);
     }
   };
 
@@ -598,13 +606,13 @@ function SettingsContent() {
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
       {showPhoneModal && (
         <TenantPhoneModal 
-          tenantId={targetTenantId} 
+          tenantId={targetTenantId as string} 
           onClose={() => {
             setShowPhoneModal(false);
-            // Reload tenant info to update status
-            fetch(getBackendUrl('/api/settings/tenant'), { headers: { 'tenant-id': targetTenantId, 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` } })
+            // Reload whatsapp instances
+            fetch(getBackendUrl('/api/settings/whatsapp'), { headers: { 'tenant-id': targetTenantId as string, 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` } })
               .then(r => r.json())
-              .then(d => { if (d.success) setTenant(d.data); });
+              .then(d => { if (d.success) setWhatsappInstances(d.data); });
           }} 
         />
       )}
@@ -618,10 +626,10 @@ function SettingsContent() {
       />
 
       <ConfirmModal
-        open={showDisconnectConfirm}
-        onOpenChange={setShowDisconnectConfirm}
-        title="Desconectar WhatsApp"
-        description="Tem certeza que deseja desconectar o WhatsApp desta empresa? As mensagens automáticas pararão de ser enviadas."
+        open={!!showDisconnectConfirm}
+        onOpenChange={(open) => !open && setShowDisconnectConfirm(null)}
+        title="Remover Conexão WhatsApp"
+        description="Tem certeza que deseja remover esta conexão? As mensagens automáticas pararão de ser enviadas para este número."
         onConfirm={confirmDisconnectWhatsApp}
       />
 
@@ -1023,7 +1031,9 @@ function SettingsContent() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">Uso de Instâncias</span>
-                  <Badge variant="outline">1 permitida, {tenant?.evolutionInstanceStatus ? "1" : "0"} em uso</Badge>
+                  <Badge variant="outline">
+                    {tenant?.whatsappProvider === 'META_CLOUD' ? "Instância Única Meta" : `${whatsappInstances.length} instâncias conectadas`}
+                  </Badge>
                 </div>
 
                 {tenant && !tenant._isProfileComplete && (
@@ -1041,59 +1051,74 @@ function SettingsContent() {
                   </div>
                 )}
                 
-                <div className="flex items-center justify-between p-4 border rounded-md">
-                  <div>
-                    <div className="font-semibold flex items-center gap-2">
-                      WhatsApp Principal (Provedor Atual: {tenant?.whatsappProvider === 'META_CLOUD' ? 'Meta Cloud API' : 'Evolution API'})
-                      {tenant?.whatsappProvider === 'META_CLOUD' ? (
-                        tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId ? (
+                {tenant?.whatsappProvider === 'META_CLOUD' ? (
+                  <div className="flex items-center justify-between p-4 border rounded-md">
+                    <div>
+                      <div className="font-semibold flex items-center gap-2">
+                        WhatsApp Principal (Meta Cloud API)
+                        {tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId ? (
                           <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado (Meta)</Badge>
                         ) : (
                           <Badge variant="secondary">Desconectado (Meta)</Badge>
-                        )
-                      ) : (
-                        tenant?.evolutionInstanceStatus === "OPEN" ? (
-                          <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
-                        ) : (
-                          <Badge variant="secondary">Desconectado</Badge>
-                        )
-                      )}
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                        {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
+                        Status: {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? "Pronto para uso (Meta API)" : "Requer configuração de Token e Phone ID"}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                      {tenant?.whatsappProvider === 'META_CLOUD' ? (
-                        <>
-                          {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
-                          Status: {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? "Pronto para uso (Meta API)" : "Requer configuração de Token e Phone ID"}
-                        </>
-                      ) : (
-                        <>
-                          {tenant?.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
-                          Status: {tenant?.evolutionInstanceStatus || "Sem conexão"}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {tenant?.whatsappProvider === 'META_CLOUD' ? (
+                    <div className="flex items-center gap-2">
                       <Button onClick={() => saveGeneral()} disabled={saving || !tenant?._isProfileComplete}>
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Salvar Configurações Meta
                       </Button>
-                    ) : (
-                      tenant?.evolutionInstanceStatus === "OPEN" ? (
-                        <Button variant="destructive" onClick={() => setShowDisconnectConfirm(true)}>
-                          <Trash className="w-4 h-4 mr-2" />
-                          Desconectar
-                        </Button>
-                      ) : (
-                        <Button onClick={() => setShowPhoneModal(true)} disabled={!tenant?._isProfileComplete}>
-                          <Smartphone className="w-4 h-4 mr-2" />
-                          Conectar QR Code
-                        </Button>
-                      )
-                    )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center mt-6 mb-2">
+                      <h3 className="font-semibold">Aparelhos Conectados (Evolution API)</h3>
+                      <Button size="sm" onClick={() => setShowPhoneModal(true)} disabled={!tenant?._isProfileComplete}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nova Conexão
+                      </Button>
+                    </div>
+                    
+                    {whatsappInstances.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground border rounded-md bg-muted/20">
+                        <Smartphone className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                        Nenhum WhatsApp conectado. Clique em "Nova Conexão" para gerar um QR Code.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {whatsappInstances.map((instance) => (
+                          <div key={instance.id} className="flex items-center justify-between p-4 border rounded-md">
+                            <div>
+                              <div className="font-semibold flex items-center gap-2">
+                                {instance.evolutionInstanceName?.replace('_AgendaZap', '') || "Instância Padrão"}
+                                {instance.evolutionInstanceStatus === "OPEN" ? (
+                                  <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
+                                ) : (
+                                  <Badge variant="secondary">{instance.evolutionInstanceStatus || "Desconectado"}</Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                                {instance.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
+                                Número: {instance.phone}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="destructive" size="sm" onClick={() => setShowDisconnectConfirm(instance.id)}>
+                                <Trash className="w-4 h-4 mr-2" />
+                                Remover
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
 
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex flex-col gap-2">

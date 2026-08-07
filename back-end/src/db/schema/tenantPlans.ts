@@ -10,6 +10,9 @@ export const tenantPlans = pgTable('tenant_plans', {
   durationDays: integer('duration_days'), // Null se for ilimitado ou não aplicável
   price: numeric('price', { precision: 10, scale: 2 }).notNull(),
   
+  maxInstallments: integer('max_installments').default(1),
+  interestAbsorption: varchar('interest_absorption', { length: 20 }).default('BUYER'), // 'BUYER' ou 'SELLER'
+  
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

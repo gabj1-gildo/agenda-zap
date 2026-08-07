@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Trash2, Edit2, Plus, Search } from "lucide-react";
+import { Trash2, Edit2, Plus, Search, BookMarked } from "lucide-react";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { formatPhone } from "@/lib/utils";
 
@@ -43,6 +43,13 @@ export default function ClientsPage() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  const [isSubsModalOpen, setIsSubsModalOpen] = useState(false);
+  const [selectedClientForSubs, setSelectedClientForSubs] = useState<any>(null);
+  const [clientSubs, setClientSubs] = useState<any[]>([]);
+  const [availablePlans, setAvailablePlans] = useState<any[]>([]);
+  const [selectedPlanToAssign, setSelectedPlanToAssign] = useState("");
+  const [assigningPlan, setAssigningPlan] = useState(false);
+
   const fetchClients = async () => {
     setLoading(true);
     try {
@@ -60,11 +67,66 @@ export default function ClientsPage() {
     }
   };
 
+  const fetchAvailablePlans = async () => {
+    try {
+      const res = await fetch(getBackendUrl(`/api/tenant-plans?tenantId=${tenantId}`), {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAvailablePlans(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     if (token && tenantId) {
       fetchClients();
+      fetchAvailablePlans();
     }
   }, [token, tenantId]);
+
+  const openSubsModal = async (client: any) => {
+    setSelectedClientForSubs(client);
+    setIsSubsModalOpen(true);
+    try {
+      const res = await fetch(getBackendUrl(`/api/dashboard/clients/${client.id}/subscriptions`), {
+        headers: { "tenant-id": tenantId, Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClientSubs(data.data);
+      }
+    } catch (e) {
+      toast.error("Erro ao carregar assinaturas.");
+    }
+  };
+
+  const handleAssignPlan = async () => {
+    if (!selectedPlanToAssign) return toast.error("Selecione um plano.");
+    setAssigningPlan(true);
+    try {
+      const res = await fetch(getBackendUrl(`/api/dashboard/clients/${selectedClientForSubs.id}/subscriptions`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "tenant-id": tenantId, Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ planId: selectedPlanToAssign })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Plano vinculado com sucesso!");
+        openSubsModal(selectedClientForSubs); // Reload subs
+        setSelectedPlanToAssign("");
+      } else {
+        toast.error(data.error || "Erro ao vincular plano.");
+      }
+    } catch (e) {
+      toast.error("Erro na conexão.");
+    } finally {
+      setAssigningPlan(false);
+    }
+  };
 
   const openNewModal = () => {
     setEditingClient(null);
@@ -196,6 +258,9 @@ export default function ClientsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                      <Button variant="outline" size="icon" onClick={() => openSubsModal(client)} title="Ver Assinaturas">
+                        <BookMarked className="w-4 h-4" />
+                      </Button>
                       <Button variant="outline" size="icon" onClick={() => openEditModal(client)}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -224,7 +289,7 @@ export default function ClientsPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome Completo</Label>
+              <Label>Nome</Label>
               <Input 
                 value={formData.name} 
                 onChange={(e) => setFormData({...formData, name: e.target.value})} 
@@ -232,11 +297,11 @@ export default function ClientsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Telefone (WhatsApp)</Label>
+              <Label>Telefone / WhatsApp (Obrigatório)</Label>
               <Input 
                 value={formData.phone} 
-                onChange={(e) => setFormData({...formData, phone: formatPhone(e.target.value)})} 
-                placeholder="+55 (00) 00000-0000" 
+                onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, "")})} 
+                placeholder="Ex: 5511999999999" 
               />
             </div>
             <div className="space-y-2">
@@ -248,6 +313,7 @@ export default function ClientsPage() {
               >
                 <option value="Ativo">Ativo</option>
                 <option value="Inativo">Inativo</option>
+                <option value="Bloqueado">Bloqueado</option>
               </select>
             </div>
           </div>
@@ -258,11 +324,74 @@ export default function ClientsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={isSubsModalOpen} onOpenChange={setIsSubsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Assinaturas de {selectedClientForSubs?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label>Assinaturas Vigentes</Label>
+              {clientSubs.length > 0 ? (
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Início</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {clientSubs.map(sub => (
+                        <TableRow key={sub.id}>
+                          <TableCell className="font-medium">{sub.plan?.name}</TableCell>
+                          <TableCell>
+                            <Badge className={sub.status === "ACTIVE" ? "bg-green-600" : "bg-gray-500"}>
+                              {sub.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatDate(sub.startDate)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground bg-muted p-4 rounded-md text-center">Nenhuma assinatura ativa encontrada para este cliente.</p>
+              )}
+            </div>
+
+            <div className="space-y-2 pt-4 border-t">
+              <Label>Vincular a um Novo Plano (Manual)</Label>
+              <div className="flex gap-2">
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  value={selectedPlanToAssign} 
+                  onChange={(e) => setSelectedPlanToAssign(e.target.value)}
+                >
+                  <option value="">Selecione um plano...</option>
+                  {availablePlans.map(plan => (
+                    <option key={plan.id} value={plan.id}>{plan.name} - R$ {Number(plan.price).toFixed(2)}</option>
+                  ))}
+                </select>
+                <Button onClick={handleAssignPlan} disabled={assigningPlan || !selectedPlanToAssign}>
+                  {assigningPlan ? "Vinculando..." : "Vincular"}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsSubsModalOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmModal
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
         title="Excluir Cliente"
-        description="Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita."
+        description="Tem certeza que deseja excluir este cliente? O histórico de chats também será apagado."
         onConfirm={confirmDelete}
       />
     </div>
