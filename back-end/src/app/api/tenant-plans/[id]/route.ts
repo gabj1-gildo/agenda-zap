@@ -5,7 +5,7 @@ import { tenantPlans } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = verifyAuth(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -29,7 +29,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           interestAbsorption: body.interestAbsorption !== undefined ? body.interestAbsorption : undefined,
           updatedAt: new Date()
         })
-        .where(and(eq(tenantPlans.id, params.id), eq(tenantPlans.tenantId, tenantId)))
+        .where(and(eq(tenantPlans.id, (await params).id), eq(tenantPlans.tenantId, tenantId)))
         .returning();
       updatedPlan = updated[0];
     });
@@ -43,7 +43,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = verifyAuth(req);
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -55,7 +55,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     let deletedPlan: any = null;
     await withTenant(tenantId, async (tx) => {
       const deleted = await tx.delete(tenantPlans)
-        .where(and(eq(tenantPlans.id, params.id), eq(tenantPlans.tenantId, tenantId)))
+        .where(and(eq(tenantPlans.id, (await params).id), eq(tenantPlans.tenantId, tenantId)))
         .returning();
       deletedPlan = deleted[0];
     });

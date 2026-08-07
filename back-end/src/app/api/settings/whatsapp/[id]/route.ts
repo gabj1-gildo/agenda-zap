@@ -7,7 +7,7 @@ import { env } from '@/config/env';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = verifyAuth(req);
@@ -17,7 +17,8 @@ export async function DELETE(
     if (!tenantId) return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 });
     if (!canAccessTenant(user, tenantId)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
-    const phoneId = params.id;
+    const { id } = await params;
+    const phoneId = id;
 
     // Buscar instância no banco
     const phoneRecord = await db.query.tenantPhones.findFirst({
@@ -60,7 +61,7 @@ export async function DELETE(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = verifyAuth(req);
@@ -70,7 +71,8 @@ export async function GET(
     if (!tenantId) return NextResponse.json({ success: false, error: 'Tenant ID required' }, { status: 400 });
     if (!canAccessTenant(user, tenantId)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
-    const phoneId = params.id;
+    const { id } = await params;
+    const phoneId = id;
 
     const phoneRecord = await db.query.tenantPhones.findFirst({
       where: and(eq(tenantPhones.id, phoneId), eq(tenantPhones.tenantId, tenantId))

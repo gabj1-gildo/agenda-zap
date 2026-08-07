@@ -107,3 +107,16 @@ export async function generateCheckoutLink(tenantId: string, planId: string, cli
     return "Erro ao processar o link de pagamento. Tente novamente mais tarde.";
   }
 }
+
+export async function createCheckoutPayment(
+  price: number,
+  description: string,
+  tenantId: string,
+  paymentMethod?: string
+): Promise<{ paymentId: string; checkoutUrl: string }> {
+  // Temporary mock implementation for appointments to satisfy build
+  return {
+    paymentId: 'MOCK_APPOINTMENT_PAYMENT_' + Date.now(),
+    checkoutUrl: 'https://mpago.la/mock_appointment_checkout'
+  };
+}

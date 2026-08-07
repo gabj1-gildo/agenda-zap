@@ -4,23 +4,21 @@ import { clientSubscriptions, tenantPlans } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { env } from '@/config/env';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const tenantId = req.headers.get('tenant-id');
     if (!tenantId) {
       return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 });
     }
 
-    const clientId = params.id;
+    const { id } = await params;
+    const clientId = id;
 
     // Buscar assinaturas do cliente com detalhes do plano
     const subscriptions = await db.query.clientSubscriptions.findMany({
-      where: and(
-        eq(clientSubscriptions.clientId, clientId),
-        eq(clientSubscriptions.tenantId, tenantId)
-      ),
+      where: eq(clientSubscriptions.clientId, clientId),
       with: {
-        plan: true
+        tenantPlan: true
       },
       orderBy: (subs, { desc }) => [desc(subs.createdAt)]
     });
@@ -33,14 +31,15 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const tenantId = req.headers.get('tenant-id');
     if (!tenantId) {
       return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 });
     }
 
-    const clientId = params.id;
+    const { id } = await params;
+    const clientId = id;
     const body = await req.json();
 
     if (!body.planId) {
@@ -49,8 +48,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const [newSubscription] = await db.insert(clientSubscriptions).values({
       clientId: clientId,
-      tenantId: tenantId,
-      planId: body.planId,
+      tenantPlanId: body.planId,
       status: 'ACTIVE',
       startDate: new Date(),
     }).returning();
