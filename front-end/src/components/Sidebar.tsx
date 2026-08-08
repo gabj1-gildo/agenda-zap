@@ -158,8 +158,6 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className={styles.sideSpacer}></div>
-
       {/* IA Agent Card */}
       <div className={styles.aiCard}>
         <div className={styles.row}>

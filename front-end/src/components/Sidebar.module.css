@@ -120,10 +120,6 @@
   color: #FFB400;
 }
 
-.sideSpacer {
-  flex: 1;
-}
-
 .aiCard {
   background: linear-gradient(160deg, var(--violet-soft), transparent), var(--surface-2);
   border: 1px solid var(--border);
