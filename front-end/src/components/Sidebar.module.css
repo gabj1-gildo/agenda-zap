@@ -9,7 +9,7 @@
   height: 100vh;
   position: sticky;
   top: 0;
-  padding: 16px 12px;
+  padding: 20px 14px;
   transition: background-color .25s, border-color .25s;
 }
 
@@ -23,7 +23,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 2px 4px 16px;
+  padding: 4px 6px 22px;
 }
 
 .sideLogo .mark {
@@ -66,17 +66,17 @@
   text-transform: uppercase;
   color: var(--muted-foreground);
   font-weight: 600;
-  padding: 12px 10px 6px;
+  padding: 16px 10px 8px;
 }
 
 .navItem {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 7px 10px;
+  padding: 9px 10px;
   border-radius: 10px;
   color: var(--muted-foreground);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   margin-bottom: 2px;
@@ -124,7 +124,7 @@
   background: linear-gradient(160deg, var(--violet-soft), transparent), var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 13px;
-  padding: 10px;
+  padding: 13px;
   margin-bottom: 10px;
 }
 
@@ -179,7 +179,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 7px 8px;
+  padding: 9px 8px;
   border-radius: 11px;
   border: 1px solid var(--border);
   background: var(--surface-2);

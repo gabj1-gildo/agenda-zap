@@ -33,7 +33,6 @@ const navLinks: NavItem[] = [
   { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Configurações" },
   { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "Configurações" },
   { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "Configurações" },
-  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "Configurações" },
 ];
 
 export function Sidebar() {
