@@ -52,7 +52,98 @@
    PALETA PADRÃO — Amber Gold
    ══════════════════════════════════════════════════════════ */
 :root {
-  /* Semantic tokens mapped from Funil */
+  /* Semantic tokens */
+  --background:           #F6F4EF;
+  --foreground:           #14213D;
+  --card:                 #FFFFFF;
+  --card-foreground:      #14213D;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #14213D;
+  --primary:              #14213D;
+  --primary-foreground:   #F6F4EF;
+  --secondary:            #E4E0D6;
+  --secondary-foreground: #14213D;
+  --muted:                #F0EDE6;
+  --muted-foreground:     #6B7280;
+  --accent:               #FFB400;
+  --accent-foreground:    #14213D;
+  --destructive:          #E14434;
+  --destructive-foreground: #FFFFFF;
+  --border:               #E4E0D6;
+  --input:                #E4E0D6;
+  --ring:                 #14213D;
+
+  /* Status colors */
+  --success:              #1F9D55;
+  --success-bg:           #E7F7ED;
+  --warning:              #B9790A;
+  --warning-bg:           #FFF6E0;
+  --info:                 #2F6FED;
+  --info-bg:              #EAF0FE;
+
+  /* Charts */
+  --chart-1: #FFB400;
+  --chart-2: #2F6FED;
+  --chart-3: #1F9D55;
+  --chart-4: #E14434;
+  --chart-5: #2A3B63;
+
+  --radius: 0.875rem;
+
+  /* Sidebar */
+  --sidebar:                    #14213D;
+  --sidebar-foreground:         #F6F4EF;
+  --sidebar-primary:            #FFB400;
+  --sidebar-primary-foreground: #14213D;
+  --sidebar-accent:             rgba(255,255,255,0.07);
+  --sidebar-accent-foreground:  #FFFFFF;
+  --sidebar-border:             rgba(255,255,255,0.10);
+  --sidebar-ring:               #FFB400;
+}
+
+/* ── Default Dark ── */
+.dark {
+  --background:           #121318;
+  --foreground:           #E8E9ED;
+  --card:                 #1A1B22;
+  --card-foreground:      #E8E9ED;
+  --popover:              #1A1B22;
+  --popover-foreground:   #E8E9ED;
+  --primary:              #F5A623;
+  --primary-foreground:   #1A1100;
+  --secondary:            #262730;
+  --secondary-foreground: #E8E9ED;
+  --muted:                #1F2028;
+  --muted-foreground:     #9298A8;
+  --accent:               #F5A623;
+  --accent-foreground:    #1A1100;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #2A2B35;
+  --input:                #2A2B35;
+  --ring:                 #F5A623;
+
+  --success:              #34D399;
+  --success-bg:           rgba(52,211,153,0.10);
+  --warning:              #FBBF24;
+  --warning-bg:           rgba(251,191,36,0.10);
+  --info:                 #60A5FA;
+  --info-bg:              rgba(96,165,250,0.10);
+
+  --sidebar:                    #111218;
+  --sidebar-foreground:         #E8E9ED;
+  --sidebar-primary:            #F5A623;
+  --sidebar-primary-foreground: #1A1100;
+  --sidebar-accent:             rgba(255,255,255,0.05);
+  --sidebar-accent-foreground:  #FFFFFF;
+  --sidebar-border:             rgba(255,255,255,0.08);
+  --sidebar-ring:               #F5A623;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PALETA SISTEMA — Inovador (Funil)
+   ══════════════════════════════════════════════════════════ */
+:root[data-theme="sistema"] {
   --background:           #eef1f7;
   --foreground:           #111827;
   --card:                 #ffffff;
@@ -73,7 +164,6 @@
   --input:                rgba(15, 23, 42, .09);
   --ring:                 #8b5cf6;
 
-  /* Status colors */
   --success:              #22c55e;
   --success-bg:           rgba(34, 197, 94, .14);
   --warning:              #f5a524;
@@ -81,16 +171,12 @@
   --info:                 #3b82f6;
   --info-bg:              rgba(59, 130, 246, .14);
 
-  /* Charts */
   --chart-1: #f5a524;
   --chart-2: #8b5cf6;
   --chart-3: #22c55e;
   --chart-4: #f43f5e;
   --chart-5: #3b82f6;
 
-  --radius: 0.875rem;
-
-  /* Sidebar */
   --sidebar:                    #ffffff;
   --sidebar-foreground:         #111827;
   --sidebar-primary:            #8b5cf6;
@@ -101,8 +187,7 @@
   --sidebar-ring:               #8b5cf6;
 }
 
-/* ── Default Dark ── */
-.dark {
+.dark[data-theme="sistema"] {
   --background:           #060a13;
   --foreground:           #eef1f8;
   --card:                 #0d1424;
