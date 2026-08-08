@@ -358,7 +358,7 @@ export default function FunilPage() {
                 borderRadius: 10, padding: 12, zIndex: 10, minWidth: 180,
                 boxShadow: 'var(--shadow)'
               }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 8, textTransform: 'uppercase' }}>Status</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8, textTransform: 'uppercase' }}>Status</div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', marginBottom: 6 }}>
                   <input type="checkbox" defaultChecked /> Online agora
                 </label>

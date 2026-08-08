@@ -185,11 +185,11 @@ export function Sidebar() {
             className={styles.sideUser}
             style={{ width: '100%', justifyContent: 'space-between' }}
           >
-            <Building2 style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+            <Building2 style={{ width: 14, height: 14, color: 'var(--muted-foreground)' }} />
             <span className={styles.name} style={{ flex: 1, textAlign: 'left' }}>
               {activeTenantName}
             </span>
-            <ChevronDown style={{ width: 14, height: 14, color: 'var(--muted)', transform: isTenantDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            <ChevronDown style={{ width: 14, height: 14, color: 'var(--muted-foreground)', transform: isTenantDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </button>
           
           {isTenantDropdownOpen && (
@@ -201,7 +201,7 @@ export function Sidebar() {
                     update({ tenantId: tenant.id });
                     setIsTenantDropdownOpen(false);
                   }}
-                  style={{ width: '100%', textAlign: 'left', padding: '10px 12px', fontSize: '11px', color: tenant.id === activeTenantId ? 'var(--text)' : 'var(--muted)', background: tenant.id === activeTenantId ? 'var(--surface-2)' : 'transparent', fontWeight: tenant.id === activeTenantId ? 700 : 500, cursor: 'pointer', border: 'none' }}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 12px', fontSize: '11px', color: tenant.id === activeTenantId ? 'var(--text)' : 'var(--muted-foreground)', background: tenant.id === activeTenantId ? 'var(--surface-2)' : 'transparent', fontWeight: tenant.id === activeTenantId ? 700 : 500, cursor: 'pointer', border: 'none' }}
                 >
                   {tenant.name}
                 </button>
@@ -228,7 +228,7 @@ export function Sidebar() {
             {role === "SUPERADMIN" ? "Super Admin" : role === "ADMIN" ? "Admin" : role === "ATTENDANT" ? "Atendente" : "—"}
           </div>
         </div>
-        <LogOut style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+        <LogOut style={{ width: 14, height: 14, color: 'var(--muted-foreground)' }} />
       </div>
     </aside>
   );

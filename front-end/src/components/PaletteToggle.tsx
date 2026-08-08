@@ -14,9 +14,6 @@ const palettes = [
   { id: "productivity", name: "Produtividade", emoji: "⚡", primary: "#059669", accent: "#4F46E5", bg: "#F8FAFC" },
   { id: "sistema", name: "Sistema",  emoji: "✨", primary: "#8b5cf6", accent: "#f5a524", bg: "#eef1f7" },
   { id: "teal",    name: "Teal",     emoji: "🌿", primary: "#0F6E56", accent: "#378ADD", bg: "#F1EFE8" },
-  { id: "blue",    name: "Azul",     emoji: "🌊", primary: "#185FA5", accent: "#534AB7", bg: "#F0F2F5" },
-  { id: "purple",  name: "Roxo",     emoji: "🔮", primary: "#534AB7", accent: "#D4537E", bg: "#F2F0F5" },
-  { id: "coral",   name: "Coral",    emoji: "🔥", primary: "#D85A30", accent: "#0F6E56", bg: "#F5F0ED" },
 ] as const;
 
 export function PaletteToggle() {

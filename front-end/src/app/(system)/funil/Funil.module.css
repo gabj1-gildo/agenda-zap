@@ -49,7 +49,7 @@
 
 .topbarTitle p {
   font-size: 12.5px;
-  color: var(--muted);
+  color: var(--muted-foreground);
   margin-top: 2px;
 }
 
@@ -82,7 +82,7 @@
 }
 
 .tbSearch input::placeholder {
-  color: var(--muted-dim);
+  color: var(--muted-foreground);
 }
 
 .tbSearch svg.iconSearch {
@@ -92,7 +92,7 @@
   transform: translateY(-50%);
   width: 14px;
   height: 14px;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .tbSearch .kbd {
@@ -101,7 +101,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 10px;
-  color: var(--muted-dim);
+  color: var(--muted-foreground);
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 1px 5px;
@@ -114,7 +114,7 @@
   border-radius: 10px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  color: var(--muted);
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +191,7 @@
 
 .userChip .role {
   font-size: 10.5px;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 /* ============ STAT ROW ============ */
@@ -239,7 +239,7 @@
   font-size: 10.5px;
   letter-spacing: .6px;
   text-transform: uppercase;
-  color: var(--muted-dim);
+  color: var(--muted-foreground);
   font-weight: 600;
 }
 
@@ -325,14 +325,14 @@
   font-size: 10.5px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--muted-dim);
+  color: var(--muted-foreground);
   font-weight: 600;
 }
 
 .flowbarTop .total {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .flowbarTop .total b {
@@ -382,7 +382,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11.5px;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .flowLegend .dot {
@@ -493,7 +493,7 @@
 
 .colTitle .sub {
   font-size: 10.5px;
-  color: var(--muted);
+  color: var(--muted-foreground);
   margin-top: 3px;
 }
 
@@ -620,7 +620,7 @@
 
 .cardSub {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--muted-foreground);
   font-family: 'JetBrains Mono', monospace;
   margin-top: 1px;
   white-space: nowrap;
@@ -630,7 +630,7 @@
 
 .cardTime {
   font-size: 10.5px;
-  color: var(--muted-dim);
+  color: var(--muted-foreground);
   flex-shrink: 0;
   white-space: nowrap;
   margin-left: 6px;
@@ -697,7 +697,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--muted);
+  color: var(--muted-foreground);
   font-style: italic;
 }
 
@@ -739,7 +739,7 @@
 
 .agentChip span {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--muted-foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -824,7 +824,7 @@
 
 .celebrate p {
   font-size: 11.5px;
-  color: var(--muted);
+  color: var(--muted-foreground);
   line-height: 1.4;
   max-width: 150px;
   margin: 0;
@@ -863,7 +863,7 @@
 
 .avatarStack .as.more {
   background: var(--surface-3);
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 /* ---------- EMPTY STATE ---------- */
@@ -874,7 +874,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: var(--muted-dim);
+  color: var(--muted-foreground);
   padding: 24px 12px;
   gap: 7px;
   border-radius: 11px;

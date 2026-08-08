@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Palette = "default" | "teal" | "blue" | "purple" | "coral" | "productivity" | "sistema";
+type Palette = "default" | "teal" | "productivity" | "sistema";
 
 interface PaletteContextType {
   palette: Palette;

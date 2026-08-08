@@ -460,10 +460,15 @@ export default function BroadcastPage() {
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Preview (Visão do Cliente)</h3>
             
             {/* Simulador de Celular */}
-            <div className="relative w-[320px] h-[640px] border-[8px] border-border bg-[#efeae2] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+            <div className="relative w-[320px] h-[640px] border-[8px] border-zinc-800 dark:border-zinc-900 bg-[#efeae2] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
               
+              {/* Phone Notch/Camera */}
+              <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50">
+                <div className="w-24 h-5 bg-zinc-800 dark:bg-zinc-900 rounded-b-xl"></div>
+              </div>
+
               {/* Header do Zap */}
-              <div className="bg-[#00a884] px-4 py-3 text-white flex items-center gap-3 shadow-sm z-10 shrink-0">
+              <div className="bg-[#00a884] px-4 pt-7 pb-3 text-white flex items-center gap-3 shadow-sm z-10 shrink-0">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                   <User className="w-5 h-5 text-white" />
                 </div>
