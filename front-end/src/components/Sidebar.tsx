@@ -11,6 +11,7 @@ import {
   Megaphone, Server, FileText, LayoutDashboard, Lock, Coins, Wand2, CreditCard, Contact, CalendarDays, CalendarCheck, Filter, Zap, Bot
 } from "lucide-react";
 import { getBackendUrl } from "@/lib/api";
+import styles from "./Sidebar.module.css";
 
 type NavItem = {
   href: string;
@@ -22,17 +23,17 @@ type NavItem = {
 };
 
 const navLinks: NavItem[] = [
-  { href: "/dashboard",    label: "Painel",        icon: LayoutDashboard, category: "MENU PRINCIPAL" },
-  { href: "/clients",      label: "Clientes",      icon: Contact,         requiresTenant: true, category: "MENU PRINCIPAL" },
-  { href: "/funil",        label: "Funil de Vendas",icon: Filter,          requiresTenant: true, category: "MENU PRINCIPAL" },
-  { href: "/chats",        label: "Conversas",     icon: MessageSquare,   badgeKey: "chats", requiresTenant: true, category: "MENU PRINCIPAL" },
-  { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "MENU PRINCIPAL" },
-  { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "RELATÓRIOS" },
-  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "RELATÓRIOS" },
-  { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "CONFIGURAÇÕES" },
-  { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "CONFIGURAÇÕES" },
-  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "CONFIGURAÇÕES" },
-  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "CONFIGURAÇÕES" },
+  { href: "/dashboard",    label: "Painel",        icon: LayoutDashboard, category: "Menu Principal" },
+  { href: "/clients",      label: "Clientes",      icon: Contact,         requiresTenant: true, category: "Menu Principal" },
+  { href: "/funil",        label: "Funil de Vendas",icon: Filter,          requiresTenant: true, category: "Menu Principal" },
+  { href: "/chats",        label: "Conversas",     icon: MessageSquare,   badgeKey: "chats", requiresTenant: true, category: "Menu Principal" },
+  { href: "/broadcast",    label: "Disparos",      icon: Megaphone,       requiresTenant: true, category: "Menu Principal" },
+  { href: "/reports",      label: "Relatórios",    icon: FileText,        requiresTenant: true, category: "Relatórios" },
+  { href: "/admin/tenants",label: "Empresas",      icon: Building2,       category: "Relatórios" },
+  { href: "/settings",     label: "Configurações", icon: Settings,        requiresTenant: true, category: "Configurações" },
+  { href: "/team",         label: "Equipe e Acessos", icon: Users,        requiresTenant: true, category: "Configurações" },
+  { href: "/admin/settings",label: "Sistema",      icon: Server,          category: "Configurações" },
+  { href: "/profile",      label: "Meu Perfil",    icon: UserCircle,      category: "Configurações" },
 ];
 
 export function Sidebar() {
@@ -85,8 +86,8 @@ export function Sidebar() {
       const activeTenant = tenants.find((t: any) => t.id === activeTenantId);
       const permissions = activeTenant?.permissions || [];
 
-      if (item.category === "CONFIGURAÇÕES" && item.label === "Sistema" && role !== "SUPERADMIN") return acc;
-      if (item.category === "RELATÓRIOS" && item.label === "Empresas" && role !== "SUPERADMIN") return acc;
+      if (item.category === "Configurações" && item.label === "Sistema" && role !== "SUPERADMIN") return acc;
+      if (item.category === "Relatórios" && item.label === "Empresas" && role !== "SUPERADMIN") return acc;
 
       if (!hasRouteAccess(item.href, role, permissions)) return acc;
       
@@ -98,33 +99,28 @@ export function Sidebar() {
   );
 
   return (
-    <aside
-      className="hidden lg:flex w-[240px] flex-shrink-0 flex-col h-screen sticky top-0 z-20 px-4 py-6 font-sans bg-[#0B0F19] text-white"
-    >
+    <aside className={styles.sidebar}>
       {/* Brand */}
-      <div className="flex items-center gap-3 px-2 pb-6">
-        <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#FFB400] text-[#0B0F19] shadow-[0_0_15px_rgba(255,180,0,0.3)]">
+      <div className={styles.sideLogo}>
+        <div className={styles.mark}>
           {hasLogo ? (
-            <img src={activeTenantLogo} alt="Logo" className="w-full h-full object-cover rounded-full" />
+            <img src={activeTenantLogo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
           ) : (
-            <Zap className="w-5 h-5 fill-current" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0f1a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+            </svg>
           )}
         </div>
-        <span className="font-display text-[15px] font-black tracking-widest uppercase">
-          AgendaZap
-        </span>
+        <div className={styles.word}>AGENDAZAP</div>
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-col flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+      <nav style={{ flex: 1, overflowY: 'auto' }}>
         {categories.map(([category, items]) => (
-          <div key={category} className="mb-4">
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-3">
-              {category}
-            </h3>
+          <div key={category}>
+            <div className={styles.navLabel}>{category}</div>
             
-            <div className="flex flex-col gap-1">
-              {items.map(({ href, label, icon: Icon, badgeKey, requiresTenant }) => {
+            {items.map(({ href, label, icon: Icon, badgeKey, requiresTenant }) => {
                 const locked = requiresTenant && isSuperAdmin && !activeTenantId;
                 const active = isActive(href);
 
@@ -133,11 +129,11 @@ export function Sidebar() {
                     <div
                       key={href}
                       title="Selecione uma empresa no topo para acessar"
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium cursor-not-allowed opacity-20"
+                      className={`${styles.navItem} ${styles.locked}`}
                     >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
-                      <span className="flex-1">{label}</span>
-                      <Lock className="w-3 h-3" />
+                      <Icon />
+                      <span style={{ flex: 1 }}>{label}</span>
+                      <Lock style={{ width: 14, height: 14 }} />
                     </div>
                   );
                 }
@@ -146,61 +142,58 @@ export function Sidebar() {
                   <Link
                     key={href}
                     href={href}
-                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200
-                      ${active
-                        ? "font-bold bg-[#FFB400] text-[#0B0F19] shadow-[0_4px_12px_rgba(255,180,0,0.25)]"
-                        : "font-medium text-slate-400 hover:text-white hover:bg-white/5"
-                      }`}
+                    className={`${styles.navItem} ${active ? styles.active : ''}`}
                   >
-                    <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${active ? 'text-[#0B0F19]' : 'text-slate-400 group-hover:text-white'}`} />
-                    <span className="flex-1 tracking-wide">{label}</span>
+                    <Icon />
+                    <span style={{ flex: 1 }}>{label}</span>
                     {badgeKey && badges[badgeKey as keyof typeof badges] > 0 && (
-                      <span
-                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                          active 
-                            ? 'bg-[#0B0F19] text-[#FFB400]' 
-                            : 'bg-red-500 text-white'
-                        }`}
-                      >
+                      <span className={`${styles.badge} ${active ? styles.activeBadge : ''}`}>
                         {badges[badgeKey as keyof typeof badges]}
                       </span>
                     )}
                   </Link>
                 );
               })}
-            </div>
           </div>
         ))}
       </nav>
 
+      <div className={styles.sideSpacer}></div>
+
       {/* IA Agent Card */}
-      <div className="mt-4 mb-4 p-4 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-3">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
+      <div className={styles.aiCard}>
+        <div className={styles.row}>
+          <div className={styles.bot}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3v2M12 19v2M3 12h2M19 12h2" />
+              <rect x="6" y="6" width="12" height="12" rx="3" />
+              <circle cx="9.5" cy="11.5" r="1" />
+              <circle cx="14.5" cy="11.5" r="1" />
+            </svg>
+            <span className={styles.statusDot}></span>
+          </div>
+          <div className={styles.title}>IA Agente Ativo</div>
         </div>
-        <div className="flex items-center gap-2 mb-2">
-          <Bot className="w-5 h-5 text-emerald-400" />
-          <span className="text-[13px] font-bold text-white">IA Agente Ativo</span>
-        </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          Monitorando conversas e sugerindo ações inteligentes
-        </p>
+        <p>Monitorando conversas e sugerindo ações inteligentes</p>
       </div>
 
       {/* Tenant Indicator */}
       {(role === "SUPERADMIN" || tenants.length > 1) && tenants.length > 0 && (
-        <div className="relative mb-3">
+        <div style={{ position: 'relative', marginBottom: '10px' }}>
           <button
             onClick={() => setIsTenantDropdownOpen(!isTenantDropdownOpen)}
-            className="w-full rounded-xl px-3 py-2.5 flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-[11px]"
+            className={styles.sideUser}
+            style={{ width: '100%', justifyContent: 'space-between' }}
           >
-            <Building2 className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold truncate flex-1 text-left text-slate-300">{activeTenantName}</span>
-            <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isTenantDropdownOpen ? 'rotate-180' : ''}`} />
+            <Building2 style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+            <span className={styles.name} style={{ flex: 1, textAlign: 'left' }}>
+              {activeTenantName}
+            </span>
+            <ChevronDown style={{ width: 14, height: 14, color: 'var(--muted)', transform: isTenantDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </button>
           
           {isTenantDropdownOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl shadow-2xl z-50 overflow-hidden max-h-48 overflow-y-auto bg-[#1A1D27] border border-white/10">
+            <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, marginBottom: '8px', background: 'var(--surface-3)', borderRadius: '10px', overflow: 'hidden', zIndex: 50, border: '1px solid var(--border)' }}>
               {tenants.map((tenant: any) => (
                 <button
                   key={tenant.id}
@@ -208,9 +201,7 @@ export function Sidebar() {
                     update({ tenantId: tenant.id });
                     setIsTenantDropdownOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2.5 text-xs transition-colors hover:bg-white/5 ${
-                    tenant.id === activeTenantId ? 'text-[#FFB400] font-bold bg-[#FFB400]/10' : 'text-slate-300'
-                  }`}
+                  style={{ width: '100%', textAlign: 'left', padding: '10px 12px', fontSize: '11px', color: tenant.id === activeTenantId ? 'var(--text)' : 'var(--muted)', background: tenant.id === activeTenantId ? 'var(--surface-2)' : 'transparent', fontWeight: tenant.id === activeTenantId ? 700 : 500, cursor: 'pointer', border: 'none' }}
                 >
                   {tenant.name}
                 </button>
@@ -221,23 +212,23 @@ export function Sidebar() {
       )}
 
       {/* Footer User Profile */}
-      <div className="flex items-center gap-3 mt-auto cursor-pointer hover:bg-white/5 p-2 -mx-2 rounded-xl transition-colors">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-white/10 text-white overflow-hidden shadow-inner shrink-0">
+      <div className={styles.sideUser} onClick={() => signOut()} title="Sair do Sistema">
+        <div className={styles.av}>
           {hasAvatar ? (
-            <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
+            <img src={avatarSrc} alt="Avatar" />
           ) : (
             initials()
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-bold truncate text-white">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className={styles.name}>
             {session?.user?.name || session?.user?.email?.split('@')[0] || "Admin"}
           </div>
-          <div className="text-[11px] text-slate-400 truncate">
+          <div className={styles.role}>
             {role === "SUPERADMIN" ? "Super Admin" : role === "ADMIN" ? "Admin" : role === "ATTENDANT" ? "Atendente" : "—"}
           </div>
         </div>
-        <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+        <LogOut style={{ width: 14, height: 14, color: 'var(--muted)' }} />
       </div>
     </aside>
   );
