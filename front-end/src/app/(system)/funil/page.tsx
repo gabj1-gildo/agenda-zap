@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useMemo, CSSProperties } from "react";
+import React, { useState, useMemo, CSSProperties, useRef } from "react";
 import { useTheme } from "next-themes";
 import styles from "./Funil.module.css";
 import { 
-  Search, Bell, SlidersHorizontal, Plus, ChevronRight, Moon, Sun, Filter, Contact, MessageSquare, Megaphone, CheckCircle2, Zap, CreditCard, CalendarDays
+  Search, Bell, SlidersHorizontal, Plus, ChevronRight, ChevronLeft, Moon, Sun, Filter, Contact, MessageSquare, Megaphone, CheckCircle2, Zap, CreditCard, CalendarDays
 } from "lucide-react";
 
 type StageKey = 'espera' | 'ia' | 'humano' | 'pagamento' | 'finalizado' | 'perdido';
@@ -96,6 +96,14 @@ export default function FunilPage() {
   const [showCompletedCards, setShowCompletedCards] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isThisMonth, setIsThisMonth] = useState(true);
+
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  const scrollBoard = (dir: 'left' | 'right') => {
+    if (boardRef.current) {
+      boardRef.current.scrollBy({ left: dir === 'left' ? -350 : 350, behavior: 'smooth' });
+    }
+  };
 
   const [badgeCounters, setBadgeCounters] = useState<Record<StageKey, number>>({
     espera: 0, ia: 0, humano: 0, pagamento: 0, finalizado: 0, perdido: 0
@@ -407,7 +415,22 @@ export default function FunilPage() {
         </div>
       </div>
 
-      <div className={styles.board}>
+      <div style={{ position: 'relative' }}>
+        <button 
+          onClick={() => scrollBoard('left')}
+          className={styles.scrollArrow}
+          style={{ left: -10 }}
+        >
+          <ChevronLeft />
+        </button>
+        <button 
+          onClick={() => scrollBoard('right')}
+          className={styles.scrollArrow}
+          style={{ right: -10 }}
+        >
+          <ChevronRight />
+        </button>
+        <div className={styles.board} ref={boardRef}>
         {STAGES.map((stage, i) => {
           const items = filteredBoard[stage.key];
           
@@ -493,6 +516,7 @@ export default function FunilPage() {
             </React.Fragment>
           );
         })}
+        </div>
       </div>
     </div>
   );

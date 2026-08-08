@@ -115,7 +115,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, overflowY: 'auto' }}>
+      <nav className={styles.navScroll}>
         {categories.map(([category, items]) => (
           <div key={category}>
             <div className={styles.navLabel}>{category}</div>
