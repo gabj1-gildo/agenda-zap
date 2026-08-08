@@ -92,6 +92,11 @@ export default function FunilPage() {
   const [draggedFrom, setDraggedFrom] = useState<StageKey | null>(null);
   const [hoveredColumn, setHoveredColumn] = useState<StageKey | null>(null);
   
+  const [expandedColumns, setExpandedColumns] = useState<Partial<Record<StageKey, boolean>>>({});
+  const [showCompletedCards, setShowCompletedCards] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isThisMonth, setIsThisMonth] = useState(true);
+
   const [badgeCounters, setBadgeCounters] = useState<Record<StageKey, number>>({
     espera: 0, ia: 0, humano: 0, pagamento: 0, finalizado: 0, perdido: 0
   });
@@ -338,8 +343,38 @@ export default function FunilPage() {
         </div>
 
         <div className={styles.statActions}>
-          <button className={styles.btn}><SlidersHorizontal />Filtros</button>
-          <button className={styles.btn}><CalendarDays />Este mês</button>
+          <div style={{ position: 'relative' }}>
+            <button 
+              className={styles.btn} 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              style={isFilterOpen ? { borderColor: 'var(--violet)', color: 'var(--violet)' } : {}}
+            >
+              <SlidersHorizontal />Filtros
+            </button>
+            {isFilterOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 8, 
+                background: 'var(--surface)', border: '1px solid var(--border)', 
+                borderRadius: 10, padding: 12, zIndex: 10, minWidth: 180,
+                boxShadow: 'var(--shadow)'
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 8, textTransform: 'uppercase' }}>Status</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', marginBottom: 6 }}>
+                  <input type="checkbox" defaultChecked /> Online agora
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
+                  <input type="checkbox" defaultChecked /> Com pendências
+                </label>
+              </div>
+            )}
+          </div>
+          <button 
+            className={styles.btn} 
+            onClick={() => setIsThisMonth(!isThisMonth)}
+            style={isThisMonth ? { background: 'var(--surface-3)', borderColor: 'var(--border)' } : {}}
+          >
+            <CalendarDays />Este mês
+          </button>
           <button className={`${styles.btn} ${styles.btnPrimary}`}><Plus />Novo Cliente</button>
         </div>
       </div>
@@ -410,7 +445,7 @@ export default function FunilPage() {
                 </div>
                 
                 <div className={styles.colBody}>
-                  {stage.key === 'finalizado' ? (
+                  {stage.key === 'finalizado' && !showCompletedCards ? (
                     <div className={styles.celebrate}>
                       <div className={styles.ringIcon}>
                         <span className={styles.spark} style={{ top: '-2px', left: '4px', animationDelay: '.2s' }}>
@@ -439,12 +474,20 @@ export default function FunilPage() {
                       <p>Nenhum lead por aqui. Arraste um card para cá.</p>
                     </div>
                   ) : (
-                    items.map((item, idx) => renderCard(stage, item, idx))
+                    (expandedColumns[stage.key] ? items : items.slice(0, 4)).map((item, idx) => renderCard(stage, item, idx))
                   )}
                 </div>
                 
                 <div className={styles.colFoot}>
-                  <button>Ver todos ({items.length}) <ChevronRight /></button>
+                  {stage.key === 'finalizado' ? (
+                    <button onClick={() => setShowCompletedCards(!showCompletedCards)}>
+                      {showCompletedCards ? 'Ver painel de celebração' : `Ver todos (${items.length})`} <ChevronRight />
+                    </button>
+                  ) : items.length > 4 ? (
+                    <button onClick={() => setExpandedColumns(prev => ({ ...prev, [stage.key]: !prev[stage.key] }))}>
+                      {expandedColumns[stage.key] ? 'Mostrar menos' : `Ver todos (${items.length})`} <ChevronRight style={{ transform: expandedColumns[stage.key] ? 'rotate(-90deg)' : 'none' }} />
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </React.Fragment>
