@@ -248,7 +248,7 @@ function SettingsContent() {
           whatsappMetaPhoneNumberId: tenant.whatsappMetaPhoneNumberId,
           cpfBirthDate: tenant.cpfBirthDate,
           cpfGender: tenant?.cpfGender,
-          logoUrl: newLogoUrl || tenant?.logoUrl,
+          logoUrl: newLogoUrl || tenant?.logoUrl || tenant?.logo_url,
           aiConfig: tenant?.aiConfig || {}
         })
       });
@@ -625,8 +625,8 @@ function SettingsContent() {
               <div className="flex flex-col sm:flex-row items-center gap-8 mb-8 p-6 bg-muted/30 rounded-2xl border border-border/50">
                 <div className="flex flex-col items-center gap-3">
                   <div className="relative group w-32 h-32 rounded-2xl border-4 border-background shadow-md overflow-hidden bg-muted flex items-center justify-center transition-all hover:shadow-lg">
-                    {tenant?.logoUrl ? (
-                      <img src={`/api/image-proxy?url=${encodeURIComponent(tenant.logoUrl)}`} alt="Logo Atual" className="w-full h-full object-cover" />
+                    {(tenant?.logoUrl || tenant?.logo_url) ? (
+                      <img src={`/api/image-proxy?url=${encodeURIComponent((tenant.logoUrl || tenant.logo_url) as string)}`} alt="Logo Atual" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-muted-foreground text-xs text-center px-2 font-semibold">Sem Logo</div>
                     )}
@@ -640,12 +640,12 @@ function SettingsContent() {
                   </div>
                   
                   <div className="flex gap-2">
-                    {tenant?.logoUrl && (
+                    {(tenant?.logoUrl || tenant?.logo_url) && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
-                        onClick={() => setViewImage(tenant.logoUrl)}
+                        onClick={() => setViewImage((tenant.logoUrl || tenant.logo_url) as string)}
                       >
                         <Eye className="w-3.5 h-3.5 mr-1.5" />
                         Visualizar
