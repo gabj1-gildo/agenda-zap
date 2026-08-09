@@ -8,9 +8,8 @@
 import { env } from '@/config/env';
 
 export function getBackendUrl(path: string = ''): string {
-  // Server-side: always go directly to backend
   if (typeof window === 'undefined') {
-    const internalBackend = env.BACKEND_INTERNAL_URL;
+    const internalBackend = env.BACKEND_INTERNAL_URL || (process.env.NODE_ENV === "production" ? "https://back-end-agendazap.mrwoap.easypanel.host" : "http://localhost:3001");
     if (!internalBackend) throw new Error("BACKEND_INTERNAL_URL não definido.");
     return `${internalBackend}${path}`;
   }

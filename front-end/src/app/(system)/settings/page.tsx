@@ -61,6 +61,12 @@ function SettingsContent() {
   const [newLogoUrl, setNewLogoUrl] = useState<string | null>(null);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [availableAiModels, setAvailableAiModels] = useState<any[]>([]);
+  const [aiPresets, setAiPresets] = useState<any>(null);
+  const [missingVarsPrompt, setMissingVarsPrompt] = useState<{
+    variables: string[];
+    values: Record<string, string>;
+    template: { isGlobal: boolean, globalId?: string, globalConfig?: any, field?: string, text?: string };
+  } | null>(null);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState<string | null>(null);
 
   const numberInputRef = useRef<HTMLInputElement>(null);
@@ -97,6 +103,10 @@ function SettingsContent() {
         const presetsData = await presetsRes.json();
         const modelsData = await modelsRes.json();
         const whatsappData = await whatsappRes.json();
+
+        if (presetsData.success) {
+          setAiPresets(presetsData.data);
+        }
 
         if (modelsData.success) {
           setAvailableAiModels(modelsData.data);
@@ -135,6 +145,80 @@ function SettingsContent() {
       setLoading(false);
     }
   }, [targetTenantId]);
+
+  function getTenantVarValue(v: string) {
+    if (v === 'nome_empresa') return tenant?.name;
+    if (v === 'telefone') return tenant?.phone;
+    if (v === 'endereco') return tenant?.address_street;
+    return tenant?.aiConfig?.customVars?.[v];
+  }
+
+  function extractVariables(text: string) {
+    const matches = text.match(/{{([^}]+)}}/g);
+    if (!matches) return [];
+    return Array.from(new Set(matches.map(m => m.replace(/[{}]/g, '').trim())));
+  }
+
+  function applyVarsToText(text: string, customValues?: Record<string, string>) {
+    let result = text;
+    const vars = extractVariables(text);
+    for (const v of vars) {
+      const val = customValues?.[v] || getTenantVarValue(v) || "";
+      result = result.replace(new RegExp(`{{${v}}}`, 'g'), val);
+    }
+    return result;
+  }
+
+  function handleSelectGlobalPreset(preset: any) {
+    const allText = Object.values(preset.config || {}).join(" ");
+    const vars = extractVariables(allText);
+    const missing = vars.filter(v => !getTenantVarValue(v));
+    
+    if (missing.length > 0) {
+      setMissingVarsPrompt({ 
+        variables: missing, 
+        values: {},
+        template: { isGlobal: true, globalId: preset.id, globalConfig: preset.config } 
+      });
+    } else {
+      applyGlobalPreset(preset.id, preset.config);
+    }
+  }
+
+  function applyGlobalPreset(id: string, config: any, customValues?: Record<string, string>) {
+    const finalConfig: any = { preset_id: id };
+    for (const [k, v] of Object.entries(config)) {
+      if (typeof v === 'string') {
+        finalConfig[k] = applyVarsToText(v, customValues);
+      } else {
+        finalConfig[k] = v;
+      }
+    }
+    setTenant((prev: any) => ({
+      ...prev,
+      aiConfig: { ...(prev?.aiConfig || {}), ...finalConfig }
+    }));
+    toast.success("Modelo aplicado! Lembre-se de salvar.");
+  }
+
+  function handleSelectAdvancedPreset(field: string, text: string) {
+    if (!text) {
+      updateAiConfig(field, "");
+      return;
+    }
+    const vars = extractVariables(text);
+    const missing = vars.filter(v => !getTenantVarValue(v));
+    
+    if (missing.length > 0) {
+      setMissingVarsPrompt({ 
+        variables: missing, 
+        values: {},
+        template: { isGlobal: false, field, text } 
+      });
+    } else {
+      updateAiConfig(field, applyVarsToText(text));
+    }
+  }
 
   const saveGeneral = async () => {
     setSaving(true);
@@ -1050,64 +1134,11 @@ function SettingsContent() {
                   <p className="text-xs text-muted-foreground mb-4">Escolha o modelo que melhor descreve o seu negócio. A IA será configurada automaticamente com as melhores práticas.</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      {
-                        id: "salao_beleza",
-                        label: "Salão / Barbearia",
-                        desc: "Tom amigável. Regras de atraso flexíveis.",
-                        config: {
-                          tom_atendimento: "Amigável, acolhedor e descontraído. Use emojis ocasionalmente.",
-                          informacoes_gerais: "Somos um salão focado em beleza e bem-estar. Oferecemos um ambiente relaxante.",
-                          regras_agendamento: "Tolerância de atraso: 10 minutos. Caso atrase mais, precisaremos reagendar.",
-                          instrucoes_pagamento: "Aceitamos Pix e cartões. O pagamento pode ser feito no local.",
-                          restricoes: "NUNCA ofereça descontos. Só ofereça os serviços listados.",
-                          regras_transbordo: "Se o cliente insistir muito, diga: 'Vou chamar alguém para te ajudar.' e pare o atendimento automático.",
-                          mensagem_encerramento: "Agradecemos o agendamento! Te esperamos. Siga nosso Instagram."
-                        }
-                      },
-                      {
-                        id: "clinica",
-                        label: "Clínica (Saúde)",
-                        desc: "Tom formal e sério. Foco em saúde.",
-                        config: {
-                          tom_atendimento: "Profissional, acolhedor, formal e empático. Evite gírias.",
-                          informacoes_gerais: "Somos uma clínica focada na saúde e bem-estar do paciente.",
-                          regras_agendamento: "Pedimos que chegue com 15 min de antecedência. Atrasos podem gerar cancelamento.",
-                          instrucoes_pagamento: "Pagamento particular via Pix ou cartão no local.",
-                          restricoes: "Nunca dê diagnósticos médicos. Não ofereça descontos.",
-                          regras_transbordo: "Para dúvidas complexas ou sintomas, transfira para um atendente humano.",
-                          mensagem_encerramento: "Agradecemos seu contato. Estamos à disposição para cuidar de você."
-                        }
-                      },
-                      {
-                        id: "generico",
-                        label: "Geral / Varejo",
-                        desc: "Tom direto ao ponto para prestação de serviços genérica.",
-                        config: {
-                          tom_atendimento: "Cordial e prestativo. Direto ao ponto.",
-                          informacoes_gerais: "Somos uma empresa comprometida com a qualidade e satisfação do cliente.",
-                          regras_agendamento: "Agendamentos conforme disponibilidade de agenda.",
-                          instrucoes_pagamento: "Trabalhamos com Pix ou Cartão.",
-                          restricoes: "Atenha-se apenas aos serviços que oferecemos.",
-                          regras_transbordo: "Se o cliente solicitar humano, transfira o atendimento.",
-                          mensagem_encerramento: "Obrigado pelo contato! Até breve."
-                        }
-                      }
-                    ].map(preset => (
+                    {(aiPresets?.global_presets || []).map((preset: any) => (
                       <div 
                         key={preset.id}
                         className={`border rounded-lg p-4 cursor-pointer transition-all ${tenant?.aiConfig?.preset_id === preset.id ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'hover:border-primary/50'}`}
-                        onClick={() => {
-                          setTenant((prev: any) => ({
-                            ...prev,
-                            aiConfig: {
-                              ...(prev?.aiConfig || {}),
-                              preset_id: preset.id,
-                              ...preset.config
-                            }
-                          }));
-                          toast.success(`Modelo "${preset.label}" aplicado! Lembre-se de salvar.`);
-                        }}
+                        onClick={() => handleSelectGlobalPreset(preset)}
                       >
                         <div className="font-semibold">{preset.label}</div>
                         <div className="text-xs text-muted-foreground mt-1">{preset.desc}</div>
@@ -1127,65 +1158,100 @@ function SettingsContent() {
                     <div className="p-4 bg-background border-t space-y-6">
                       <div className="space-y-2">
                         <Label>Tom de Atendimento</Label>
-                        <Input 
-                          value={tenant?.aiConfig?.tom_atendimento || ""} 
-                          onChange={e => updateAiConfig('tom_atendimento', e.target.value)} 
-                          placeholder="Ex: Cordial, direto e amigável. Use emojis curtos."
-                        />
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.tom_atendimento || ""}
+                          onChange={e => handleSelectAdvancedPreset('tom_atendimento', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.tom_atendimento?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
                         <Label>Informações Gerais da Empresa</Label>
-                        <textarea 
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          value={tenant?.aiConfig?.informacoes_gerais || ""} 
-                          onChange={e => updateAiConfig('informacoes_gerais', e.target.value)} 
-                        />
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.informacoes_gerais || ""}
+                          onChange={e => handleSelectAdvancedPreset('informacoes_gerais', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.informacoes_gerais?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
                         <Label>Regras de Agendamento</Label>
-                        <textarea 
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          value={tenant?.aiConfig?.regras_agendamento || ""} 
-                          onChange={e => updateAiConfig('regras_agendamento', e.target.value)} 
-                        />
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.regras_agendamento || ""}
+                          onChange={e => handleSelectAdvancedPreset('regras_agendamento', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.regras_agendamento?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Instruções de Pagamento (Valores, Pix, Cartão)</Label>
-                        <textarea 
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          value={tenant?.aiConfig?.instrucoes_pagamento || ""} 
-                          onChange={e => updateAiConfig('instrucoes_pagamento', e.target.value)} 
-                        />
+                        <Label>Instruções de Pagamento</Label>
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.instrucoes_pagamento || ""}
+                          onChange={e => handleSelectAdvancedPreset('instrucoes_pagamento', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.instrucoes_pagamento?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Restrições (O que a IA NÃO deve fazer)</Label>
-                        <textarea 
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          value={tenant?.aiConfig?.restricoes || ""} 
-                          onChange={e => updateAiConfig('restricoes', e.target.value)} 
-                        />
+                        <Label>Regras de Transbordo (Humano)</Label>
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.regras_transbordo || ""}
+                          onChange={e => handleSelectAdvancedPreset('regras_transbordo', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.regras_transbordo?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Regras de Transbordo (Quando chamar humano)</Label>
-                        <textarea 
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          value={tenant?.aiConfig?.regras_transbordo || ""} 
-                          onChange={e => updateAiConfig('regras_transbordo', e.target.value)} 
-                        />
+                        <Label>Restrições / Regras Rígidas</Label>
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.restricoes || ""}
+                          onChange={e => handleSelectAdvancedPreset('restricoes', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.restricoes?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Mensagem Padrão de Encerramento (Opcional)</Label>
-                        <textarea 
-                          className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                          value={tenant?.aiConfig?.mensagem_encerramento || ""} 
-                          onChange={e => updateAiConfig('mensagem_encerramento', e.target.value)} 
-                        />
+                        <Label>Mensagem de Encerramento</Label>
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={tenant?.aiConfig?.mensagem_encerramento || ""}
+                          onChange={e => handleSelectAdvancedPreset('mensagem_encerramento', e.target.value)}
+                        >
+                          <option value="">Selecione um modelo avançado...</option>
+                          {aiPresets?.mensagem_encerramento?.map((opt: any) => (
+                            <option key={opt.text} value={opt.text}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </details>
@@ -1392,6 +1458,54 @@ function SettingsContent() {
           </div>
         </div>
       )}
+
+      {/* Modal de Variáveis da IA */}
+      <Dialog open={!!missingVarsPrompt} onOpenChange={(o) => !o && setMissingVarsPrompt(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Informações Faltantes</DialogTitle>
+            <DialogDescription>
+              O modelo selecionado precisa dos seguintes dados para ser configurado. Preencha-os para continuar:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {missingVarsPrompt?.variables.map(v => (
+              <div key={v} className="space-y-2">
+                <Label className="capitalize">{v.replace(/_/g, ' ')}</Label>
+                <Input 
+                  value={missingVarsPrompt.values[v] || ""}
+                  onChange={(e) => setMissingVarsPrompt(prev => prev ? {
+                    ...prev,
+                    values: { ...prev.values, [v]: e.target.value }
+                  } : null)}
+                  placeholder={`Digite o(a) ${v.replace(/_/g, ' ')}`}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMissingVarsPrompt(null)}>Cancelar</Button>
+            <Button onClick={() => {
+              if (missingVarsPrompt?.template.isGlobal) {
+                applyGlobalPreset(missingVarsPrompt.template.globalId!, missingVarsPrompt.template.globalConfig, missingVarsPrompt.values);
+              } else if (missingVarsPrompt?.template.field) {
+                updateAiConfig(missingVarsPrompt.template.field, applyVarsToText(missingVarsPrompt.template.text!, missingVarsPrompt.values));
+              }
+              // Salvar as variáveis também no tenant para usos futuros
+              setTenant((prev: any) => ({
+                ...prev,
+                aiConfig: {
+                  ...(prev?.aiConfig || {}),
+                  customVars: { ...(prev?.aiConfig?.customVars || {}), ...missingVarsPrompt?.values }
+                }
+              }));
+              setMissingVarsPrompt(null);
+            }}>
+              Aplicar Modelo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

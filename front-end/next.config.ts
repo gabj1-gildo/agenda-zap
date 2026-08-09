@@ -8,11 +8,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/backend/:path*',
-        destination: `${process.env.BACKEND_INTERNAL_URL || 'http://localhost:3001'}/:path*`,
+        destination: `${process.env.BACKEND_INTERNAL_URL || (process.env.NODE_ENV === "production" ? "https://back-end-agendazap.mrwoap.easypanel.host" : "http://localhost:3001")}/:path*`,
       },
       {
         source: '/api/media/:path*',
-        destination: `${process.env.BACKEND_INTERNAL_URL || 'http://localhost:3001'}/api/media/:path*`,
+        destination: `${process.env.BACKEND_INTERNAL_URL || (process.env.NODE_ENV === "production" ? "https://back-end-agendazap.mrwoap.easypanel.host" : "http://localhost:3001")}/api/media/:path*`,
       },
     ];
   },

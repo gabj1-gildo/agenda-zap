@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FIELDS = [
+  { id: "global_presets", name: "Pacotes Globais" },
   { id: "tom_atendimento", name: "Tom de Atendimento" },
   { id: "instrucoes_pagamento", name: "Instruções de Pagamento" },
   { id: "regras_transbordo", name: "Regras de Transbordo" },
@@ -104,7 +105,11 @@ export default function AiPresetsAdminPage() {
   const handleAddItem = (field: string) => {
     setPresets(prev => {
       const fieldList = [...(prev[field] || [])];
-      fieldList.push({ label: "Novo Modelo", text: "" });
+      if (field === "global_presets") {
+        fieldList.push({ id: `pacote_${fieldList.length + 1}`, label: "Novo Pacote", desc: "", config: {} });
+      } else {
+        fieldList.push({ label: "Novo Modelo", text: "" });
+      }
       return { ...prev, [field]: fieldList };
     });
   };
@@ -160,44 +165,104 @@ export default function AiPresetsAdminPage() {
                   </div>
                   
                   <div className="space-y-6">
-                    {!(presets[field.id] && presets[field.id].length > 0) ? (
-                      <div className="text-center p-8 border border-dashed rounded-lg text-muted-foreground">
-                        Nenhum modelo configurado para este campo.
-                      </div>
-                    ) : (
-                      presets[field.id].map((item, idx) => (
-                        <div key={idx} className="relative bg-muted/30 border rounded-lg p-4 space-y-4">
-                          <div className="absolute top-4 right-4">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleRemoveItem(field.id, idx)}
-                              className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="space-y-2 pr-12">
-                            <Label>Nome do Modelo (Exibido no Menu)</Label>
-                            <Input 
-                              value={item.label} 
-                              onChange={(e) => handleUpdateItem(field.id, idx, 'label', e.target.value)} 
-                              placeholder="Ex: Padrão, Rígido, Descontraído..."
-                              className="bg-background"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Texto do Template (Conteúdo Injetado)</Label>
-                            <Textarea 
-                              value={item.text} 
-                              onChange={(e) => handleUpdateItem(field.id, idx, 'text', e.target.value)} 
-                              placeholder="Ex: Instrução de como a IA deve agir..."
-                              className="min-h-[100px] bg-background font-mono text-sm"
-                            />
-                          </div>
+                    {field.id === "global_presets" ? (
+                      !(presets[field.id] && presets[field.id].length > 0) ? (
+                        <div className="text-center p-8 border border-dashed rounded-lg text-muted-foreground">
+                          Nenhum modelo global configurado.
                         </div>
-                      ))
+                      ) : (
+                        presets[field.id].map((item: any, idx: number) => (
+                          <div key={idx} className="relative bg-muted/30 border rounded-lg p-4 space-y-4">
+                            <div className="absolute top-4 right-4">
+                              <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(field.id, idx)} className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <div className="space-y-2 pr-12">
+                              <Label>ID do Pacote (Apenas Letras/Números, sem espaço)</Label>
+                              <Input value={item.id || ""} onChange={(e) => {
+                                const list = [...presets[field.id]];
+                                list[idx] = { ...list[idx], id: e.target.value };
+                                setPresets({ ...presets, [field.id]: list });
+                              }} placeholder="ex: salao_beleza" className="bg-background" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Nome do Pacote</Label>
+                              <Input value={item.label || ""} onChange={(e) => {
+                                const list = [...presets[field.id]];
+                                list[idx] = { ...list[idx], label: e.target.value };
+                                setPresets({ ...presets, [field.id]: list });
+                              }} placeholder="ex: Salão / Barbearia" className="bg-background" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Descrição Curta</Label>
+                              <Input value={item.desc || ""} onChange={(e) => {
+                                const list = [...presets[field.id]];
+                                list[idx] = { ...list[idx], desc: e.target.value };
+                                setPresets({ ...presets, [field.id]: list });
+                              }} placeholder="ex: Tom amigável..." className="bg-background" />
+                            </div>
+                            
+                            <div className="p-4 border rounded-md mt-4 space-y-4 bg-background/50">
+                              <h3 className="font-semibold text-sm">Textos Injetados pelo Pacote:</h3>
+                              {FIELDS.filter(f => f.id !== 'global_presets').map(f => (
+                                <div key={f.id} className="space-y-1">
+                                  <Label className="text-xs">{f.name}</Label>
+                                  <Textarea 
+                                    value={item.config?.[f.id] || ""} 
+                                    onChange={(e) => {
+                                      const list = [...presets[field.id]];
+                                      list[idx] = { ...list[idx], config: { ...(list[idx].config || {}), [f.id]: e.target.value } };
+                                      setPresets({ ...presets, [field.id]: list });
+                                    }} 
+                                    className="min-h-[60px] text-xs font-mono bg-background"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )
+                    ) : (
+                      !(presets[field.id] && presets[field.id].length > 0) ? (
+                        <div className="text-center p-8 border border-dashed rounded-lg text-muted-foreground">
+                          Nenhum modelo configurado para este campo.
+                        </div>
+                      ) : (
+                        presets[field.id].map((item: any, idx: number) => (
+                          <div key={idx} className="relative bg-muted/30 border rounded-lg p-4 space-y-4">
+                            <div className="absolute top-4 right-4">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleRemoveItem(field.id, idx)}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-2 pr-12">
+                              <Label>Nome do Modelo (Exibido no Menu)</Label>
+                              <Input 
+                                value={item.label || ""} 
+                                onChange={(e) => handleUpdateItem(field.id, idx, 'label', e.target.value)} 
+                                placeholder="Ex: Padrão, Rígido, Descontraído..."
+                                className="bg-background"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Texto do Template (Conteúdo Injetado)</Label>
+                              <Textarea 
+                                value={item.text || ""} 
+                                onChange={(e) => handleUpdateItem(field.id, idx, 'text', e.target.value)} 
+                                placeholder="Ex: Instrução de como a IA deve agir..."
+                                className="min-h-[100px] bg-background font-mono text-sm"
+                              />
+                            </div>
+                          </div>
+                        ))
+                      )
                     )}
                   </div>
                 </TabsContent>

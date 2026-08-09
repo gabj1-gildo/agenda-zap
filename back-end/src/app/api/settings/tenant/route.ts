@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { tenants } from '@/db/schema';
+import { tenants, services, schedules } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { r2, DeleteObjectCommand, R2_BUCKET } from '@/lib/r2';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
     if (!tenant) return NextResponse.json({ success: false, error: 'Tenant not found' }, { status: 404 });
     
-    const { services, schedules } = await import('@/db/schema');
+    
     const missingRequirements = [];
     
     if (!tenant.name || tenant.name.trim() === '') missingRequirements.push('Nome da Empresa');
