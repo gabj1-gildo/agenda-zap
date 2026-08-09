@@ -230,14 +230,6 @@ export function Header() {
 
       {/* Right: search + actions */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Search */}
-        <div
-          className="hidden md:flex items-center gap-2 border border-border rounded-xl px-3 py-2 text-sm text-muted-foreground w-56 lg:w-64 bg-muted/30"
-        >
-          <Search className="w-3.5 h-3.5 flex-shrink-0" />
-          <span>Buscar...</span>
-        </div>
-
         {/* Palette toggle */}
         <PaletteToggle />
 
@@ -245,15 +237,23 @@ export function Header() {
         <ThemeToggle />
 
         {/* Bell */}
-        <button
-          className="w-9 h-9 rounded-xl border border-border flex items-center justify-center relative hover:bg-muted transition-colors"
-        >
-          <Bell className="w-4 h-4" />
-          <span
-            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-            style={{ background: "var(--destructive)", border: "1.5px solid var(--card)" }}
-          />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="w-9 h-9 rounded-xl border border-border flex items-center justify-center relative hover:bg-muted transition-colors outline-none"
+          >
+            <Bell className="w-4 h-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-64 p-0" align="end">
+            <div className="p-3 border-b font-semibold flex justify-between items-center">
+              Notificações
+              <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">0</span>
+            </div>
+            <div className="p-6 text-center text-sm text-muted-foreground flex flex-col items-center justify-center">
+              <Bell className="w-8 h-8 opacity-20 mb-2" />
+              Nenhuma notificação no momento.
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Avatar dropdown */}
         <DropdownMenu>

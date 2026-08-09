@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { users, userTenants } from '@/db/schema';
+import { users, userTenants, tenants } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
@@ -45,6 +45,15 @@ export async function POST(req: Request) {
     if (!email) return NextResponse.json({ success: false, message: 'E-mail obrigatório' }, { status: 400 });
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Check user limit
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+    if (!tenant) return NextResponse.json({ success: false, message: 'Empresa não encontrada' }, { status: 404 });
+    
+    const existingTeam = await db.select().from(userTenants).where(eq(userTenants.tenantId, tenantId));
+    if (existingTeam.length >= tenant.maxUsers) {
+      return NextResponse.json({ success: false, message: `Limite de usuários atingido (${tenant.maxUsers} max). Mude seu plano.` }, { status: 400 });
+    }
 
     // Check if user exists
     let [user] = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);

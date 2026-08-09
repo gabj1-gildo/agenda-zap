@@ -10,22 +10,23 @@ type Props = {
   tenantId: string;
   onClose: () => void;
   onSuccess?: () => void;
+  existingInstanceId?: string;
 };
 
 type Step = "phone" | "qr" | "connected";
 
-export function TenantPhoneModal({ tenantId, onClose, onSuccess }: Props) {
+export function TenantPhoneModal({ tenantId, onClose, onSuccess, existingInstanceId }: Props) {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
 
-  const [step, setStep] = useState<Step>("phone");
+  const [step, setStep] = useState<Step>(existingInstanceId ? "qr" : "phone");
   const [phone, setPhone] = useState("");
   const [instanceName, setInstanceName] = useState("");
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
-  const [polling, setPolling] = useState(false);
+  const [polling, setPolling] = useState(!!existingInstanceId);
   const [status, setStatus] = useState("PENDING_QR");
-  const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(null);
+  const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(existingInstanceId || null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

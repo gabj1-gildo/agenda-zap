@@ -45,10 +45,11 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const isInternal = fetchUrl.startsWith(internalBackend);
     const res = await fetch(fetchUrl, {
-      headers: {
+      headers: isInternal ? {
         Authorization: `Bearer ${token.accessToken}`,
-      },
+      } : undefined,
     });
 
     if (!res.ok) {

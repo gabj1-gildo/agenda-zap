@@ -57,7 +57,7 @@ function SettingsContent() {
   const [whatsappInstances, setWhatsappInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState<boolean | string>(false);
   const [newLogoUrl, setNewLogoUrl] = useState<string | null>(null);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [availableAiModels, setAvailableAiModels] = useState<any[]>([]);
@@ -163,9 +163,9 @@ function SettingsContent() {
           whatsappMetaToken: tenant.whatsappMetaToken,
           whatsappMetaPhoneNumberId: tenant.whatsappMetaPhoneNumberId,
           cpfBirthDate: tenant.cpfBirthDate,
-          cpfGender: tenant.cpfGender,
-          logoUrl: newLogoUrl || tenant.logoUrl,
-          aiConfig: tenant.aiConfig || {}
+          cpfGender: tenant?.cpfGender,
+          logoUrl: newLogoUrl || tenant?.logoUrl,
+          aiConfig: tenant?.aiConfig || {}
         })
       });
       const data = await response.json();
@@ -489,6 +489,7 @@ function SettingsContent() {
       {showPhoneModal && (
         <TenantPhoneModal 
           tenantId={targetTenantId as string} 
+          existingInstanceId={typeof showPhoneModal === 'string' ? showPhoneModal : undefined}
           onClose={() => {
             setShowPhoneModal(false);
             // Reload whatsapp instances
@@ -920,15 +921,21 @@ function SettingsContent() {
                                 {instance.evolutionInstanceStatus === "OPEN" ? (
                                   <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
                                 ) : (
-                                  <Badge variant="secondary">{instance.evolutionInstanceStatus || "Desconectado"}</Badge>
+                                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white">{instance.evolutionInstanceStatus || "Desconectado"}</Badge>
                                 )}
                               </div>
                               <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                                {instance.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
+                                {instance.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
                                 Número: {instance.phone}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              {instance.evolutionInstanceStatus !== "OPEN" && (
+                                <Button variant="outline" size="sm" onClick={() => setShowPhoneModal(instance.id)}>
+                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                  Reconectar
+                                </Button>
+                              )}
                               <Button variant="destructive" size="sm" onClick={() => setShowDisconnectConfirm(instance.id)}>
                                 <Trash className="w-4 h-4 mr-2" />
                                 Remover
@@ -1028,7 +1035,7 @@ function SettingsContent() {
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         <option value="">Usar Padrão Global</option>
-                        {availableAiModels.filter(m => !tenant?.aiConfig?.ai_provider || m.provider === tenant.aiConfig.ai_provider).map(m => (
+                        {availableAiModels.filter(m => !tenant?.aiConfig?.ai_provider || m.provider === tenant?.aiConfig?.ai_provider).map(m => (
                           <option key={m.id} value={m.modelId}>{m.name}</option>
                         ))}
                       </select>
@@ -1094,7 +1101,7 @@ function SettingsContent() {
                           setTenant((prev: any) => ({
                             ...prev,
                             aiConfig: {
-                              ...prev.aiConfig,
+                              ...(prev?.aiConfig || {}),
                               preset_id: preset.id,
                               ...preset.config
                             }

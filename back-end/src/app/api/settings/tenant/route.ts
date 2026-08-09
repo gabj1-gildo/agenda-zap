@@ -64,6 +64,7 @@ export async function PATCH(req: Request) {
     if (body.cpfBirthDate !== undefined) updateData.cpfBirthDate = body.cpfBirthDate;
     if (body.cpfGender !== undefined) updateData.cpfGender = body.cpfGender;
     if (body.description !== undefined) updateData.description = body.description;
+    if (body.logoUrl !== undefined) updateData.logoUrl = body.logoUrl;
     
     // Address fields
     if (body.cep !== undefined) updateData.cep = body.cep;
@@ -96,7 +97,8 @@ export async function PATCH(req: Request) {
         'regras_transbordo', 
         'mensagem_encerramento',
         'ai_provider',
-        'ai_model'
+        'ai_model',
+        'preset_id'
       ];
       
       const MAX_LENGTH = 2000;

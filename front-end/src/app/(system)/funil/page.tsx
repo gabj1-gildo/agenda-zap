@@ -96,6 +96,7 @@ export default function FunilPage() {
   const [showCompletedCards, setShowCompletedCards] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isThisMonth, setIsThisMonth] = useState(true);
+  const [filterOnline, setFilterOnline] = useState(false);
 
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -126,18 +127,26 @@ export default function FunilPage() {
   }, [board, totalCards]);
 
   const filteredBoard = useMemo(() => {
-    if (!search.trim()) return board;
-    const q = search.toLowerCase();
-    const result = { ...board };
-    for (const key of Object.keys(result) as StageKey[]) {
-      result[key] = result[key].filter(c => 
-        c.name.toLowerCase().includes(q) || 
-        c.phone.includes(q) ||
-        (c.agent && c.agent.toLowerCase().includes(q))
-      );
+    let result = { ...board };
+    
+    if (filterOnline) {
+      for (const key of Object.keys(result) as StageKey[]) {
+        result[key] = result[key].filter(c => c.status === 'online');
+      }
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      for (const key of Object.keys(result) as StageKey[]) {
+        result[key] = result[key].filter(c => 
+          c.name.toLowerCase().includes(q) || 
+          c.phone.includes(q) ||
+          (c.agent && c.agent.toLowerCase().includes(q))
+        );
+      }
     }
     return result;
-  }, [board, search]);
+  }, [board, search, filterOnline]);
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
@@ -368,10 +377,10 @@ export default function FunilPage() {
               }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8, textTransform: 'uppercase' }}>Status</div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', marginBottom: 6 }}>
-                  <input type="checkbox" defaultChecked /> Online agora
+                  <input type="checkbox" checked={filterOnline} onChange={(e) => setFilterOnline(e.target.checked)} /> Online agora
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer' }}>
-                  <input type="checkbox" defaultChecked /> Com pendências
+                  <input type="checkbox" /> Com pendências
                 </label>
               </div>
             )}
