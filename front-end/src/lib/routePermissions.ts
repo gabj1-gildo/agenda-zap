@@ -6,14 +6,20 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/admin/tenants': ['SUPERADMIN'],
   '/admin/settings': ['SUPERADMIN'],
   '/admin/broadcast': ['SUPERADMIN'],
+  '/admin/ai-presets': ['SUPERADMIN'],
+  '/empresas': ['SUPERADMIN'],
 
   // Restrito SUPERADMIN e ADMIN
   '/admin/users': ['SUPERADMIN', 'ADMIN'],
   '/settings': ['SUPERADMIN', 'ADMIN'],
   '/team': ['SUPERADMIN', 'ADMIN'],
   '/reports': ['SUPERADMIN', 'ADMIN'],
+  '/billing': ['SUPERADMIN', 'ADMIN'],
+  '/planos': ['SUPERADMIN', 'ADMIN'],
+  '/payments': ['SUPERADMIN', 'ADMIN'],
+  '/services': ['SUPERADMIN', 'ADMIN'],
 
-  // Aberto para todos
+  // Aberto para todos os roles autenticados
   '/': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/agenda': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/appointments': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
@@ -21,7 +27,6 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/clients': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/funil': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/chats': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
-  '/payments': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/profile': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
 };
 
@@ -33,7 +38,6 @@ export function hasRouteAccess(path: string, role?: string, permissions?: string
 
   // SUPERADMIN tem acesso irrestrito
   if (role === 'SUPERADMIN') return true;
-  // ADMIN também tem acesso a quase tudo, exceto rotas estritas de superadmin (resolvido abaixo)
 
   const routes = Object.keys(ROUTE_PERMISSIONS).sort((a, b) => b.length - a.length);
 
@@ -41,8 +45,7 @@ export function hasRouteAccess(path: string, role?: string, permissions?: string
     if (path === route || path.startsWith(route + '/')) {
       const allowedRoles = ROUTE_PERMISSIONS[route];
       const roleAllowed = allowedRoles.includes(role as Role);
-      
-      // Se a role não tem acesso, negado.
+
       if (!roleAllowed) return false;
 
       // Se for ATTENDANT, verificar as permissões granulares
@@ -55,24 +58,21 @@ export function hasRouteAccess(path: string, role?: string, permissions?: string
           '/funil': 'funil',
           '/payments': 'payments',
           '/broadcast': 'broadcast',
-          '/settings': 'settings' // normalmente admin, mas caso tenham permissão
         };
-        
-        // Se a rota está mapeada para um módulo, checa se a permissão existe no array
-        // (Se não houver permissão configurada, negamos por padrão)
+
         for (const [routePath, moduleName] of Object.entries(moduleMap)) {
-           if (path === routePath || path.startsWith(routePath + '/')) {
-             if (!permissions || !permissions.includes(moduleName)) {
-               return false;
-             }
-           }
+          if (path === routePath || path.startsWith(routePath + '/')) {
+            if (!permissions || !permissions.includes(moduleName)) {
+              return false;
+            }
+          }
         }
       }
-      
+
       return true;
     }
   }
 
-  // Permite acesso se a rota não estiver mapeada (ex. login, rotas públicas)
+  // Permite acesso se a rota não estiver mapeada
   return true;
 }

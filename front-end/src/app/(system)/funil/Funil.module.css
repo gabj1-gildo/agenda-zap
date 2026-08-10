@@ -259,9 +259,22 @@
 .statActions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-left: auto;
+  gap: 8px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.searchInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  flex: 1;
+  min-width: 160px;
+  max-width: 300px;
 }
 
 .btn {
