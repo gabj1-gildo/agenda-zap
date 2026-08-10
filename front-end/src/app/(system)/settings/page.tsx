@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Suspense } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Copy, Plus, Trash2, ShieldAlert, MonitorSmartphone, Smartphone, Clock, X, FilePenLine, Camera, Eye, ArrowRight, CheckCircle, Wifi, WifiOff, Trash, ChevronDown, RefreshCw } from "lucide-react";
+import { Copy, Plus, Trash2, ShieldAlert, MonitorSmartphone, Smartphone, Clock, X, FilePenLine, Camera, Eye, ArrowRight, CheckCircle, Wifi, WifiOff, Trash, ChevronDown, RefreshCw, AlertCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
