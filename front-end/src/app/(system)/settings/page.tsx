@@ -574,6 +574,7 @@ function SettingsContent() {
       {showPhoneModal && (
         <TenantPhoneModal 
           tenantId={targetTenantId as string} 
+          tenantPhone={tenant?.phone || undefined}
           existingInstanceId={typeof showPhoneModal === 'string' ? showPhoneModal : undefined}
           onClose={() => {
             setShowPhoneModal(false);

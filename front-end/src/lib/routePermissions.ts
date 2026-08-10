@@ -21,10 +21,12 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
 
   // Aberto para todos os roles autenticados
   '/': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
+  '/dashboard': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/agenda': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/appointments': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/broadcast': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/clients': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
+  '/assinantes': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/funil': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/chats': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],
   '/profile': ['SUPERADMIN', 'ADMIN', 'ATTENDANT'],

@@ -391,7 +391,11 @@ export default function BroadcastPage() {
                   </div>
 
                   <div className="pt-6">
-                    {(!tenant?.evolutionInstanceName || tenant?.evolutionInstanceStatus !== 'OPEN') ? (
+                    {(
+                      (tenant?.whatsappProvider === 'EVOLUTION' || !tenant?.whatsappProvider)
+                        ? (!tenant?.evolutionInstanceName || tenant?.evolutionInstanceStatus !== 'OPEN')
+                        : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
+                    ) ? (
                       <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl flex items-center justify-between">
                         <div className="flex items-center gap-3 text-sm font-medium">
                           <Smartphone className="w-5 h-5" />

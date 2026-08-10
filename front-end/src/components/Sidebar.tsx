@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { hasRouteAccess } from "@/lib/routePermissions";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, CalendarDays, CalendarCheck, Contact, Filter,
-  MessageSquare, Megaphone, CreditCard, Receipt, FileText,
-  Settings, Users, Briefcase, Package, Building2, UserCog,
-  Server, Wand2, Lock, ChevronDown, LogOut, Bot
+  MessageSquare, Megaphone, CreditCard, FileText, Settings, Users,
+  Briefcase, Package, Building2, Server, Wand2, ChevronDown, LogOut,
+  UserCheck
 } from "lucide-react";
 import { getBackendUrl } from "@/lib/api";
 import styles from "./Sidebar.module.css";
@@ -20,14 +19,13 @@ type NavItem = {
   icon: React.ElementType;
   badgeKey?: string;
   requiresTenant?: boolean;
-  roles?: string[];
 };
 
 type NavCategory = {
   key: string;
   label: string;
   items: NavItem[];
-  roles?: string[]; // if set, only these roles see this category
+  roles?: string[];
 };
 
 const NAV_STRUCTURE: NavCategory[] = [
@@ -35,13 +33,14 @@ const NAV_STRUCTURE: NavCategory[] = [
     key: "principal",
     label: "Principal",
     items: [
-      { href: "/dashboard",     label: "Painel",          icon: LayoutDashboard },
-      { href: "/agenda",        label: "Agenda",           icon: CalendarDays,    requiresTenant: true },
-      { href: "/appointments",  label: "Agendamentos",     icon: CalendarCheck,   requiresTenant: true },
-      { href: "/clients",       label: "Clientes",         icon: Contact,         requiresTenant: true },
-      { href: "/funil",         label: "Funil de Vendas",  icon: Filter,          requiresTenant: true },
-      { href: "/chats",         label: "Conversas",        icon: MessageSquare,   badgeKey: "chats", requiresTenant: true },
-      { href: "/broadcast",     label: "Disparos",         icon: Megaphone,       requiresTenant: true },
+      { href: "/dashboard",     label: "Painel",           icon: LayoutDashboard },
+      { href: "/agenda",        label: "Agenda",            icon: CalendarDays,   requiresTenant: true },
+      { href: "/appointments",  label: "Agendamentos",      icon: CalendarCheck,  requiresTenant: true },
+      { href: "/clients",       label: "Clientes",          icon: Contact,        requiresTenant: true },
+      { href: "/assinantes",    label: "Assinantes",        icon: UserCheck,      requiresTenant: true },
+      { href: "/funil",         label: "Funil de Vendas",   icon: Filter,         requiresTenant: true },
+      { href: "/chats",         label: "Conversas",         icon: MessageSquare,  badgeKey: "chats", requiresTenant: true },
+      { href: "/broadcast",     label: "Disparos",          icon: Megaphone,      requiresTenant: true },
     ],
   },
   {
@@ -49,8 +48,8 @@ const NAV_STRUCTURE: NavCategory[] = [
     label: "Financeiro",
     roles: ["ADMIN", "SUPERADMIN"],
     items: [
-      { href: "/payments",  label: "Pagamentos",  icon: CreditCard, requiresTenant: true },
-      { href: "/billing",   label: "Faturamento", icon: Receipt,    requiresTenant: true },
+      { href: "/payments",  label: "Recibos",      icon: CreditCard, requiresTenant: true },
+      { href: "/reports",   label: "Relatórios",   icon: FileText,   requiresTenant: true },
     ],
   },
   {
@@ -58,15 +57,7 @@ const NAV_STRUCTURE: NavCategory[] = [
     label: "Planos",
     roles: ["ADMIN", "SUPERADMIN"],
     items: [
-      { href: "/planos", label: "Meu Plano", icon: Package, requiresTenant: true },
-    ],
-  },
-  {
-    key: "relatorios",
-    label: "Relatórios",
-    roles: ["ADMIN", "SUPERADMIN"],
-    items: [
-      { href: "/reports", label: "Relatórios", icon: FileText, requiresTenant: true },
+      { href: "/planos", label: "Planos", icon: Package, requiresTenant: true },
     ],
   },
   {
@@ -74,9 +65,10 @@ const NAV_STRUCTURE: NavCategory[] = [
     label: "Configurações",
     roles: ["ADMIN", "SUPERADMIN"],
     items: [
-      { href: "/settings",  label: "Configurações",   icon: Settings,  requiresTenant: true },
-      { href: "/team",      label: "Equipe e Acessos",icon: Users,     requiresTenant: true },
-      { href: "/services",  label: "Serviços",        icon: Briefcase, requiresTenant: true },
+      { href: "/settings",  label: "Configurações",    icon: Settings,  requiresTenant: true },
+      { href: "/team",      label: "Equipe e Acessos", icon: Users,     requiresTenant: true },
+      { href: "/services",  label: "Serviços",         icon: Briefcase, requiresTenant: true },
+      { href: "/billing",   label: "Minha Assinatura", icon: CreditCard, requiresTenant: true },
     ],
   },
   {
@@ -84,7 +76,6 @@ const NAV_STRUCTURE: NavCategory[] = [
     label: "Admin",
     roles: ["SUPERADMIN"],
     items: [
-      { href: "/empresas",        label: "Empresas",     icon: Building2 },
       { href: "/admin/tenants",   label: "Empresas",     icon: Building2 },
       { href: "/admin/settings",  label: "Sistema",      icon: Server },
       { href: "/admin/ai-presets",label: "Templates IA", icon: Wand2 },
@@ -94,9 +85,8 @@ const NAV_STRUCTURE: NavCategory[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: session, update } = useSession();
-  const [badges, setBadges] = useState({ chats: 0, payments: 0 });
+  const [badges, setBadges] = useState({ chats: 0 });
   const [isTenantDropdownOpen, setIsTenantDropdownOpen] = useState(false);
 
   const role = (session?.user as any)?.role as string;
@@ -114,23 +104,29 @@ export function Sidebar() {
 
   const isSuperAdmin = role === "SUPERADMIN";
 
-  // Determine which category the current path belongs to
+  // Determine active category from pathname
   const activeCategory = NAV_STRUCTURE.find(cat =>
     cat.items.some(item => {
-      if (item.href === "/dashboard" || item.href === "/admin") return pathname === item.href;
+      if (item.href === "/dashboard") return pathname === item.href;
       return pathname.startsWith(item.href);
     })
   )?.key ?? "principal";
 
+  // Accordion: only one open at a time
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     NAV_STRUCTURE.forEach(cat => { initial[cat.key] = cat.key === activeCategory; });
     return initial;
   });
 
-  // Keep active category open when navigation changes
+  // Keep active category open when route changes
   useEffect(() => {
-    setOpenCategories(prev => ({ ...prev, [activeCategory]: true }));
+    setOpenCategories(prev => {
+      // Close all, open only active
+      const next: Record<string, boolean> = {};
+      Object.keys(prev).forEach(k => { next[k] = k === activeCategory; });
+      return next;
+    });
   }, [activeCategory]);
 
   useEffect(() => {
@@ -147,12 +143,18 @@ export function Sidebar() {
 
   if (pathname === "/login") return null;
 
+  // Exclusive toggle: close all others when clicking
   const toggleCategory = (key: string) => {
-    setOpenCategories(prev => ({ ...prev, [key]: !prev[key] }));
+    setOpenCategories(prev => {
+      const isAlreadyOpen = prev[key];
+      const allClosed: Record<string, boolean> = {};
+      Object.keys(prev).forEach(k => { allClosed[k] = false; });
+      return { ...allClosed, [key]: !isAlreadyOpen };
+    });
   };
 
   const isActive = (href: string) => {
-    if (href === "/dashboard" || href === "/admin") return pathname === href;
+    if (href === "/dashboard") return pathname === href;
     return pathname.startsWith(href);
   };
 
@@ -163,21 +165,10 @@ export function Sidebar() {
   };
 
   const visibleCategories = NAV_STRUCTURE.filter(cat => {
-    if (!cat.roles) return true; // visible to all
+    if (!cat.roles) return true;
     if (isSuperAdmin) return true;
     return cat.roles.includes(role);
   });
-
-  const getVisibleItems = (cat: NavCategory) => {
-    return cat.items.filter(item => {
-      // Deduplicate: admin items by role
-      if (cat.key === "admin") {
-        if (item.href === "/empresas") return false; // use /admin/tenants instead
-      }
-      const locked = item.requiresTenant && isSuperAdmin && !activeTenantId;
-      return true; // locked items still show, just greyed out
-    });
-  };
 
   return (
     <aside className={styles.sidebar}>
@@ -185,9 +176,9 @@ export function Sidebar() {
       <div className={styles.sideLogo}>
         <div className={styles.mark}>
           {hasLogo ? (
-            <img src={activeTenantLogo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} />
+            <img src={activeTenantLogo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "8px", padding: "3px" }} />
           ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0f1a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a524" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
             </svg>
           )}
@@ -198,9 +189,8 @@ export function Sidebar() {
       {/* Accordion Nav */}
       <nav className={styles.navScroll}>
         {visibleCategories.map(cat => {
-          const items = getVisibleItems(cat);
           const isOpen = openCategories[cat.key] ?? false;
-          const hasActive = items.some(item => isActive(item.href));
+          const hasActive = cat.items.some(item => isActive(item.href));
 
           return (
             <div key={cat.key} className={styles.accordionSection}>
@@ -217,16 +207,15 @@ export function Sidebar() {
 
               {isOpen && (
                 <div className={styles.accordionItems}>
-                  {items.map(({ href, label, icon: Icon, badgeKey, requiresTenant }) => {
+                  {cat.items.map(({ href, label, icon: Icon, badgeKey, requiresTenant }) => {
                     const locked = requiresTenant && isSuperAdmin && !activeTenantId;
                     const active = isActive(href);
 
                     if (locked) {
                       return (
-                        <div key={href} title="Selecione uma empresa para acessar" className={`${styles.navItem} ${styles.locked}`}>
+                        <div key={href} title="Selecione uma empresa" className={`${styles.navItem} ${styles.locked}`}>
                           <Icon />
                           <span style={{ flex: 1 }}>{label}</span>
-                          <Lock style={{ width: 12, height: 12 }} />
                         </div>
                       );
                     }

@@ -11,22 +11,29 @@ type Props = {
   onClose: () => void;
   onSuccess?: () => void;
   existingInstanceId?: string;
+  tenantPhone?: string; // Item 11: pre-fill
 };
 
 type Step = "phone" | "qr" | "connected";
 
-export function TenantPhoneModal({ tenantId, onClose, onSuccess, existingInstanceId }: Props) {
+export function TenantPhoneModal({ tenantId, onClose, onSuccess, existingInstanceId, tenantPhone }: Props) {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
 
   const [step, setStep] = useState<Step>(existingInstanceId ? "qr" : "phone");
-  const [phone, setPhone] = useState("");
-  const [instanceName, setInstanceName] = useState("");
+  const [phone, setPhone] = useState(tenantPhone ? formatPhone(tenantPhone) : ""); // Item 11
+  const [instanceBaseName, setInstanceBaseName] = useState(""); // user types name without suffix
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [polling, setPolling] = useState(!!existingInstanceId);
   const [status, setStatus] = useState("PENDING_QR");
   const [currentPhoneId, setCurrentPhoneId] = useState<string | null>(existingInstanceId || null);
+
+  // Item 16: normalized final name
+  const normalizeInstanceName = (raw: string) =>
+    raw.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+
+  const instanceName = instanceBaseName ? `${normalizeInstanceName(instanceBaseName)}-AgendaZap` : '';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,17 +147,22 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess, existingInstanc
             <form onSubmit={submit} className="space-y-5">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                  Nome da Conexão
+                  Nome desta Conexão
                 </label>
                 <input
                   type="text"
-                  value={instanceName}
-                  onChange={(e) => setInstanceName(e.target.value)}
-                  placeholder="Ex: WhatsApp Vendas"
+                  value={instanceBaseName}
+                  onChange={(e) => setInstanceBaseName(e.target.value)}
+                  placeholder="Ex: Vendas ou Lucas Ramos"
                   required
                   style={{ borderColor: "var(--border)", background: "var(--background)" }}
-                  className="w-full border rounded-xl px-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-[#25D366]/30 text-foreground transition-shadow mb-4"
+                  className="w-full border rounded-xl px-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-[#25D366]/30 text-foreground transition-shadow mb-1"
                 />
+                {instanceBaseName && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ID da instância: <span className="font-mono font-semibold text-foreground">{instanceName}</span>
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">

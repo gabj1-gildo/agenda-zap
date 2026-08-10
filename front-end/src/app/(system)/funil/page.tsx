@@ -84,7 +84,7 @@ export default function FunilPage() {
   const [filterOnline, setFilterOnline] = useState(false);
   const [filterStages, setFilterStages] = useState<StageKey[]>([]);
   const [showNewLead, setShowNewLead] = useState(false);
-  const [stats, setStats] = useState({ total: 0, conversion: 0, inAttendance: 0 });
+  const [stats, setStats] = useState({ total: 0, conversion: 0, inAttendance: 0, finalizados: 0 });
 
   // New lead form
   const [newLeadName, setNewLeadName] = useState("");
@@ -236,9 +236,10 @@ export default function FunilPage() {
         className={styles.card}
         draggable
         tabIndex={0}
-        style={{ animationDelay: `${idx * 40}ms` }}
+        style={{ animationDelay: `${idx * 40}ms`, cursor: 'pointer' }}
         onDragStart={(e) => handleDragStart(item.id, stage.key, e)}
         onDragEnd={handleDragEnd}
+        onClick={() => window.location.href = `/chats?clientId=${item.id}`}
       >
         <div className={styles.cardHead}>
           <div className={styles.avatar}>{initials(displayName)}</div>
@@ -327,7 +328,7 @@ export default function FunilPage() {
                 disabled={savingLead}
                 style={{
                   marginTop: 4, padding: '10px', borderRadius: 10, border: 'none',
-                  background: 'var(--amber)', color: '#1a1206', fontWeight: 700,
+                  background: '#3b82f6', color: '#fff', fontWeight: 700,
                   fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                 }}
               >
@@ -346,8 +347,10 @@ export default function FunilPage() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
           </div>
           <div>
-            <div className={styles.label}>Total no funil</div>
-            <div className={styles.value}>{stats.total}</div>
+            <div className={styles.label}>Ativos no funil</div>
+            <div className={styles.value}>
+              {board.espera.length + board.ia.length + board.humano.length + board.pagamento.length}
+            </div>
           </div>
         </div>
         <div className={styles.statCard}>
@@ -366,6 +369,15 @@ export default function FunilPage() {
           <div>
             <div className={styles.label}>Em atendimento</div>
             <div className={styles.value}>{stats.inAttendance}</div>
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.ic} style={{ background: 'rgba(34,197,94,.10)', color: '#16a34a' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div className={styles.label}>Finalizados</div>
+            <div className={styles.value}>{board.finalizado?.length ?? stats.finalizados}</div>
           </div>
         </div>
       </div>
@@ -426,7 +438,12 @@ export default function FunilPage() {
           Atualizar
         </button>
 
-        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setShowNewLead(true)}>
+        <button
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 10, border: 'none', background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: 12.5, cursor: 'pointer', transition: 'background .15s' }}
+          onClick={() => setShowNewLead(true)}
+          onMouseEnter={e => (e.currentTarget.style.background = '#2563eb')}
+          onMouseLeave={e => (e.currentTarget.style.background = '#3b82f6')}
+        >
           <Plus style={{ width: 14, height: 14 }} />
           Novo Lead
         </button>

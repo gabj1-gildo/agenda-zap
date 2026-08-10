@@ -301,7 +301,11 @@ export default function ChatsPage() {
         <div className="w-full flex items-center justify-center">
           <p className="text-muted-foreground">Carregando...</p>
         </div>
-      ) : tenant?.evolutionInstanceStatus !== "OPEN" ? (
+      ) : (
+        (tenant?.whatsappProvider === 'EVOLUTION' || !tenant?.whatsappProvider)
+          ? tenant?.evolutionInstanceStatus !== "OPEN"
+          : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
+      ) ? (
         <div className="w-full flex flex-col items-center justify-center p-8 text-center space-y-4">
           <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mb-2">
             <Smartphone className="w-8 h-8 text-muted-foreground" />

@@ -71,17 +71,36 @@ export function Header() {
   const activeTenant = tenants.find((t) => t.id === (session as any)?.tenantId);
 
   const pageTitles: Record<string, { title: string; sub: string }> = {
-    "/":             { title: "Painel",        sub: "Visão geral do sistema" },
-    "/appointments": { title: "Agenda",        sub: "Controle de horários" },
-    "/chats":        { title: "Conversas",     sub: "Inbox de mensagens" },
-    "/payments":     { title: "Pagamentos",    sub: "Cobranças e recebimentos" },
-    "/settings":     { title: "Configurações", sub: "Dados, horários e integrações" },
+    "/dashboard":        { title: "Painel",               sub: "Visão geral do sistema" },
+    "/agenda":           { title: "Agenda",               sub: "Controle de horários" },
+    "/appointments":     { title: "Agendamentos",         sub: "Histórico e status" },
+    "/clients":          { title: "Clientes",             sub: "Base de contatos" },
+    "/assinantes":       { title: "Assinantes",           sub: "Quem assinou seus planos" },
+    "/funil":            { title: "Funil de Vendas",      sub: "Pipeline de leads" },
+    "/chats":            { title: "Conversas",            sub: "Inbox de mensagens" },
+    "/broadcast":        { title: "Disparos",             sub: "Mensagens em massa" },
+    "/payments":         { title: "Recibos",              sub: "Cobranças e recebimentos" },
+    "/reports":          { title: "Relatórios",          sub: "Análise de desempenho" },
+    "/planos":           { title: "Planos",               sub: "Planos oferecidos" },
+    "/settings":         { title: "Configurações",       sub: "Dados e preferências" },
+    "/team":             { title: "Equipe e Acessos",    sub: "Usuários e permissões" },
+    "/services":         { title: "Serviços",            sub: "Catálogo de serviços" },
+    "/billing":          { title: "Minha Assinatura",    sub: "Plano atual e faturamento" },
+    "/profile":          { title: "Meu Perfil",          sub: "Dados da sua conta" },
+    "/admin/tenants":    { title: "Empresas",             sub: "Gestão de tenants" },
+    "/admin/settings":   { title: "Sistema",             sub: "Configurações globais" },
+    "/admin/ai-presets": { title: "Templates IA",        sub: "Modelos de inteligência artificial" },
   };
 
   const current = Object.entries(pageTitles).reverse().find(([k]) =>
-    k === "/" ? pathname === "/" : pathname.startsWith(k)
+    k === "/dashboard" ? pathname === "/dashboard" || pathname === "/" : pathname.startsWith(k)
   );
   const pageInfo = current?.[1] ?? { title: "Painel", sub: "" };
+
+  // Item 15 — browser tab title
+  useEffect(() => {
+    document.title = pageInfo.title ? `AgendaZap — ${pageInfo.title}` : "AgendaZap";
+  }, [pageInfo.title]);
   
   const avatarRaw = (session?.user?.image || (session?.user as any)?.picture) as string;
   const hasAvatar = typeof avatarRaw === 'string' && avatarRaw.trim() !== '' && avatarRaw !== 'null';
