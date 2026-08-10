@@ -1002,7 +1002,6 @@ function SettingsContent() {
                     </div>
                             </div>
                     </div>
-                  </div>
 
                   {!tenant?._isProfileComplete && (
                     <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-md p-4 text-sm text-amber-800 dark:text-amber-200">
