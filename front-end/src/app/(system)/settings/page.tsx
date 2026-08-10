@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Suspense } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Copy, Plus, Trash2, ShieldAlert, MonitorSmartphone, Smartphone, Clock, X, FilePenLine, Camera, Eye, ArrowRight, CheckCircle, Wifi, WifiOff, Trash, ChevronDown, RefreshCw, AlertCircle, Settings } from "lucide-react";
