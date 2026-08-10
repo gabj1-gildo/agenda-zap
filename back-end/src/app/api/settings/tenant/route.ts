@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { tenants, services, schedules } from '@/db/schema';
+import { tenants, services, schedules, tenantPhones } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { r2, DeleteObjectCommand, R2_BUCKET } from '@/lib/r2';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
@@ -30,6 +30,12 @@ export async function GET(req: Request) {
     const schs = await db.select().from(schedules).where(eq(schedules.tenantId, tenantId));
     if (!schs.some(s => s.isActive)) missingRequirements.push('Pelo menos 1 Dia de Funcionamento');
     
+    // Fallback para suportar o novo modelo de múltiplas instâncias
+    const phones = await db.select().from(tenantPhones).where(eq(tenantPhones.tenantId, tenantId));
+    if (phones.some(p => p.evolutionInstanceStatus === 'OPEN')) {
+      tenant.evolutionInstanceStatus = 'OPEN';
+    }
+
     return NextResponse.json({ 
       success: true, 
       data: {
