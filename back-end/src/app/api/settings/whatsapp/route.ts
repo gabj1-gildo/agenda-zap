@@ -54,10 +54,12 @@ export async function POST(req: Request) {
       where: eq(tenantPhones.tenantId, tenantId)
     });
 
+    const hasMetaCloud = tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId;
+    const totalInstances = currentPhones.length + (hasMetaCloud ? 1 : 0);
     const maxInstances = tenant?.customMaxWhatsAppInstances ?? subscription.plan.maxWhatsAppInstances;
 
-    if (currentPhones.length >= maxInstances) {
-      return NextResponse.json({ success: false, error: `Seu plano/limite permite no máximo ${maxInstances} instância(s) de WhatsApp. Faça upgrade para adicionar mais.` }, { status: 403 });
+    if (totalInstances >= maxInstances) {
+      return NextResponse.json({ success: false, error: `Seu plano/limite permite no máximo ${maxInstances} instância(s) de WhatsApp. O limite já foi atingido.` }, { status: 403 });
     }
 
     const body = await req.json();

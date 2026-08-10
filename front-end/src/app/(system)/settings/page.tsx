@@ -59,6 +59,8 @@ function SettingsContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState<boolean | string>(false);
+  const [showProviderSelect, setShowProviderSelect] = useState(false);
+  const [showMetaModal, setShowMetaModal] = useState(false);
   const [newLogoUrl, setNewLogoUrl] = useState<string | null>(null);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [availableAiModels, setAvailableAiModels] = useState<any[]>([]);
@@ -976,157 +978,149 @@ function SettingsContent() {
                 <CardDescription>Conecte o número do seu estabelecimento para enviar e receber mensagens automaticamente.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Uso de Instâncias</span>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge variant={whatsappInstances.length >= (tenant?.customMaxWhatsAppInstances ?? 1) ? "destructive" : "outline"} className="text-xs">
-                      {whatsappInstances.length}/{tenant?.customMaxWhatsAppInstances ?? 1} instâncias
-                    </Badge>
-                    <div style={{ width: 80, height: 4, background: 'var(--border)', borderRadius: 999 }}>
-                      <div style={{ 
-                        width: `${Math.min((whatsappInstances.length / (tenant?.customMaxWhatsAppInstances ?? 1)) * 100, 100)}%`, 
-                        height: '100%', 
-                        background: whatsappInstances.length >= (tenant?.customMaxWhatsAppInstances ?? 1) ? '#ef4444' : '#f5a524', 
-                        borderRadius: 999, transition: 'width .3s' 
+                {(() => {
+                  const hasMetaCloud = !!(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId);
+                  const usedWhatsAppInstances = whatsappInstances.length + (hasMetaCloud ? 1 : 0);
+                  const maxWhatsAppInstances = tenant?.customMaxWhatsAppInstances ?? 1;
+                  const limitReached = usedWhatsAppInstances >= maxWhatsAppInstances;
+
+                  return (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold">Uso de Instâncias</span>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge variant={limitReached ? "destructive" : "outline"} className="text-xs">
+                            {usedWhatsAppInstances}/{maxWhatsAppInstances} instâncias
+                          </Badge>
+                          <div style={{ width: 80, height: 4, background: 'var(--border)', borderRadius: 999 }}>
+                            <div style={{ 
+                              width: `${Math.min((usedWhatsAppInstances / maxWhatsAppInstances) * 100, 100)}%`, 
+                              height: '100%', 
+                              background: limitReached ? '#ef4444' : '#f5a524', 
+                              borderRadius: 999, transition: 'width .3s' 
                       }} />
                     </div>
+                            </div>
+                    </div>
                   </div>
-                </div>
 
-                {tenant && !tenant._isProfileComplete && (
-                  <div className="flex flex-col gap-2 p-4 bg-orange-50 border border-orange-200 text-orange-800 rounded-md text-sm">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <ShieldAlert className="w-4 h-4" />
-                      Complete seu perfil para ativar a IA
-                    </div>
-                    <p>Para conectar o WhatsApp e habilitar o atendimento automático, você precisa preencher:</p>
-                    <ul className="list-disc list-inside ml-2">
-                      {tenant._missingRequirements?.map((req: string, i: number) => (
-                        <li key={i}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {tenant?.whatsappProvider === 'META_CLOUD' ? (
-                  <div className="flex items-center justify-between p-4 border rounded-md">
-                    <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        WhatsApp Principal (Meta Cloud API)
-                        {tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId ? (
-                          <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado (Meta)</Badge>
-                        ) : (
-                          <Badge variant="secondary">Desconectado (Meta)</Badge>
-                        )}
+                  {!tenant?._isProfileComplete && (
+                    <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-md p-4 text-sm text-amber-800 dark:text-amber-200">
+                      <div className="font-semibold flex items-center gap-2 mb-1">
+                        <AlertCircle className="w-4 h-4" />
+                        Complete seu perfil para ativar a IA
                       </div>
-                      <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                        {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4" />}
-                        Status: {(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId) ? "Pronto para uso (Meta API)" : "Requer configuração de Token e Phone ID"}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button onClick={() => saveGeneral()} disabled={saving || !tenant?._isProfileComplete}>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Salvar Configurações Meta
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between items-center mt-6 mb-2">
-                      <h3 className="font-semibold">Aparelhos Conectados (Evolution API)</h3>
-                      <Button size="sm" onClick={() => setShowPhoneModal(true)} disabled={!tenant?._isProfileComplete}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nova Conexão
-                      </Button>
-                    </div>
-                    
-                    {whatsappInstances.length === 0 ? (
-                      <div className="p-8 text-center text-muted-foreground border rounded-md bg-muted/20">
-                        <Smartphone className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                        Nenhum WhatsApp conectado. Clique em "Nova Conexão" para gerar um QR Code.
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {whatsappInstances.map((instance) => (
-                          <div key={instance.id} className="flex items-center justify-between p-4 border rounded-md">
-                            <div>
-                              <div className="font-semibold flex items-center gap-2">
-                                {instance.evolutionInstanceName?.replace('_AgendaZap', '') || "Instância Padrão"}
-                                {instance.evolutionInstanceStatus === "OPEN" ? (
-                                  <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
-                                ) : (
-                                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white">{instance.evolutionInstanceStatus || "Desconectado"}</Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                                {instance.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
-                                Número: {instance.phone}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {instance.evolutionInstanceStatus !== "OPEN" && (
-                                <Button variant="outline" size="sm" onClick={() => setShowPhoneModal(instance.id)}>
-                                  <RefreshCw className="w-4 h-4 mr-2" />
-                                  Reconectar
-                                </Button>
-                              )}
-                              <Button variant="destructive" size="sm" onClick={() => setShowDisconnectConfirm(instance.id)}>
-                                <Trash className="w-4 h-4 mr-2" />
-                                Remover
-                              </Button>
-                            </div>
-                          </div>
+                      <p>Para conectar o WhatsApp e habilitar o atendimento automático, você precisa preencher:</p>
+                      <ul className="list-disc list-inside ml-2">
+                        {tenant._missingRequirements?.map((req: string, i: number) => (
+                          <li key={i}>{req}</li>
                         ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-base">Provedor de WhatsApp</Label>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      A Meta Cloud API é a integração oficial do WhatsApp, indicada para alto volume. Mensagens enviadas dentro de 24h são cobradas pela Meta. A Evolution API utiliza o escaneamento de QR Code com seu número pessoal (sem custo por mensagem).
-                    </div>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                      value={tenant?.whatsappProvider || 'EVOLUTION'}
-                      onChange={(e) => setTenant({ ...tenant, whatsappProvider: e.target.value })}
-                    >
-                      <option value="EVOLUTION">Evolution API (QR Code / Pessoal)</option>
-                      <option value="META_CLOUD">Meta Cloud API (Oficial / Business)</option>
-                    </select>
-                  </div>
-
-                  {tenant?.whatsappProvider === 'META_CLOUD' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 bg-muted/30 p-4 rounded-md border">
-                      <div className="space-y-2">
-                        <Label>Meta Token Permanente</Label>
-                        <Input 
-                          type="password"
-                          value={tenant?.whatsappMetaToken || ''} 
-                          onChange={e => setTenant({...tenant, whatsappMetaToken: e.target.value})} 
-                          placeholder="EAAI..." 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Phone Number ID (ID do Número de Telefone)</Label>
-                        <Input 
-                          value={tenant?.whatsappMetaPhoneNumberId || ''} 
-                          onChange={e => setTenant({...tenant, whatsappMetaPhoneNumberId: e.target.value})} 
-                          placeholder="1234567890" 
-                        />
-                      </div>
-                      <div className="col-span-1 md:col-span-2 mt-2">
-                        <div className="text-xs text-muted-foreground">
-                          Após salvar o token, certifique-se de configurar a Webhook na Meta Business apontando para: <br />
-                          <code className="bg-muted px-1 rounded select-all">{getBackendUrl('/api/webhooks/whatsapp-meta')}</code>
-                        </div>
-                      </div>
+                      </ul>
                     </div>
                   )}
-                </div>
+
+                  <div className="flex justify-between items-center mt-6 mb-2">
+                    <h3 className="font-semibold">Aparelhos Conectados</h3>
+                    <Button size="sm" onClick={() => setShowProviderSelect(true)} disabled={!tenant?._isProfileComplete || limitReached}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nova Conexão
+                    </Button>
+                  </div>
+                  
+                  {whatsappInstances.length === 0 && !hasMetaCloud ? (
+                    <div className="p-8 text-center text-muted-foreground border rounded-md bg-muted/20">
+                      <Smartphone className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                      Nenhum WhatsApp conectado. Clique em "Nova Conexão" para gerar um QR Code ou configurar a Meta Cloud.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Meta Cloud Instance */}
+                      {hasMetaCloud && (
+                        <div className="flex items-center justify-between p-4 border rounded-md relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-1 bg-green-500 text-[9px] font-bold px-2 rounded-bl-lg text-white uppercase tracking-wider">
+                            Oficial Meta
+                          </div>
+                          <div>
+                            <div className="font-semibold flex items-center gap-2">
+                              WhatsApp Principal (Meta Cloud API)
+                              <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                              <Wifi className="w-4 h-4 text-green-600" />
+                              Status: Pronto para uso
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setShowMetaModal(true)}>
+                              <Settings className="w-4 h-4 mr-2" />
+                              Configurar
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => {
+                              if (confirm("Remover conexão Meta Cloud?")) {
+                                setTenant({ ...tenant, whatsappMetaToken: null, whatsappMetaPhoneNumberId: null });
+                                setTimeout(() => saveGeneral(), 0);
+                              }
+                            }}>
+                              <Trash className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Evolution Instances */}
+                      {whatsappInstances.map((instance) => (
+                        <div key={instance.id} className="flex items-center justify-between p-4 border rounded-md relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-1 bg-blue-500 text-[9px] font-bold px-2 rounded-bl-lg text-white uppercase tracking-wider">
+                            Evolution API
+                          </div>
+                          <div>
+                            <div className="font-semibold flex items-center gap-2">
+                              {instance.evolutionInstanceName?.replace('-AgendaZap', '')?.replace('_AgendaZap', '') || "Instância Padrão"}
+                              {instance.evolutionInstanceStatus === "OPEN" ? (
+                                <Badge className="bg-green-600 hover:bg-green-700 text-white">Conectado</Badge>
+                              ) : (
+                                <Badge className="bg-amber-500 hover:bg-amber-600 text-white">{instance.evolutionInstanceStatus || "Desconectado"}</Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+                              {instance.evolutionInstanceStatus === "OPEN" ? <Wifi className="w-4 h-4 text-green-600" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
+                              Número: {instance.phone}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mt-2">
+                            {instance.evolutionInstanceStatus !== "OPEN" && (
+                              <Button variant="outline" size="sm" onClick={() => setShowPhoneModal(instance.id)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Reconectar
+                              </Button>
+                            )}
+                            <Button variant="destructive" size="sm" onClick={() => setShowDisconnectConfirm(instance.id)}>
+                              <Trash className="w-4 h-4 mr-2" />
+                              Remover
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-4 pt-4 mt-6 border-t">
+                    {/* IA Switch & Provider Setting */}
+                    <div className="flex items-center justify-between p-4 border rounded-md bg-muted/30">
+                      <div>
+                        <div className="font-semibold">Atendimento via IA</div>
+                        <div className="text-sm text-muted-foreground">O agente de Inteligência Artificial deve responder automaticamente?</div>
+                      </div>
+                      <Switch 
+                        checked={tenant?.aiEnabled || false} 
+                        onCheckedChange={(checked) => setTenant({...tenant, aiEnabled: checked})} 
+                        disabled={!tenant?._isProfileComplete}
+                      />
+                    </div>
+                  </div>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
         </TabsContent>
@@ -1486,10 +1480,104 @@ function SettingsContent() {
       {showPhoneModal && (
         <TenantPhoneModal 
           tenantId={targetTenantId as string} 
-          onClose={() => setShowPhoneModal(false)} 
-          onSuccess={() => setTenant((prev: any) => prev ? { ...prev, evolutionInstanceStatus: 'OPEN' } : null)}
+          tenantPhone={tenant?.phone || undefined}
+          existingInstanceId={typeof showPhoneModal === 'string' ? showPhoneModal : undefined}
+          onClose={() => {
+            setShowPhoneModal(false);
+            fetch(getBackendUrl('/api/settings/whatsapp'), { headers: { 'tenant-id': targetTenantId as string, 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` } })
+              .then(r => r.json())
+              .then(d => { if (d.success) setWhatsappInstances(d.data); });
+          }} 
         />
       )}
+
+      {/* Modal: Selecionar Provedor */}
+      <Dialog open={showProviderSelect} onOpenChange={setShowProviderSelect}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Conexão WhatsApp</DialogTitle>
+            <DialogDescription>
+              Selecione o provedor que deseja utilizar para conectar este número.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div 
+              onClick={() => { setShowProviderSelect(false); setShowPhoneModal(true); }}
+              className="border rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors flex flex-col items-center text-center gap-3"
+            >
+              <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-3 rounded-full">
+                <Smartphone className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="font-semibold">Evolution API</h4>
+                <p className="text-xs text-muted-foreground mt-1">Lê o QR Code com seu celular. Ideal para o seu número pessoal ou de vendas atual.</p>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => { setShowProviderSelect(false); setShowMetaModal(true); }}
+              className="border rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors flex flex-col items-center text-center gap-3"
+            >
+              <div className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-3 rounded-full">
+                <Settings className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="font-semibold">Oficial Meta Cloud</h4>
+                <p className="text-xs text-muted-foreground mt-1">Integração oficial (Business API). Requer configuração no painel de desenvolvedores da Meta.</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Configurar Meta Cloud */}
+      <Dialog open={showMetaModal} onOpenChange={setShowMetaModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configurar Meta Cloud API</DialogTitle>
+            <DialogDescription>
+              Insira as credenciais do seu aplicativo Meta for Developers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Meta Token Permanente</Label>
+              <Input 
+                type="password"
+                value={tenant?.whatsappMetaToken || ''} 
+                onChange={e => setTenant({...tenant, whatsappMetaToken: e.target.value})} 
+                placeholder="EAAI..." 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone Number ID (ID do Número de Telefone)</Label>
+              <Input 
+                value={tenant?.whatsappMetaPhoneNumberId || ''} 
+                onChange={e => setTenant({...tenant, whatsappMetaPhoneNumberId: e.target.value})} 
+                placeholder="1234567890" 
+              />
+            </div>
+            <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
+              <p className="font-semibold mb-1">Passo adicional obrigatório:</p>
+              Após salvar o token, certifique-se de configurar a Webhook na Meta Business apontando para esta exata URL: <br />
+              <code className="bg-background border px-1.5 py-0.5 rounded select-all mt-1 inline-block">{getBackendUrl('/api/webhooks/whatsapp-meta')}</code>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMetaModal(false)}>Cancelar</Button>
+            <Button onClick={() => {
+              setTenant({...tenant, whatsappProvider: 'META_CLOUD'});
+              setTimeout(() => {
+                saveGeneral();
+                setShowMetaModal(false);
+              }, 0);
+            }}>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Salvar Credenciais
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Visualização de Imagem */}
       {viewImage && (
