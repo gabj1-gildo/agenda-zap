@@ -52,17 +52,21 @@ export default function BroadcastPage() {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       };
 
-      const [tenantRes, tagsRes, templatesRes] = await Promise.all([
+      const [tenantRes, tagsRes, templatesRes, whatsappRes] = await Promise.all([
         fetch(getBackendUrl('/api/settings/tenant'), { headers }),
         fetch(getBackendUrl('/api/tags'), { headers }),
-        fetch(getBackendUrl('/api/broadcast/templates'), { headers })
+        fetch(getBackendUrl('/api/broadcast/templates'), { headers }),
+        fetch(getBackendUrl('/api/settings/whatsapp'), { headers })
       ]);
 
-      const [tenantData, tagsData, templatesData] = await Promise.all([
-        tenantRes.json(), tagsRes.json(), templatesRes.json()
+      const [tenantData, tagsData, templatesData, whatsappData] = await Promise.all([
+        tenantRes.json(), tagsRes.json(), templatesRes.json(), whatsappRes.json()
       ]);
 
-      if (tenantData.success) setTenant(tenantData.data);
+      if (tenantData.success) {
+        const hasConnectedWhatsapp = whatsappData.success && whatsappData.data?.some((p: any) => p.evolutionInstanceStatus === 'OPEN');
+        setTenant({ ...tenantData.data, _hasConnectedWhatsapp: hasConnectedWhatsapp });
+      }
       if (tagsData.success) setTags(tagsData.data);
       if (templatesData.success) setTemplates(templatesData.data);
       
@@ -393,7 +397,7 @@ export default function BroadcastPage() {
                   <div className="pt-6">
                     {(
                       (tenant?.whatsappProvider === 'EVOLUTION' || !tenant?.whatsappProvider)
-                        ? (!tenant?.evolutionInstanceName || tenant?.evolutionInstanceStatus !== 'OPEN')
+                        ? !tenant?._hasConnectedWhatsapp
                         : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
                     ) ? (
                       <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl flex items-center justify-between">

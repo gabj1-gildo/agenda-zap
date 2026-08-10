@@ -161,11 +161,19 @@ export default function ChatsPage() {
 
     const loadTenant = async () => {
       try {
-        const res = await fetch(getBackendUrl('/api/settings/tenant'), { 
-          headers: { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` } 
-        });
-        const data = await res.json();
-        if (data.success) setTenant(data.data);
+        const headers = { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` };
+        const [tenantRes, whatsappRes] = await Promise.all([
+          fetch(getBackendUrl('/api/settings/tenant'), { headers }),
+          fetch(getBackendUrl('/api/settings/whatsapp'), { headers })
+        ]);
+        
+        const tenantData = await tenantRes.json();
+        const whatsappData = await whatsappRes.json();
+        
+        if (tenantData.success) {
+          const hasConnectedWhatsapp = whatsappData.success && whatsappData.data?.some((p: any) => p.evolutionInstanceStatus === 'OPEN');
+          setTenant({ ...tenantData.data, _hasConnectedWhatsapp: hasConnectedWhatsapp });
+        }
       } catch (err) {
         console.error("Erro ao carregar dados da empresa", err);
       } finally {
@@ -303,7 +311,7 @@ export default function ChatsPage() {
         </div>
       ) : (
         (tenant?.whatsappProvider === 'EVOLUTION' || !tenant?.whatsappProvider)
-          ? tenant?.evolutionInstanceStatus !== "OPEN"
+          ? !tenant?._hasConnectedWhatsapp
           : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
       ) ? (
         <div className="w-full flex flex-col items-center justify-center p-8 text-center space-y-4">
