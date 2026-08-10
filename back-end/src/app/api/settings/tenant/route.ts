@@ -4,6 +4,7 @@ import { tenants, services, schedules, tenantPhones } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { r2, DeleteObjectCommand, R2_BUCKET } from '@/lib/r2';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
+import { withTenant } from '@/db/withTenant';
 
 export async function GET(req: Request) {
   try {
@@ -31,7 +32,15 @@ export async function GET(req: Request) {
     if (!schs.some(s => s.isActive)) missingRequirements.push('Pelo menos 1 Dia de Funcionamento');
     
     // Fallback para suportar o novo modelo de múltiplas instâncias
-    const phones = await db.select().from(tenantPhones).where(eq(tenantPhones.tenantId, tenantId));
+    let phones: any[] = [];
+    try {
+      await withTenant(tenantId, async (tx) => {
+        phones = await tx.select().from(tenantPhones).where(eq(tenantPhones.tenantId, tenantId));
+      });
+    } catch (err) {
+      console.error('Error fetching tenant phones:', err);
+    }
+    
     if (phones.some(p => p.evolutionInstanceStatus === 'OPEN')) {
       tenant.evolutionInstanceStatus = 'OPEN';
     }
