@@ -27,6 +27,7 @@ import { PaymentConfig } from "@/components/PaymentConfig";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { ServicesSettings } from "@/components/ServicesSettings";
 import { ExceptionsSettings } from "@/components/ExceptionsSettings";
+import { TagsSettings } from "@/components/TagsSettings";
 
 import { env } from '@/config/env';
 
@@ -606,10 +607,11 @@ function SettingsContent() {
       </div>
 
             <Tabs defaultValue="empresa" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4 h-auto md:h-10 gap-2">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 h-auto md:h-10 gap-2">
           <TabsTrigger value="empresa">Empresa</TabsTrigger>
           <TabsTrigger value="notificacoes">WhatsApp</TabsTrigger>
           <TabsTrigger value="ia">IA</TabsTrigger>
+          <TabsTrigger value="tags">Tags</TabsTrigger>
           <TabsTrigger value="integracoes">Integrações</TabsTrigger>
         </TabsList>
 
@@ -894,28 +896,66 @@ function SettingsContent() {
                     />
                   </div>
                   
-                  <div className="space-y-2 md:col-span-6 mt-4">
-                    <Label>Tipo de Atendimento</Label>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                      value={tenant?.serviceLocationType || 'FISICO'}
-                      onChange={(e) => setTenant({ ...tenant, serviceLocationType: e.target.value })}
-                    >
-                      <option value="FISICO">Somente no Local (Físico)</option>
-                      <option value="DOMICILIO">Somente a Domicílio</option>
-                      <option value="AMBOS">Ambos (Físico e Domicílio)</option>
-                    </select>
+                  <div className="space-y-3 md:col-span-6 mt-4">
+                    <Label className="text-sm font-semibold">Tipo de Atendimento</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        { value: 'ON_SITE', label: 'No Estabelecimento', desc: 'Clientes vêm até você', icon: '🏪' },
+                        { value: 'DOMICILE', label: 'A Domicílio', desc: 'Você vai até o cliente', icon: '🚗' },
+                        { value: 'BOTH', label: 'Ambos', desc: 'Os dois tipos', icon: '🔄' },
+                      ].map(opt => (
+                        <label
+                          key={opt.value}
+                          className={`flex flex-col p-4 border rounded-xl cursor-pointer transition-all duration-200 ${
+                            (tenant?.serviceLocationType || 'ON_SITE') === opt.value
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <input
+                              type="radio"
+                              name="serviceLocationType"
+                              value={opt.value}
+                              checked={(tenant?.serviceLocationType || 'ON_SITE') === opt.value}
+                              onChange={() => setTenant({ ...tenant, serviceLocationType: opt.value })}
+                              className="accent-primary"
+                            />
+                            <span className="text-lg">{opt.icon}</span>
+                            <span className="font-semibold text-sm">{opt.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground ml-5">{opt.desc}</p>
+                        </label>
+                      ))}
+                    </div>
                   </div>
 
-                  {(tenant?.serviceLocationType === 'DOMICILIO' || tenant?.serviceLocationType === 'AMBOS') && (
-                    <div className="space-y-2 md:col-span-6 mt-4">
-                      <Label>Perímetro de Atendimento a Domicílio</Label>
-                      <Input 
-                        value={tenant?.servicePerimeter || ""} 
-                        onChange={e => setTenant({...tenant, servicePerimeter: e.target.value})} 
-                        placeholder="Ex: Raio de 15km ou lista de bairros"
+                  {(tenant?.serviceLocationType === 'DOMICILE' || tenant?.serviceLocationType === 'BOTH') && (
+                    <div className="space-y-3 md:col-span-6">
+                      <Label className="text-sm font-semibold">Perímetro de Atendimento a Domicílio</Label>
+                      <textarea
+                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        rows={3}
+                        value={tenant?.servicePerimeter || ""}
+                        onChange={e => setTenant({...tenant, servicePerimeter: e.target.value})}
+                        placeholder={`Descreva a área de atendimento. Exemplos:
+- Raio de 15km a partir do centro
+- Bairros: Centro, Santa Mônica, Jardim América
+- Cidades: Monte Claros, Bocaiuva, Pirapora`}
                       />
-                      <p className="text-xs text-muted-foreground">A IA usará esta informação para validar o endereço enviado pelo cliente.</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {['Raio de 10km', 'Raio de 20km', 'Cidade toda', 'Região metropolitana'].map(sugg => (
+                          <button
+                            key={sugg}
+                            type="button"
+                            onClick={() => setTenant({...tenant, servicePerimeter: sugg})}
+                            className="text-xs px-3 py-1 rounded-full border border-border hover:bg-muted transition-colors"
+                          >
+                            + {sugg}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">A IA usará esta informação para validar o endereço enviado pelo cliente e informar se está dentro do perímetro.</p>
                     </div>
                   )}
                 </div>
@@ -937,9 +977,19 @@ function SettingsContent() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">Uso de Instâncias</span>
-                  <Badge variant="outline">
-                    {tenant?.whatsappProvider === 'META_CLOUD' ? "Instância Única Meta" : `${whatsappInstances.length} instâncias conectadas`}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant={whatsappInstances.length >= (tenant?.customMaxWhatsAppInstances ?? 1) ? "destructive" : "outline"} className="text-xs">
+                      {whatsappInstances.length}/{tenant?.customMaxWhatsAppInstances ?? 1} instâncias
+                    </Badge>
+                    <div style={{ width: 80, height: 4, background: 'var(--border)', borderRadius: 999 }}>
+                      <div style={{ 
+                        width: `${Math.min((whatsappInstances.length / (tenant?.customMaxWhatsAppInstances ?? 1)) * 100, 100)}%`, 
+                        height: '100%', 
+                        background: whatsappInstances.length >= (tenant?.customMaxWhatsAppInstances ?? 1) ? '#ef4444' : '#f5a524', 
+                        borderRadius: 999, transition: 'width .3s' 
+                      }} />
+                    </div>
+                  </div>
                 </div>
 
                 {tenant && !tenant._isProfileComplete && (
@@ -1262,6 +1312,10 @@ function SettingsContent() {
               <Button onClick={saveGeneral} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
             </CardFooter>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="tags" className="space-y-6">
+          <TagsSettings tenantId={targetTenantId as string} />
         </TabsContent>
 
         <TabsContent value="integracoes" className="space-y-6">

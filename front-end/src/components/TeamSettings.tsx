@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, UserPlus, Shield } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ const MODULES = [
 export function TeamSettings({ tenantId }: { tenantId: string }) {
   const { data: session } = useSession();
   const [team, setTeam] = useState<any[]>([]);
+  const [maxUsers, setMaxUsers] = useState<number>(3);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -41,16 +43,15 @@ export function TeamSettings({ tenantId }: { tenantId: string }) {
 
   const loadTeam = async () => {
     try {
-      const res = await fetch(getBackendUrl('/api/settings/team'), {
-        headers: {
-          'tenant-id': tenantId,
-          'Authorization': `Bearer ${(session?.user as any)?.accessToken}`
-        }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setTeam(data.data);
-      }
+      const headers = { 'tenant-id': tenantId, 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` };
+      const [teamRes, tenantRes] = await Promise.all([
+        fetch(getBackendUrl('/api/settings/team'), { headers }),
+        fetch(getBackendUrl('/api/settings/tenant'), { headers })
+      ]);
+      const data = await teamRes.json();
+      const tenantData = await tenantRes.json();
+      if (data.success) setTeam(data.data);
+      if (tenantData.success) setMaxUsers(tenantData.data?.maxUsers ?? 3);
     } catch (e) {
       toast.error("Erro ao carregar equipe");
     } finally {
@@ -143,6 +144,9 @@ export function TeamSettings({ tenantId }: { tenantId: string }) {
     }
   };
 
+  const atLimit = team.length >= maxUsers;
+  const usedPct = Math.min((team.length / maxUsers) * 100, 100);
+
   if (loading) return <div>Carregando equipe...</div>;
 
   return (
@@ -157,8 +161,21 @@ export function TeamSettings({ tenantId }: { tenantId: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Membros da Equipe</CardTitle>
-          <CardDescription>Gerencie quem tem acesso à sua empresa e quais módulos eles podem ver.</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Membros da Equipe</CardTitle>
+              <CardDescription>Gerencie quem tem acesso à sua empresa e quais módulos eles podem ver.</CardDescription>
+            </div>
+            {/* Limit counter */}
+            <div className="flex flex-col items-end gap-1">
+              <Badge variant={atLimit ? "destructive" : "outline"} className="text-xs">
+                {team.length}/{maxUsers} perfis
+              </Badge>
+              <div style={{ width: 80, height: 4, background: 'var(--border)', borderRadius: 999 }}>
+                <div style={{ width: `${usedPct}%`, height: '100%', background: atLimit ? '#ef4444' : '#f5a524', borderRadius: 999, transition: 'width .3s' }} />
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {team.length === 0 ? (
@@ -285,9 +302,9 @@ export function TeamSettings({ tenantId }: { tenantId: string }) {
             </div>
           </div>
 
-          <Button onClick={handleAddUser} disabled={saving} className="w-full sm:w-auto">
+          <Button onClick={handleAddUser} disabled={saving || atLimit} className="w-full sm:w-auto">
             <UserPlus className="w-4 h-4 mr-2" />
-            Convidar Membro
+            {atLimit ? `Limite atingido (${team.length}/${maxUsers})` : 'Convidar Membro'}
           </Button>
         </CardContent>
       </Card>

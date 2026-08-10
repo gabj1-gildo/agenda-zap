@@ -27,6 +27,7 @@ export function ProfessionalsSettings({ tenantId }: { tenantId: string }) {
   const [professionals, setProfessionals] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [team, setTeam] = useState<any[]>([]);
+  const [maxProfessionals, setMaxProfessionals] = useState<number>(5);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -49,19 +50,22 @@ export function ProfessionalsSettings({ tenantId }: { tenantId: string }) {
 
   const loadAllData = async () => {
     try {
-      const headers = { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) };
-      const [profRes, svcRes, teamRes] = await Promise.all([
-        fetch(getBackendUrl('/api/settings/professionals'), { headers }),
-        fetch(getBackendUrl('/api/settings/services'), { headers }),
-        fetch(getBackendUrl('/api/settings/team'), { headers })
+      const hdrs = { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) };
+      const [profRes, svcRes, teamRes, tenantRes] = await Promise.all([
+        fetch(getBackendUrl('/api/settings/professionals'), { headers: hdrs }),
+        fetch(getBackendUrl('/api/settings/services'), { headers: hdrs }),
+        fetch(getBackendUrl('/api/settings/team'), { headers: hdrs }),
+        fetch(getBackendUrl('/api/settings/tenant'), { headers: hdrs })
       ]);
       const profData = await profRes.json();
       const svcData = await svcRes.json();
       const teamData = await teamRes.json();
+      const tenantData = await tenantRes.json();
       
       if (profData.success) setProfessionals(profData.data);
       if (svcData.success) setServices(svcData.data);
       if (teamData.success) setTeam(teamData.data);
+      if (tenantData.success) setMaxProfessionals(tenantData.data?.maxUsers ?? 5);
     } catch (e) {
       toast.error("Erro de conexão ao carregar dados");
     } finally {
@@ -180,9 +184,26 @@ export function ProfessionalsSettings({ tenantId }: { tenantId: string }) {
           <h3 className="text-lg font-semibold">Profissionais</h3>
           <p className="text-sm text-muted-foreground">Cadastre sua equipe, associe aos serviços que prestam e configure a agenda individual.</p>
         </div>
-        <Button onClick={handleOpenNew} className="gap-2">
-          <Plus className="w-4 h-4" /> Novo Profissional
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+              professionals.length >= maxProfessionals ? 'border-red-300 text-red-600 bg-red-50' : 'border-border text-muted-foreground'
+            }`}>
+              {professionals.length}/{maxProfessionals} profissionais
+            </span>
+            <Button onClick={handleOpenNew} className="gap-2" disabled={professionals.length >= maxProfessionals}>
+              <Plus className="w-4 h-4" /> {professionals.length >= maxProfessionals ? 'Limite atingido' : 'Novo Profissional'}
+            </Button>
+          </div>
+          <div style={{ width: 100, height: 4, background: 'var(--border)', borderRadius: 999 }}>
+            <div style={{ 
+              width: `${Math.min((professionals.length / maxProfessionals) * 100, 100)}%`, 
+              height: '100%', 
+              background: professionals.length >= maxProfessionals ? '#ef4444' : '#f5a524', 
+              borderRadius: 999, transition: 'width .3s' 
+            }} />
+          </div>
+        </div>
       </div>
 
       <Card>
