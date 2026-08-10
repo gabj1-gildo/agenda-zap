@@ -169,8 +169,8 @@ export default function ChatsPage() {
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
         const [tenantRes, whatsappRes] = await Promise.all([
-          fetch(getBackendUrl('/api/settings/tenant'), { headers }),
-          fetch(getBackendUrl('/api/settings/whatsapp'), { headers })
+          fetch(getBackendUrl('/api/settings/tenant'), { headers, cache: 'no-store' }),
+          fetch(getBackendUrl('/api/settings/whatsapp'), { headers, cache: 'no-store' })
         ]);
         
         const tenantData = await tenantRes.json();

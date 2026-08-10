@@ -7,19 +7,19 @@ git push origin main
 Write-Host "Atualizando branch front-end..." -ForegroundColor Blue
 git checkout -B front-end main
 git rm -rf back-end website docs --ignore-unmatch
-git commit -m "chore: deploy front-end"
+git commit -m "deploy front-end"
 git push origin front-end --force
 
 Write-Host "Atualizando branch website..." -ForegroundColor Blue
 git checkout -B website main
 git rm -rf back-end front-end docs --ignore-unmatch
-git commit -m "chore: deploy website"
+git commit -m "deploy website"
 git push origin website --force
 
 Write-Host "Atualizando branch back-end..." -ForegroundColor Blue
 git checkout -B back-end main
 git rm -rf front-end website docs --ignore-unmatch
-git commit -m "chore: deploy back-end"
+git commit -m "deploy back-end"
 git push origin back-end --force
 
 Write-Host "Limpando e voltando para a branch main..." -ForegroundColor Green
