@@ -396,7 +396,7 @@ export default function BroadcastPage() {
 
                   <div className="pt-6">
                     {(
-                      (tenant?.whatsappProvider === 'EVOLUTION' || !tenant?.whatsappProvider)
+                      (tenant?.whatsappProvider?.toUpperCase() === 'EVOLUTION' || !tenant?.whatsappProvider)
                         ? !tenant?._hasConnectedWhatsapp
                         : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
                     ) ? (

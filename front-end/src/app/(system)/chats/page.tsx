@@ -322,7 +322,7 @@ export default function ChatsPage() {
           <p className="text-muted-foreground">Carregando...</p>
         </div>
       ) : (
-        (tenant?.whatsappProvider === 'EVOLUTION' || !tenant?.whatsappProvider)
+        (tenant?.whatsappProvider?.toUpperCase() === 'EVOLUTION' || !tenant?.whatsappProvider)
           ? !tenant?._hasConnectedWhatsapp
           : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
       ) ? (
