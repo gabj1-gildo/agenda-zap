@@ -46,7 +46,7 @@ function timeToMins(t: string) {
 }
 
 function SettingsContent() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const queryTenantId = searchParams?.get("tenant");
   const role = (session?.user as any)?.role;
@@ -570,7 +570,8 @@ function SettingsContent() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
+  if (loading || status === "loading") return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
+  if (!tenant) return <div className="p-8 text-center text-muted-foreground">Selecione uma empresa para ver as configurações.</div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
