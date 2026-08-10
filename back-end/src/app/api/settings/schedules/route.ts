@@ -25,7 +25,9 @@ export async function GET(req: Request) {
     
     return NextResponse.json({ success: true, data: tenantSchedules });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[GET /api/settings/schedules] error:', msg);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
@@ -67,6 +69,8 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[PUT /api/settings/schedules] error:', msg);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

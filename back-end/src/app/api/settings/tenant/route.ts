@@ -39,7 +39,9 @@ export async function GET(req: Request) {
       } 
     });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[GET /api/settings/tenant] error:', msg);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
 
@@ -152,6 +154,8 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true, data: updated, ignoredFields });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[PATCH /api/settings/tenant] error:', msg);
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
