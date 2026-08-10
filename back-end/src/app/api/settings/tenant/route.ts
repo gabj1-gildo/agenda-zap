@@ -41,8 +41,10 @@ export async function GET(req: Request) {
       console.error('Error fetching tenant phones:', err);
     }
     
-    if (phones.some(p => p.evolutionInstanceStatus === 'OPEN')) {
+    const openPhone = phones.find(p => p.evolutionInstanceStatus?.toUpperCase() === 'OPEN' || p.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED');
+    if (openPhone) {
       tenant.evolutionInstanceStatus = 'OPEN';
+      tenant.evolutionInstanceName = openPhone.evolutionInstanceName;
     }
 
     return NextResponse.json({ 

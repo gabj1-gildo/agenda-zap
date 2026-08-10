@@ -177,7 +177,11 @@ export default function ChatsPage() {
         const whatsappData = await whatsappRes.json();
         
         if (tenantData.success) {
-          const hasConnectedWhatsapp = whatsappData.success && Array.isArray(whatsappData.data) && whatsappData.data.some((p: any) => p.evolutionInstanceStatus === 'OPEN');
+          const hasConnectedWhatsapp = 
+            (whatsappData.success && Array.isArray(whatsappData.data) && whatsappData.data.some((p: any) => p.evolutionInstanceStatus?.toUpperCase() === 'OPEN' || p.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED')) ||
+            tenantData.data?.evolutionInstanceStatus?.toUpperCase() === 'OPEN' ||
+            tenantData.data?.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED';
+
           setTenant({ ...tenantData.data, _hasConnectedWhatsapp: hasConnectedWhatsapp });
         }
       } catch (err) {
