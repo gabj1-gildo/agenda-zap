@@ -1,9 +1,15 @@
 import { db } from '@/db';
-import { tenants } from '@/db/schema';
+import { tenants, tenantPhones } from '@/db/schema';
 import { metaMessageLogs } from '@/db/schema/metaMessageLogs';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { sendWhatsAppMessage as sendEvolutionText, sendWhatsAppImage as sendEvolutionImage } from './evolutionApi';
 import { sendMetaWhatsAppMessage, sendMetaWhatsAppImage } from './metaCloudApi';
+
+async function getEvolutionInstanceName(tenant: any): Promise<string | undefined> {
+  if (tenant.evolutionInstanceName) return tenant.evolutionInstanceName;
+  const phones = await db.select().from(tenantPhones).where(and(eq(tenantPhones.tenantId, tenant.id), eq(tenantPhones.evolutionInstanceStatus, 'OPEN'))).limit(1);
+  return phones[0]?.evolutionInstanceName || undefined;
+}
 
 export async function sendWhatsAppMessage(
   remoteJid: string,
@@ -55,7 +61,8 @@ export async function sendWhatsAppMessage(
       return false;
     }
   } else {
-    return await sendEvolutionText(remoteJid, text, tenant.evolutionInstanceName || undefined);
+    const instanceName = await getEvolutionInstanceName(tenant);
+    return await sendEvolutionText(remoteJid, text, instanceName);
   }
 }
 
@@ -108,6 +115,7 @@ export async function sendWhatsAppImage(
       return false;
     }
   } else {
-    return await sendEvolutionImage(remoteJid, imageUrl, caption, tenant.evolutionInstanceName || undefined);
+    const instanceName = await getEvolutionInstanceName(tenant);
+    return await sendEvolutionImage(remoteJid, imageUrl, caption, instanceName);
   }
 }

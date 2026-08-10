@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { clients, tenants } from '@/db/schema';
+import { clients, tenants, tenantPhones } from '@/db/schema';
 import { eq, isNotNull, and } from 'drizzle-orm';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 import { sendWhatsAppMessage } from '@/services/whatsappService';
@@ -36,11 +36,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Empresa não encontrada' }, { status: 404 });
     }
 
-    if (tenant.evolutionInstanceStatus !== 'OPEN' || !tenant.evolutionInstanceName) {
-      return NextResponse.json({ success: false, error: 'O WhatsApp da empresa não está conectado. Vá em Configurações > Integrações para conectar.' }, { status: 400 });
+    const openPhone = (await db.select().from(tenantPhones).where(and(eq(tenantPhones.tenantId, tenantId), eq(tenantPhones.evolutionInstanceStatus, 'OPEN'))).limit(1))[0];
+    const isConnected = tenant.evolutionInstanceStatus === 'OPEN' || tenant.whatsappProvider === 'META_CLOUD' || !!openPhone;
+
+    if (!isConnected) {
+      return NextResponse.json({ success: false, error: 'O WhatsApp da empresa não está conectado. Vá em Configurações > WhatsApp para conectar.' }, { status: 400 });
     }
 
-    const instanceName = tenant.evolutionInstanceName;
+    const instanceName = tenant.evolutionInstanceName || openPhone?.evolutionInstanceName;
 
     // Buscar clientes do tenant
     let targetClients: any[] = [];

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { tenantPhones } from '@/db/schema';
+import { tenantPhones, tenants } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
 import { env } from '@/config/env';
@@ -95,10 +95,22 @@ export async function GET(
     const state: string = statusData?.instance?.state || 'DISCONNECTED';
 
     // Atualizar status no banco
+    const upperState = state.toUpperCase();
     await db
       .update(tenantPhones)
-      .set({ evolutionInstanceStatus: state.toUpperCase(), updatedAt: new Date() })
+      .set({ evolutionInstanceStatus: upperState, updatedAt: new Date() })
       .where(eq(tenantPhones.id, phoneId));
+
+    if (upperState === 'OPEN') {
+      await db
+        .update(tenants)
+        .set({ 
+          evolutionInstanceName: phoneRecord.evolutionInstanceName,
+          evolutionInstanceStatus: 'OPEN',
+          updatedAt: new Date()
+        })
+        .where(eq(tenants.id, tenantId));
+    }
 
     let qrCode: string | null = null;
     if (state !== 'open') {

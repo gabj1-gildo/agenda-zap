@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { chatSessions, clients } from '@/db/schema';
+import { chatSessions, clients, tenantPhones } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sendWhatsAppMessage } from '@/services/whatsappService';
 
@@ -35,7 +35,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ success: false, error: 'Session not found' }, { status: 404 });
     }
 
-    if (session.tenant?.evolutionInstanceStatus !== 'OPEN' || !session.tenant?.evolutionInstanceName) {
+    const isConnected = session.tenant?.evolutionInstanceStatus === 'OPEN' || 
+      session.tenant?.whatsappProvider === 'META_CLOUD' ||
+      (await db.select().from(tenantPhones).where(and(eq(tenantPhones.tenantId, session.tenant.id), eq(tenantPhones.evolutionInstanceStatus, 'OPEN'))).limit(1)).length > 0;
+
+    if (!isConnected) {
       return NextResponse.json({ success: false, error: 'O WhatsApp da empresa não está conectado.' }, { status: 400 });
     }
 

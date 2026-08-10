@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { clients, chatSessions, tenants } from '@/db/schema';
+import { clients, chatSessions, tenants, tenantPhones } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sendWhatsAppMessage } from '@/services/whatsappService';
 import { verifyAuth, canAccessTenant } from '@/lib/auth';
@@ -25,7 +25,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Empresa não encontrada' }, { status: 404 });
     }
 
-    if (tenant.evolutionInstanceStatus !== 'OPEN' || !tenant.evolutionInstanceName) {
+    const isConnected = tenant.evolutionInstanceStatus === 'OPEN' || 
+      tenant.whatsappProvider === 'META_CLOUD' ||
+      (await db.select().from(tenantPhones).where(and(eq(tenantPhones.tenantId, tenantId), eq(tenantPhones.evolutionInstanceStatus, 'OPEN'))).limit(1)).length > 0;
+
+    if (!isConnected) {
       return NextResponse.json({ success: false, error: 'O WhatsApp da empresa não está conectado.' }, { status: 400 });
     }
 

@@ -137,10 +137,14 @@ export default function ChatsPage() {
     }
   };
 
-  const fetcher = (url: string) => fetch(url, { headers: { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` } }).then(res => res.json());
+  const fetcher = (url: string) => {
+    const headers: Record<string, string> = { 'tenant-id': tenantId };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return fetch(url, { headers }).then(res => res.json());
+  };
 
   const { data: chatsResponse } = useSWR(
-    tenantId ? getBackendUrl('/api/chats') : null,
+    (tenantId && token) ? getBackendUrl('/api/chats') : null,
     fetcher,
     { refreshInterval: 3000 } // Polling silencioso a cada 3s
   );
@@ -161,7 +165,9 @@ export default function ChatsPage() {
 
     const loadTenant = async () => {
       try {
-        const headers = { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` };
+        const headers: Record<string, string> = { 'tenant-id': tenantId };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const [tenantRes, whatsappRes] = await Promise.all([
           fetch(getBackendUrl('/api/settings/tenant'), { headers }),
           fetch(getBackendUrl('/api/settings/whatsapp'), { headers })
@@ -171,7 +177,7 @@ export default function ChatsPage() {
         const whatsappData = await whatsappRes.json();
         
         if (tenantData.success) {
-          const hasConnectedWhatsapp = whatsappData.success && whatsappData.data?.some((p: any) => p.evolutionInstanceStatus === 'OPEN');
+          const hasConnectedWhatsapp = whatsappData.success && Array.isArray(whatsappData.data) && whatsappData.data.some((p: any) => p.evolutionInstanceStatus === 'OPEN');
           setTenant({ ...tenantData.data, _hasConnectedWhatsapp: hasConnectedWhatsapp });
         }
       } catch (err) {
@@ -182,7 +188,7 @@ export default function ChatsPage() {
     };
 
     loadTenant();
-  }, [tenantId]);
+  }, [tenantId, token]);
 
   const handleSelectSession = async (session: ChatSession) => {
     setSelectedSession(session);
