@@ -18,6 +18,34 @@ export async function POST(req: Request) {
     }
     console.log(`[WEBHOOK RECEBIDO] Evento: ${body.event}, Instância: ${body.instance}`);
 
+    // -----------------------------------------------------
+    // TRATAR EVENTO DE CONEXÃO (EVITA O PROBLEMA DE DESCONECTADO NO FRONT)
+    // -----------------------------------------------------
+    if (body.event === 'connection.update') {
+      const state = body.data?.state || body.data?.status;
+      if (state && body.instance) {
+        const upperState = state.toUpperCase();
+        console.log(`[WEBHOOK] Atualização de conexão para ${body.instance}: ${upperState}`);
+        
+        const phoneRecord = await db.query.tenantPhones.findFirst({
+          where: eq(tenantPhones.evolutionInstanceName, body.instance)
+        });
+        
+        if (phoneRecord) {
+          await db.update(tenantPhones)
+            .set({ evolutionInstanceStatus: upperState, updatedAt: new Date() })
+            .where(eq(tenantPhones.id, phoneRecord.id));
+            
+          if (upperState === 'OPEN') {
+            await db.update(tenants)
+              .set({ evolutionInstanceStatus: upperState, evolutionInstanceName: body.instance, updatedAt: new Date() })
+              .where(eq(tenants.id, phoneRecord.tenantId));
+          }
+        }
+      }
+      return NextResponse.json({ success: true, message: 'Status de conexão atualizado' });
+    }
+
     // Check if it's a valid Evolution API message event
     if (body.event !== 'messages.upsert' || !body.data || !body.data.message) {
       return NextResponse.json({ success: true, message: 'Ignored non-message event' });

@@ -11,6 +11,7 @@ import { ClientTags } from "@/components/ClientTags";
 import { TenantPhoneModal } from "@/components/TenantPhoneModal";
 import { Button } from "@/components/ui/button";
 import { getBackendUrl } from "@/lib/api";
+import { toast } from "sonner";
 
 type Message = {
   role: "user" | "system" | "model";
@@ -160,38 +161,39 @@ export default function ChatsPage() {
     }
   }, [chatsResponse]);
 
-  useEffect(() => {
+  const loadTenantData = async () => {
     if (!tenantId) return;
+    try {
+      const headers: Record<string, string> = { 'tenant-id': tenantId };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const loadTenant = async () => {
-      try {
-        const headers: Record<string, string> = { 'tenant-id': tenantId };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+      const [tenantRes, whatsappRes] = await Promise.all([
+        fetch(getBackendUrl('/api/settings/tenant'), { headers, cache: 'no-store' }),
+        fetch(getBackendUrl('/api/settings/whatsapp'), { headers, cache: 'no-store' })
+      ]);
+      
+      const tenantData = await tenantRes.json();
+      const whatsappData = await whatsappRes.json();
+      
+      if (tenantData.success) {
+        const hasConnectedWhatsapp = 
+          (whatsappData.success && Array.isArray(whatsappData.data) && whatsappData.data.some((p: any) => p.evolutionInstanceStatus?.toUpperCase() === 'OPEN' || p.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED')) ||
+          tenantData.data?.evolutionInstanceStatus?.toUpperCase() === 'OPEN' ||
+          tenantData.data?.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED';
 
-        const [tenantRes, whatsappRes] = await Promise.all([
-          fetch(getBackendUrl('/api/settings/tenant'), { headers, cache: 'no-store' }),
-          fetch(getBackendUrl('/api/settings/whatsapp'), { headers, cache: 'no-store' })
-        ]);
-        
-        const tenantData = await tenantRes.json();
-        const whatsappData = await whatsappRes.json();
-        
-        if (tenantData.success) {
-          const hasConnectedWhatsapp = 
-            (whatsappData.success && Array.isArray(whatsappData.data) && whatsappData.data.some((p: any) => p.evolutionInstanceStatus?.toUpperCase() === 'OPEN' || p.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED')) ||
-            tenantData.data?.evolutionInstanceStatus?.toUpperCase() === 'OPEN' ||
-            tenantData.data?.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED';
-
-          setTenant({ ...tenantData.data, _hasConnectedWhatsapp: hasConnectedWhatsapp });
-        }
-      } catch (err) {
-        console.error("Erro ao carregar dados da empresa", err);
-      } finally {
-        setLoading(false);
+        setTenant({ ...tenantData.data, _hasConnectedWhatsapp: hasConnectedWhatsapp });
+        return hasConnectedWhatsapp;
       }
-    };
+    } catch (err) {
+      console.error("Erro ao carregar dados da empresa", err);
+    } finally {
+      setLoading(false);
+    }
+    return false;
+  };
 
-    loadTenant();
+  useEffect(() => {
+    loadTenantData();
   }, [tenantId, token]);
 
   const handleSelectSession = async (session: ChatSession) => {
@@ -310,7 +312,7 @@ export default function ChatsPage() {
           tenantId={tenantId} 
           onClose={() => {
             setShowPhoneModal(false);
-            window.location.reload();
+            loadTenantData();
           }} 
         />
       )}
@@ -333,9 +335,25 @@ export default function ChatsPage() {
             Para acessar suas conversas e enviar mensagens, é necessário que o WhatsApp do seu estabelecimento esteja pareado com o sistema.
           </p>
           {(session?.user as any)?.role !== "ATTENDANT" ? (
-            <Button onClick={() => setShowPhoneModal(true)} className="mt-4">
-              Conectar WhatsApp Agora
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <Button onClick={() => setShowPhoneModal(true)}>
+                Conectar WhatsApp Agora
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={async () => {
+                  const toastId = toast.loading("Sincronizando status...");
+                  const isConnected = await loadTenantData();
+                  if (isConnected) {
+                    toast.success("WhatsApp conectado!", { id: toastId });
+                  } else {
+                    toast.error("Ainda desconectado.", { id: toastId });
+                  }
+                }}
+              >
+                Verificar Conexão
+              </Button>
+            </div>
           ) : (
             <p className="text-sm font-semibold text-destructive mt-4">
               Solicite ao administrador para conectar o WhatsApp da empresa.
