@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/agenda',
+        destination: '/calendar',
+        permanent: true,
+      },
+    ];
+  },
   allowedDevOrigins: ['threaten-removable-unaudited.ngrok-free.dev'],
 };
 

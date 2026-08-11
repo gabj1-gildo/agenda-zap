@@ -34,7 +34,7 @@ const NAV_STRUCTURE: NavCategory[] = [
     label: "Principal",
     items: [
       { href: "/dashboard",     label: "Painel",           icon: LayoutDashboard },
-      { href: "/agenda",        label: "Agenda",            icon: CalendarDays,   requiresTenant: true },
+      { href: "/calendar",      label: "Agenda",            icon: CalendarDays,   requiresTenant: true },
       { href: "/appointments",  label: "Agendamentos",      icon: CalendarCheck,  requiresTenant: true },
       { href: "/clients",       label: "Clientes",          icon: Contact,        requiresTenant: true },
       { href: "/assinantes",    label: "Assinantes",        icon: UserCheck,      requiresTenant: true },
