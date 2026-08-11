@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import { ExportButton } from "@/components/ExportButton";
 import { getBackendUrl } from "@/lib/api";
 import { Countdown } from "@/components/Countdown";
@@ -34,17 +35,23 @@ function formatDate(d: string) {
   }).format(new Date(d));
 }
 
-export default async function AppointmentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string; search?: string }>;
-}) {
-  const session = await getServerSession(authOptions);
-  const token = (session?.user as any)?.accessToken;
-  const tenantId = (session?.user as any)?.tenantId;
+function AppointmentsSkeleton() {
+  return (
+    <div className="animate-pulse space-y-8 mt-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-24 bg-muted rounded-2xl w-full border border-border"></div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <div className="h-10 bg-muted rounded-xl w-64 border border-border"></div>
+      </div>
+      <div className="h-64 bg-muted rounded-2xl w-full border border-border"></div>
+    </div>
+  );
+}
 
-  if (!token || !tenantId) return <div>Acesso negado.</div>;
-
+async function AppointmentsContent({ searchParams, tenantId, token }: any) {
   const appointments = await getAppointments(tenantId, token);
   const resolvedSearchParams = await searchParams;
   const currentTab = resolvedSearchParams.tab || "todos";
@@ -74,17 +81,9 @@ export default async function AppointmentsPage({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            Agenda
-          </p>
-          <h1 className="font-display font-extrabold text-4xl text-foreground">
-            Agendamentos
-          </h1>
-        </div>
+    <div className="space-y-8 mt-4">
+      {/* Export Button moved here */}
+      <div className="flex justify-end">
         <ExportButton data={filtered} />
       </div>
 
@@ -164,79 +163,113 @@ export default async function AppointmentsPage({
         style={{ borderColor: "var(--border)" }}
         className="bg-card rounded-2xl border overflow-hidden"
       >
-        <div className="overflow-x-auto w-full -mx-4 px-4 sm:mx-0 sm:px-0"><table className="w-full min-w-[700px] border-collapse">
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
-              {["Data e Hora", "Cliente", "Serviço", "Valor", "Status", "Ações"].map((h) => (
-                <th
-                  key={h}
-                  className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length > 0 ? (
-              filtered.map((apt: any) => {
-                const cfg = statusConfig[apt.status] ?? { label: apt.status, cls: "stamp" };
-                return (
-                  <tr
-                    key={apt.id}
-                    style={{ borderBottom: "1px solid var(--border)" }}
-                    className="hover:bg-muted/40 transition-colors"
+        <div className="overflow-x-auto w-full -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full min-w-[700px] border-collapse">
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
+                {["Data e Hora", "Cliente", "Serviço", "Valor", "Status", "Ações"].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3"
                   >
-                    <td className="px-5 py-3.5 font-mono-custom text-xs text-muted-foreground">
-                      {formatDate(apt.date)}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          style={{ background: "var(--muted-foreground)", color: "#fff" }}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                        >
-                          {(apt.client?.name || "?").charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">
-                          {apt.client?.name || "Desconhecido"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                      {apt.serviceName || apt.service || "—"}
-                    </td>
-                    <td className="px-5 py-3.5 font-mono-custom text-sm font-bold text-foreground">
-                      {apt.price ? `R$ ${Number(apt.price).toFixed(2).replace(".", ",")}` : "—"}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className={cfg.cls}>{cfg.label}</span>
-                      {apt.status === 'PENDENTE' && apt.expiresAt && (
-                        <div className="mt-1 flex flex-col gap-0.5">
-                          <span className="text-[10px] text-muted-foreground">Expira: {formatDate(apt.expiresAt)}</span>
-                          <Countdown expiresAt={apt.expiresAt} />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <AppointmentActions appointmentId={apt.id} tenantId={tenantId} token={token} />
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="text-center py-12 text-sm text-muted-foreground"
-                >
-                  Nenhum agendamento nesta visualização.
-                </td>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table></div>
+            </thead>
+            <tbody>
+              {filtered.length > 0 ? (
+                filtered.map((apt: any) => {
+                  const cfg = statusConfig[apt.status] ?? { label: apt.status, cls: "stamp" };
+                  return (
+                    <tr
+                      key={apt.id}
+                      style={{ borderBottom: "1px solid var(--border)" }}
+                      className="hover:bg-muted/40 transition-colors"
+                    >
+                      <td className="px-5 py-3.5 font-mono-custom text-xs text-muted-foreground">
+                        {formatDate(apt.date)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            style={{ background: "var(--muted-foreground)", color: "#fff" }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                          >
+                            {(apt.client?.name || "?").charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {apt.client?.name || "Desconhecido"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
+                        {apt.serviceName || apt.service || "—"}
+                      </td>
+                      <td className="px-5 py-3.5 font-mono-custom text-sm font-bold text-foreground">
+                        {apt.price ? `R$ ${Number(apt.price).toFixed(2).replace(".", ",")}` : "—"}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={cfg.cls}>{cfg.label}</span>
+                        {apt.status === 'PENDENTE' && apt.expiresAt && (
+                          <div className="mt-1 flex flex-col gap-0.5">
+                            <span className="text-[10px] text-muted-foreground">Expira: {formatDate(apt.expiresAt)}</span>
+                            <Countdown expiresAt={apt.expiresAt} />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <AppointmentActions appointmentId={apt.id} tenantId={tenantId} token={token} />
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center py-12 text-sm text-muted-foreground"
+                  >
+                    Nenhum agendamento nesta visualização.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+    </div>
+  );
+}
+
+export default async function AppointmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; search?: string }>;
+}) {
+  const session = await getServerSession(authOptions);
+  const token = (session?.user as any)?.accessToken;
+  const tenantId = (session?.user as any)?.tenantId;
+
+  if (!token || !tenantId) return <div>Acesso negado.</div>;
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header instantly rendered */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
+            Agenda
+          </p>
+          <h1 className="font-display font-extrabold text-4xl text-foreground">
+            Agendamentos
+          </h1>
+        </div>
+        </div>
+
+      <Suspense fallback={<AppointmentsSkeleton />}>
+        <AppointmentsContent searchParams={searchParams} tenantId={tenantId} token={token} />
+      </Suspense>
     </div>
   );
 }

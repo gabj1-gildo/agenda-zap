@@ -21,16 +21,8 @@ export default async function DashboardPage() {
   // Se for Admin do tenant, atendente, ou Superadmin visualizando um tenant
   if (role === "ADMIN" || role === "ATTENDANT" || (role === "SUPERADMIN" && activeTenantId)) {
     
-    // O filtro padrão ao carregar a tela é "Hoje"
-    const start = new Date();
-    start.setHours(0,0,0,0);
-    const end = new Date();
-    
-    const initialMetrics = await fetchDashboardMetrics(
-      activeTenantId,
-      start.toISOString(),
-      end.toISOString()
-    );
+    // Removendo o fetch do lado do servidor para não bloquear a transição de rota (Router).
+    // O SWR no lado do cliente (TenantDashboard -> useDashboardMetrics) buscará isso imediatamente.
 
     const defaultMetrics = {
       faturamento: 0, appointmentsCount: 0, atendimentosPagos: 0, atendimentosPendentes: 0,
@@ -43,17 +35,18 @@ export default async function DashboardPage() {
         tenantId={activeTenantId}
         role={role}
         userName={userName}
-        initialMetrics={initialMetrics || defaultMetrics}
+        initialMetrics={defaultMetrics} // Usa os zeros iniciais, SWR faz a primeira busca sem travar a rota
       />
     );
   }
 
   // Visão nativa do SUPERADMIN (sem tenant selecionado)
-  const tenants = await fetchTenants();
+  // Também evitamos bloquear com fetch lento aqui.
+  const tenants = await fetchTenants(); // Assumindo que essa chamada é super rápida, mas idealmente seria Client-Side
   let adminMetrics = null;
-  if (!activeTenantId) {
-    adminMetrics = await fetchAdminMetrics();
-  }
+  // if (!activeTenantId) {
+  //   adminMetrics = await fetchAdminMetrics();
+  // }
 
   return (
     <AdminDashboard 
