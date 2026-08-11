@@ -30,12 +30,12 @@ export function ClientsTable({ clients, isLoading, onOpenSubsModal, onOpenEditMo
     <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Telefone / WhatsApp</TableHead>
-            <TableHead>Data de Cadastro</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+          <TableRow style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
+            <TableHead className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Nome</TableHead>
+            <TableHead className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Telefone / WhatsApp</TableHead>
+            <TableHead className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Data de Cadastro</TableHead>
+            <TableHead className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Status</TableHead>
+            <TableHead className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
