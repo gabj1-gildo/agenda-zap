@@ -7,8 +7,9 @@ import { sendMetaWhatsAppMessage, sendMetaWhatsAppImage } from './metaCloudApi';
 
 async function getEvolutionInstanceName(tenant: any): Promise<string | undefined> {
   if (tenant.evolutionInstanceName) return tenant.evolutionInstanceName;
-  const phones = await db.select().from(tenantPhones).where(and(eq(tenantPhones.tenantId, tenant.id), eq(tenantPhones.evolutionInstanceStatus, 'OPEN'))).limit(1);
-  return phones[0]?.evolutionInstanceName || undefined;
+  const phones = await db.select().from(tenantPhones).where(eq(tenantPhones.tenantId, tenant.id));
+  const openPhone = phones.find(p => p.evolutionInstanceStatus?.toUpperCase() === 'OPEN' || p.evolutionInstanceStatus?.toUpperCase() === 'CONNECTED');
+  return openPhone?.evolutionInstanceName || undefined;
 }
 
 export async function sendWhatsAppMessage(
@@ -32,10 +33,11 @@ export async function sendWhatsAppMessage(
 
   if (!tenant) return false;
 
-  if (tenant.whatsappProvider === 'META_CLOUD') {
+  if (tenant.whatsappProvider?.toUpperCase() === 'META_CLOUD') {
     if (!tenant.whatsappMetaPhoneNumberId || !tenant.whatsappMetaToken) {
-      console.error('Meta Cloud provider selected but missing tokens for tenant:', tenantId);
-      return false;
+      console.error('Meta Cloud provider selected but missing tokens for tenant:', tenantId, '- Falling back to Evolution API');
+      const instanceName = await getEvolutionInstanceName(tenant);
+      return await sendEvolutionText(remoteJid, text, instanceName);
     }
     
     try {
@@ -87,9 +89,11 @@ export async function sendWhatsAppImage(
 
   if (!tenant) return false;
 
-  if (tenant.whatsappProvider === 'META_CLOUD') {
+  if (tenant.whatsappProvider?.toUpperCase() === 'META_CLOUD') {
     if (!tenant.whatsappMetaPhoneNumberId || !tenant.whatsappMetaToken) {
-      return false;
+      console.error('Meta Cloud provider selected but missing tokens for tenant:', tenantId, '- Falling back to Evolution API');
+      const instanceName = await getEvolutionInstanceName(tenant);
+      return await sendEvolutionImage(remoteJid, imageUrl, caption, instanceName);
     }
     
     try {
