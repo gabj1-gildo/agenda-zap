@@ -46,8 +46,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     // O Evolution API requer o remoteJid (ex: 5511999999999@s.whatsapp.net)
     const remoteJid = `${session.client.phone}@s.whatsapp.net`;
 
-    // Enviar mensagem via Evolution API
-    await sendWhatsAppMessage(remoteJid, message, session.tenant.id);
+    const instanceName = (session.context as any)?.evolutionInstanceName;
+
+    // Enviar mensagem via Evolution API (forçando a instância correta se disponível)
+    await sendWhatsAppMessage(remoteJid, message, instanceName || session.tenant.id);
 
     // Salvar no histórico
     const currentHistory = (session.history as any[]) || [];

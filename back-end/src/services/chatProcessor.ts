@@ -10,7 +10,8 @@ export async function processIncomingMessage(
   text: string,
   tenant: any,
   mediaBase64?: string,
-  mimeType?: string
+  mimeType?: string,
+  evolutionInstanceName?: string
 ) {
   try {
     console.log(`\n--- Processando mensagem consolidada de ${phoneJid} para tenant ${tenant.id} ---`);
@@ -58,15 +59,20 @@ export async function processIncomingMessage(
         tenantId: tenant.id,
         status: 'ACTIVE',
         history: currentHistory,
-        hasUnread: true
+        hasUnread: true,
+        context: evolutionInstanceName ? { evolutionInstanceName } : {}
       }).returning();
       session = newSession;
     } else {
       currentHistory = (session.history as any[]) || [];
       currentHistory.push(newMessage);
       
+      const updatedContext = evolutionInstanceName 
+        ? { ...(session.context as any || {}), evolutionInstanceName } 
+        : session.context;
+
       await db.update(chatSessions)
-        .set({ history: currentHistory, updatedAt: new Date(), hasUnread: true })
+        .set({ history: currentHistory, updatedAt: new Date(), hasUnread: true, context: updatedContext })
         .where(eq(chatSessions.id, session.id));
     }
 
@@ -100,7 +106,7 @@ export async function processIncomingMessage(
     }
 
     for (const msg of mensagensFinais) {
-      await sendWhatsAppMessage(phoneJid, msg, tenant.id);
+      await sendWhatsAppMessage(phoneJid, msg, evolutionInstanceName || tenant.id);
     }
 
   } catch (error) {

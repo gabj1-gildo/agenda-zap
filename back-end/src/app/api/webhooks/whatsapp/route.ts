@@ -137,7 +137,7 @@ export async function POST(req: Request) {
       });
       const tenant = phoneRecord?.tenant;
       if (tenant) {
-        processIncomingMessage(remoteJid, pushName, messageContent, tenant, mediaBase64, mimeType).catch(console.error);
+        processIncomingMessage(remoteJid, pushName, messageContent, tenant, mediaBase64, mimeType, body.instance).catch(console.error);
       }
       
       return NextResponse.json({ success: true, message: 'Message processing started directly (no debounce)' });
@@ -191,7 +191,7 @@ export async function POST(req: Request) {
                 });
                 const tenant = phoneRecord?.tenant;
                 if (tenant) {
-                  await processIncomingMessage(remoteJid, pushName, mergedText.join('\n'), tenant, lastMedia, lastMime);
+                  await processIncomingMessage(remoteJid, pushName, mergedText.join('\n'), tenant, lastMedia, lastMime, body.instance);
                 }
               }
             } finally {
