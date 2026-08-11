@@ -31,7 +31,7 @@ type NavItem = {
 
 const navLinks: NavItem[] = [
   { href: "/",             label: "Painel",        icon: LayoutDashboard, category: "Principal" },
-  { href: "/agenda",       label: "Agenda",        icon: CalendarDays,        requiresTenant: true, category: "Principal" },
+  { href: "/calendar",     label: "Agenda",        icon: CalendarDays,        requiresTenant: true, category: "Principal" },
   { href: "/appointments", label: "Agendamentos",  icon: CalendarCheck,        requiresTenant: true, category: "Principal" },
   { href: "/clients",      label: "Clientes",      icon: Contact,         requiresTenant: true, category: "Relacionamento" },
   { href: "/funil",        label: "Funil",         icon: Filter,          requiresTenant: true, category: "Relacionamento" },
@@ -72,7 +72,7 @@ export function Header() {
 
   const pageTitles: Record<string, { title: string; sub: string }> = {
     "/dashboard":        { title: "Painel",               sub: "Visão geral do sistema" },
-    "/agenda":           { title: "Agenda",               sub: "Controle de horários" },
+    "/calendar":         { title: "Agenda",               sub: "Controle de horários" },
     "/appointments":     { title: "Agendamentos",         sub: "Histórico e status" },
     "/clients":          { title: "Clientes",             sub: "Base de contatos" },
     "/assinantes":       { title: "Assinantes",           sub: "Quem assinou seus planos" },
