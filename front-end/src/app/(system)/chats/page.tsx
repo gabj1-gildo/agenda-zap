@@ -36,6 +36,7 @@ type ChatSession = {
   history: Message[];
   updatedAt: string;
   client: Client;
+  context?: any;
 };
 
 export default function ChatsPage() {
@@ -57,6 +58,41 @@ export default function ChatsPage() {
   const token = (session?.user as any)?.accessToken;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const saveNotesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [notes, setNotes] = useState("");
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+
+  useEffect(() => {
+    if (selectedSession) {
+      setNotes(selectedSession.context?.notes || "");
+    }
+  }, [selectedSession?.id]);
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newNotes = e.target.value;
+    setNotes(newNotes);
+    
+    // Auto-save logic
+    if (saveNotesTimeoutRef.current) {
+      clearTimeout(saveNotesTimeoutRef.current);
+    }
+    
+    saveNotesTimeoutRef.current = setTimeout(async () => {
+      if (!selectedSession) return;
+      setIsSavingNotes(true);
+      try {
+        await fetch(getBackendUrl(`/api/chats/${selectedSession.id}/notes`), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ notes: newNotes })
+        });
+      } catch (err) {
+        console.error("Erro ao salvar anotações:", err);
+      } finally {
+        setIsSavingNotes(false);
+      }
+    }, 1000);
+  };
 
   const getFunnelBadgeColor = (stage?: string) => {
     switch (stage?.toUpperCase()) {
@@ -525,133 +561,184 @@ export default function ChatsPage() {
         </div>
       </div>
 
-      {/* Visualizador do Chat */}
-      <div className="flex-1 bg-card border border-border rounded-lg flex flex-col overflow-hidden shadow-sm min-w-0">
-        {selectedSession ? (
-          <>
-            {/* Header do Chat */}
-            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
-              <div className="overflow-hidden min-w-0 flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full shrink-0 ${getStatusColor(selectedSession.client?.status)}`} title={`Status: ${selectedSession.client?.status || 'Ativo'}`} />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-lg truncate flex items-center gap-2">
-                      {selectedSession.client?.name || (selectedSession.client?.whatsappName ? `@${selectedSession.client.whatsappName}` : "Desconhecido")}
-                      <button onClick={handleEditName} className="text-muted-foreground hover:text-primary transition-colors" title="Editar nome">
-                        <Pencil className="w-3 h-3" />
-                      </button>
-                    </h3>
-                    {selectedSession.client?.funnelStage && (
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getFunnelBadgeColor(selectedSession.client.funnelStage)}`}>
-                        {selectedSession.client.funnelStage.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground flex items-center mt-1 mb-1">
-                    <Phone className="w-3 h-3 mr-1 shrink-0" />
-                    <span className="truncate">{selectedSession.client?.phone}</span>
-                  </div>
-                  <ClientTags 
-                    clientId={selectedSession.client.id}
-                    tenantId={tenantId}
-                    initialTags={selectedSession.client.clientTags?.map((ct: any) => ct.tag) || []}
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={syncHistory}
-                disabled={isSyncing}
-                title="Sincronizar mensagens da Evolution API"
-                className="ml-auto shrink-0 p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-5 h-5 ${isSyncing ? "animate-spin text-primary" : ""}`} />
-              </button>
-
-              <button
-                onClick={toggleStatus}
-                className={`ml-3 shrink-0 px-4 py-2 rounded-md font-medium text-sm flex items-center transition-colors ${selectedSession.status === 'ACTIVE'
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  : 'bg-orange-500 text-white hover:bg-orange-600'
-                  }`}
-              >
-                {selectedSession.status === 'ACTIVE' ? (
-                  <>
-                    <Pause className="w-4 h-4 mr-2" />
-                    Assumir Atendimento
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Devolver para IA
-                  </>
-                )}
-              </button>
-            </div> {/* <-- CORREÇÃO: DIV FECHADA AQUI */}
-
-            {/* Histórico de Mensagens */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col bg-slate-50/50">
-              {selectedSession.history && selectedSession.history.length > 0 ? (
-                selectedSession.history.map((msg, index) => {
-                  const isUser = msg.role === 'user';
-                  return (
-                    <div key={index} className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
-                      <div
-                        className={`max-w-[70%] sm:max-w-[80%] rounded-2xl px-4 py-2 shadow-sm break-words ${isUser
-                          ? 'bg-white border border-slate-200 rounded-tl-sm text-slate-800'
-                          : 'bg-primary/10 text-primary-900 border border-primary/20 rounded-tr-sm'
-                          }`}
-                      >
-                        <div className="flex items-center mb-1 space-x-1 opacity-60">
-                          {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                          <span className="text-[10px] font-semibold uppercase tracking-wider">
-                            {isUser ? 'Cliente' : (msg.role === 'system' ? 'Você / Bot' : 'Bot')}
-                          </span>
-                        </div>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
-                      </div>
+      {/* Container do Visualizador + Sidebar do Cliente */}
+      <div className="flex-1 flex gap-4 min-w-0">
+        
+        {/* Visualizador do Chat */}
+        <div className="flex-1 bg-card border border-border rounded-lg flex flex-col overflow-hidden shadow-sm min-w-0">
+          {selectedSession ? (
+            <>
+              {/* Header do Chat */}
+              <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
+                <div className="overflow-hidden min-w-0 flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full shrink-0 ${getStatusColor(selectedSession.client?.status)}`} title={`Status: ${selectedSession.client?.status || 'Ativo'}`} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg truncate flex items-center gap-2">
+                        {selectedSession.client?.name || (selectedSession.client?.whatsappName ? `@${selectedSession.client.whatsappName}` : "Desconhecido")}
+                      </h3>
+                      {selectedSession.client?.funnelStage && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getFunnelBadgeColor(selectedSession.client.funnelStage)}`}>
+                          {selectedSession.client.funnelStage.toUpperCase()}
+                        </span>
+                      )}
                     </div>
-                  );
-                })
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  Sem histórico de mensagens
+                    <div className="text-sm text-muted-foreground flex items-center mt-1">
+                      <Phone className="w-3 h-3 mr-1 shrink-0" />
+                      <span className="truncate">{selectedSession.client?.phone}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
 
-            {/* Input de Envio de Mensagem */}
-            <div className="p-4 border-t border-border bg-white">
-              {selectedSession.status === 'ACTIVE' && (
-                <div className="mb-2 text-xs text-orange-600 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Atenção: A IA está ativa. Se você enviar uma mensagem, o cliente vai receber, mas a IA continuará respondendo. Recomendamos "Assumir Atendimento" primeiro.
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={syncHistory}
+                    disabled={isSyncing}
+                    title="Sincronizar mensagens da Evolution API"
+                    className="p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-5 h-5 ${isSyncing ? "animate-spin text-primary" : ""}`} />
+                  </button>
+
+                  <button
+                    onClick={toggleStatus}
+                    className={`px-4 py-2 rounded-md font-medium text-sm flex items-center transition-colors ${selectedSession.status === 'ACTIVE'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
+                      }`}
+                  >
+                    {selectedSession.status === 'ACTIVE' ? (
+                      <>
+                        <Pause className="w-4 h-4 mr-2" />
+                        Assumir Atendimento
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Devolver para IA
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
-              <div className="flex gap-2">
-                <textarea
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Digite sua mensagem (Enter para enviar, Shift+Enter para quebrar linha)..."
-                  className="flex-1 min-h-[44px] max-h-32 p-3 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary resize-y"
-                  rows={1}
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={!inputText.trim() || isSending}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shrink-0 h-[44px]"
-                >
-                  <Send className="w-4 h-4" />
+              </div>
+
+              {/* Histórico de Mensagens */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col bg-slate-50/50">
+                {selectedSession.history && selectedSession.history.length > 0 ? (
+                  selectedSession.history.map((msg, index) => {
+                    const isUser = msg.role === 'user';
+                    return (
+                      <div key={index} className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
+                        <div
+                          className={`max-w-[70%] sm:max-w-[80%] rounded-2xl px-4 py-2 shadow-sm break-words ${isUser
+                            ? 'bg-white border border-slate-200 rounded-tl-sm text-slate-800'
+                            : 'bg-primary/10 text-primary-900 border border-primary/20 rounded-tr-sm'
+                            }`}
+                        >
+                          <div className="flex items-center mb-1 space-x-1 opacity-60">
+                            {isUser ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                            <span className="text-[10px] font-semibold uppercase tracking-wider">
+                              {isUser ? 'Cliente' : (msg.role === 'system' ? 'Você / Bot' : 'Bot')}
+                            </span>
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    Sem histórico de mensagens
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input de Envio de Mensagem */}
+              <div className="p-4 border-t border-border bg-white">
+                {selectedSession.status === 'ACTIVE' && (
+                  <div className="mb-2 text-xs text-orange-600 flex items-center">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    Atenção: A IA está ativa. Se você enviar uma mensagem, o cliente vai receber, mas a IA continuará respondendo. Recomendamos "Assumir Atendimento" primeiro.
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Digite sua mensagem (Enter para enviar, Shift+Enter para quebrar linha)..."
+                    className="flex-1 min-h-[44px] max-h-32 p-3 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+                    rows={1}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!inputText.trim() || isSending}
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shrink-0 h-[44px]"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 bg-slate-50/50">
+              <MessageSquare className="w-16 h-16 mb-4 text-slate-300" />
+              <p>Selecione uma conversa para visualizar o histórico</p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar do Cliente (Aparece apenas quando um chat está selecionado) */}
+        {selectedSession && (
+          <div className="w-72 bg-card border border-border rounded-lg flex flex-col overflow-hidden shadow-sm shrink-0">
+            <div className="p-4 border-b border-border bg-muted/30">
+              <h3 className="font-display font-extrabold text-lg flex items-center justify-between">
+                Detalhes
+                <button onClick={handleEditName} className="text-muted-foreground hover:text-primary transition-colors p-1" title="Editar nome">
+                  <Pencil className="w-4 h-4" />
                 </button>
+              </h3>
+            </div>
+            
+            <div className="p-4 flex-1 overflow-y-auto space-y-6">
+              {/* Informações Básicas */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Nome do Cliente</label>
+                  <p className="font-semibold">{selectedSession.client?.name || (selectedSession.client?.whatsappName ? `@${selectedSession.client.whatsappName}` : "Desconhecido")}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">WhatsApp</label>
+                  <p className="flex items-center text-sm"><Phone className="w-3 h-3 mr-1" /> {selectedSession.client?.phone}</p>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Etiquetas (Tags)</label>
+                <ClientTags 
+                  clientId={selectedSession.client.id}
+                  tenantId={tenantId}
+                  initialTags={selectedSession.client.clientTags?.map((ct: any) => ct.tag) || []}
+                />
+              </div>
+
+              {/* Anotações Dinâmicas */}
+              <div className="space-y-2 pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Anotações Exclusivas</label>
+                  {isSavingNotes && <RefreshCw className="w-3 h-3 text-muted-foreground animate-spin" />}
+                </div>
+                <textarea
+                  value={notes}
+                  onChange={handleNotesChange}
+                  placeholder="Escreva anotações sobre este cliente aqui..."
+                  className="w-full h-32 p-3 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+                />
+                <p className="text-[10px] text-muted-foreground">Salvo automaticamente enquanto você digita.</p>
               </div>
             </div>
-          </> // <-- CORREÇÃO: FRAGMENTO FECHADO AQUI
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50 bg-slate-50/50">
-            <MessageSquare className="w-16 h-16 mb-4 text-slate-300" />
-            <p>Selecione uma conversa para visualizar o histórico</p>
           </div>
         )}
       </div>
