@@ -322,9 +322,11 @@ export default function ChatsPage() {
           <p className="text-muted-foreground">Carregando...</p>
         </div>
       ) : (
-        (tenant?.whatsappProvider?.toUpperCase() === 'EVOLUTION' || !tenant?.whatsappProvider)
-          ? !tenant?._hasConnectedWhatsapp
-          : !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
+        (
+          tenant?._hasConnectedWhatsapp ? false 
+          : tenant?.whatsappProvider?.toUpperCase() === 'META_CLOUD' ? !(tenant?.whatsappMetaToken && tenant?.whatsappMetaPhoneNumberId)
+          : true
+        )
       ) ? (
         <div className="w-full flex flex-col items-center justify-center p-8 text-center space-y-4">
           <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mb-2">
