@@ -7,62 +7,6 @@ import { getBackendUrl } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-function getMonthDays(base: Date) {
-  const firstDay = new Date(base.getFullYear(), base.getMonth(), 1);
-  const startOffset = firstDay.getDay(); 
-  const startDate = new Date(firstDay);
-  startDate.setDate(firstDay.getDate() - startOffset);
-  
-  const lastDay = new Date(base.getFullYear(), base.getMonth() + 1, 0);
-  const endOffset = 6 - lastDay.getDay();
-  const totalDays = startOffset + lastDay.getDate() + endOffset;
-  const numCells = totalDays <= 35 ? 35 : 42;
-  
-  return Array.from({ length: numCells }, (_, i) => {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
-    return d;
-  });
-}
-
-async function fetchInitialAgenda(tenantId: string, token: string) {
-  try {
-    const baseDate = new Date();
-    const days = getMonthDays(baseDate);
-    const startStr = days[0].toISOString();
-    const endStr = days[days.length - 1].toISOString();
-
-    const res = await fetch(getBackendUrl(`/api/tenants/${tenantId}/agenda?start=${startStr}&end=${endStr}`), {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-    
-    const data = await res.json();
-    if (data.success) {
-      return {
-        appointments: data.data,
-        schedulingMode: data.schedulingMode || "GERAL"
-      };
-    }
-  } catch (error) {
-    console.error("Error fetching initial agenda:", error);
-  }
-  return { appointments: [], schedulingMode: "GERAL" };
-}
-
-async function CalendarLoader({ tenantId, token }: { tenantId: string, token: string }) {
-  const { appointments, schedulingMode } = await fetchInitialAgenda(tenantId, token);
-  
-  return (
-    <CalendarClient 
-      tenantId={tenantId}
-      token={token}
-      initialAppointments={appointments}
-      initialMode={schedulingMode}
-    />
-  );
-}
-
 export default async function CalendarPage() {
   const session = await getServerSession(authOptions);
   const tenantId = (session as any)?.tenantId;
@@ -82,9 +26,14 @@ export default async function CalendarPage() {
     );
   }
 
+  // Ao invés de aguardar os dados no servidor e bloquear a tela (causando sensação de lentidão),
+  // renderizamos a "casca" do calendário instantaneamente. O fetch inicial será feito pelo Client Component.
   return (
-    <Suspense fallback={<CalendarSkeleton />}>
-      <CalendarLoader tenantId={tenantId} token={token} />
-    </Suspense>
+    <CalendarClient 
+      tenantId={tenantId}
+      token={token}
+      initialAppointments={[]}
+      initialMode="GERAL"
+    />
   );
 }
