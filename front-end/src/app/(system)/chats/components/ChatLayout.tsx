@@ -103,11 +103,7 @@ export function ChatLayout({ tenantId, token }: ChatLayoutProps) {
         />
       )}
 
-      {isCheckingConnection ? (
-        <div className="w-full flex items-center justify-center">
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      ) : hasConnectedWhatsapp ? (
+      {!isCheckingConnection && hasConnectedWhatsapp ? (
         <div className="w-full flex flex-col items-center justify-center p-8 text-center space-y-4">
           <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mb-2">
             <Smartphone className="w-8 h-8 text-muted-foreground" />
@@ -146,7 +142,7 @@ export function ChatLayout({ tenantId, token }: ChatLayoutProps) {
         <>
           <ChatSidebar 
             sessions={sessions}
-            isLoading={isChatsLoading}
+            isLoading={isChatsLoading || isCheckingConnection}
             selectedSessionId={selectedSessionId}
             onSelectSession={handleSelectSession}
             onNewChat={() => setShowNewChatModal(true)}

@@ -515,7 +515,13 @@ export default function FunilPage() {
                   </div>
 
                   <div className={styles.colBody}>
-                    {stage.key === 'finalizado' && !showCompletedCards ? (
+                    {loading ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '0 4px' }}>
+                        {[1, 2].map(i => (
+                          <div key={i} style={{ height: '70px', background: 'var(--muted)', borderRadius: '12px', opacity: 0.5 }} className="animate-pulse" />
+                        ))}
+                      </div>
+                    ) : stage.key === 'finalizado' && !showCompletedCards ? (
                       <div className={styles.celebrate}>
                         <div className={styles.ringIcon}>
                           <span className={styles.spark} style={{ top: '-2px', left: '4px', animationDelay: '.2s' }}>
