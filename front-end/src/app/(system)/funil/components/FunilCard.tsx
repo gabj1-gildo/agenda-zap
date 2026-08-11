@@ -1,4 +1,5 @@
-import { LeadCard, StageKey } from "../types/funil";
+import { LeadCard, StageKey, Stage } from "../types/funil";
+import { Sparkles } from "lucide-react";
 
 function initials(name?: string) {
   const clean = (name || '').replace(/[().]/g, '').trim();
@@ -21,36 +22,49 @@ function timeAgo(dateStr?: string) {
 interface FunilCardProps {
   card: LeadCard;
   stageKey: StageKey;
+  stage: Stage;
   onDragStart: (id: string, from: StageKey, e: React.DragEvent) => void;
   onClick: () => void;
 }
 
-export function FunilCard({ card, stageKey, onDragStart, onClick }: FunilCardProps) {
+export function FunilCard({ card, stageKey, stage, onDragStart, onClick }: FunilCardProps) {
   return (
     <div
       draggable
       onDragStart={(e) => onDragStart(card.id, stageKey, e)}
       onClick={onClick}
-      className="bg-card border border-border rounded-xl p-3 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all active:scale-[0.98] relative"
+      className="bg-card border border-border rounded-xl p-3.5 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all relative group"
     >
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0 relative">
-          {initials(card.name)}
-          {card.status === 'online' && (
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-card rounded-full"></span>
-          )}
+      <div className="flex justify-between items-start">
+        <div className="flex gap-3 min-w-0">
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+            style={{ backgroundColor: stage.light, color: stage.color === '#ffffff' ? '#000' : '#000' }}
+          >
+            {initials(card.name)}
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <p className="text-[13px] font-bold text-foreground truncate max-w-[120px]">{card.name || 'Sem Nome'}</p>
+            <p className="text-[11px] text-muted-foreground font-mono truncate">{card.phone}</p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground truncate">{card.name || 'Sem Nome'}</p>
-          <p className="text-xs text-muted-foreground truncate">{card.phone}</p>
-        </div>
-      </div>
-      
-      {card.updatedAt && (
-        <div className="flex justify-end mt-3 border-t border-border/50 pt-2">
-          <span className="text-[10px] text-muted-foreground/70 font-mono-custom tracking-wider">
+        
+        <div className="flex flex-col items-end gap-1.5 shrink-0 pl-2">
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
             {timeAgo(card.updatedAt)}
           </span>
+          {stageKey === 'ia' && (
+            <span className="text-[10px] font-bold bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5"/> IA
+            </span>
+          )}
+        </div>
+      </div>
+
+      {card.status === 'online' && (
+        <div className="flex items-center gap-1.5 mt-3 border-t border-border/40 pt-2">
+          <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.5)]"></span>
+          <span className="text-[11px] text-green-600 font-medium">Online</span>
         </div>
       )}
     </div>

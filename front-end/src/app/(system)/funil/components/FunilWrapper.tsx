@@ -5,8 +5,9 @@ import { useFunil } from "../hooks/useFunil";
 import { FunilHeader } from "./FunilHeader";
 import { FunilBoard } from "./FunilBoard";
 import { StageKey } from "../types/funil";
-import { CheckCircle2, Zap } from "lucide-react";
+import { CheckCircle2, Zap, TrendingUp, Filter, User } from "lucide-react";
 import { NewLeadModal } from "./NewLeadModal";
+import { FunilDistribution } from "./FunilDistribution";
 
 interface FunilWrapperProps {
   tenantId: string;
@@ -51,54 +52,76 @@ export function FunilWrapper({ tenantId, token }: FunilWrapperProps) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] min-h-0">
-      <FunilHeader 
-        search={search}
-        setSearch={setSearch}
-        filterOnline={filterOnline}
-        setFilterOnline={setFilterOnline}
-        isFilterOpen={isFilterOpen}
-        setIsFilterOpen={setIsFilterOpen}
-        isRefreshing={isRefreshing}
-        onRefresh={() => mutate()}
-        onOpenNewLeadModal={() => setIsNewLeadOpen(true)}
-      />
+    <div className="flex flex-col h-[calc(100vh-60px)] min-h-0 bg-[#faf9f6]">
+      <div className="p-4 flex-1 flex flex-col min-h-0 max-w-[1600px] w-full mx-auto">
+        <FunilHeader 
+          search={search}
+          setSearch={setSearch}
+          filterOnline={filterOnline}
+          setFilterOnline={setFilterOnline}
+          isFilterOpen={isFilterOpen}
+          setIsFilterOpen={setIsFilterOpen}
+          isRefreshing={isRefreshing}
+          onRefresh={() => mutate()}
+          onOpenNewLeadModal={() => setIsNewLeadOpen(true)}
+        />
 
-      <div className="flex flex-wrap items-center gap-4 mb-4">
-        <div className="flex items-center gap-6 bg-card border border-border px-4 py-2 rounded-xl text-sm">
-          <div className="flex flex-col">
-            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Total</span>
-            <span className="font-bold text-foreground">{stats.total} leads</span>
+        {/* STATS ROW */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+              <Filter className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Ativos no Funil</p>
+              <p className="text-xl font-bold text-foreground">{stats.total}</p>
+            </div>
           </div>
-          <div className="w-px h-8 bg-border/50"></div>
-          <div className="flex flex-col">
-            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Conversão</span>
-            <span className="font-bold text-emerald-500 flex items-center gap-1">
-              <Zap className="w-3 h-3" /> {stats.conversion}%
-            </span>
+          
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Conversão</p>
+              <p className="text-xl font-bold text-foreground">{stats.conversion}%</p>
+            </div>
           </div>
-          <div className="w-px h-8 bg-border/50"></div>
-          <div className="flex flex-col">
-            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">Atendimento</span>
-            <span className="font-bold text-blue-500">{stats.inAttendance} leads</span>
+
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Em Atendimento</p>
+              <p className="text-xl font-bold text-foreground">{stats.inAttendance}</p>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm relative overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 relative z-10">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Finalizados</p>
+              <p className="text-xl font-bold text-foreground">{stats.finalizados}</p>
+            </div>
           </div>
         </div>
 
-        <button 
-          onClick={() => setShowCompleted(!showCompleted)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors border ${showCompleted ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-card border-border text-muted-foreground hover:bg-muted'}`}
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          {showCompleted ? 'Ocultar Finalizados' : 'Exibir Finalizados'}
-        </button>
-      </div>
+        {/* DISTRIBUTION BAR */}
+        <FunilDistribution board={board} total={stats.total} />
 
-      <FunilBoard 
-        board={filteredBoard}
-        showCompleted={showCompleted}
-        onMoveLead={moveLeadOptimistic}
-        onClickCard={(id) => { window.location.href = `/chats?clientId=${id}`; }}
-      />
+        {/* BOARD */}
+        <div className="flex-1 min-h-0">
+          <FunilBoard 
+            board={filteredBoard}
+            showCompleted={showCompleted}
+            onMoveLead={moveLeadOptimistic}
+            onClickCard={(id) => { window.location.href = `/chats?clientId=${id}`; }}
+          />
+        </div>
+      </div>
 
       <NewLeadModal 
         isOpen={isNewLeadOpen}

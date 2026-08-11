@@ -44,41 +44,44 @@ export function FunilColumn({
 
   return (
     <div 
-      className={`flex flex-col w-[320px] shrink-0 h-full max-h-full rounded-2xl border transition-colors ${isHovered ? 'bg-muted/50 border-violet-500/50' : 'bg-muted/20 border-border'}`}
+      className={`flex flex-col w-[300px] shrink-0 h-full max-h-full rounded-2xl bg-card border shadow-sm transition-colors ${isHovered ? 'border-violet-500/50 shadow-md' : 'border-border'}`}
       onDragOver={(e) => onDragOver(stage.key, e)}
       onDrop={(e) => onDrop(stage.key, e)}
     >
+      {/* Connector line effect between columns could be simulated here, but we will keep it simple and clean */}
       {/* Header */}
       <div 
-        className="p-4 flex items-center justify-between border-b border-border/50 bg-card rounded-t-2xl cursor-pointer"
+        className="p-4 flex items-start justify-between border-b border-border/50 cursor-pointer"
         onClick={() => onToggleExpand(stage.key)}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 rounded-full" style={{ background: stage.color, boxShadow: `0 0 10px rgba(${stage.rgb}, 0.5)` }}></div>
-          <div>
-            <h3 className="font-bold text-sm text-foreground">{stage.title}</h3>
-            <p className="text-[10px] text-muted-foreground leading-tight">{stage.sub}</p>
-          </div>
+        <div>
+          <h3 className="font-bold text-[13px] text-foreground uppercase tracking-wider">{stage.title}</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px] leading-tight">{stage.sub}</p>
         </div>
-        <div className="bg-muted px-2 py-1 rounded-md text-xs font-bold text-muted-foreground">
+        <div 
+          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm shrink-0"
+          style={{ backgroundColor: stage.color }}
+        >
           {cards.length}
         </div>
       </div>
 
       {/* Cards Area */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar min-h-[150px]">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar min-h-[150px] bg-muted/10 rounded-b-2xl">
         {cards.map(card => (
           <FunilCard 
             key={card.id} 
             card={card} 
+            stage={stage}
             stageKey={stage.key} 
             onDragStart={onDragStart} 
             onClick={() => onClickCard(card.id)} 
           />
         ))}
         {cards.length === 0 && (
-          <div className="h-24 border-2 border-dashed border-border/60 rounded-xl flex items-center justify-center text-xs text-muted-foreground/60">
-            Arraste um lead para cá
+          <div className="h-28 border-2 border-dashed border-border/60 rounded-xl flex flex-col items-center justify-center text-xs text-muted-foreground/60 gap-2">
+            <div className="text-xl font-light">+</div>
+            Arraste um card para cá
           </div>
         )}
       </div>
