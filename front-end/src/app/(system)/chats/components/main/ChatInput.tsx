@@ -6,13 +6,14 @@ interface ChatInputProps {
   session: ChatSession;
   isSending: boolean;
   onSendMessage: (message: string) => void;
+  isDisconnected?: boolean;
 }
 
-export function ChatInput({ session, isSending, onSendMessage }: ChatInputProps) {
+export function ChatInput({ session, isSending, onSendMessage, isDisconnected }: ChatInputProps) {
   const [inputText, setInputText] = useState("");
 
   const handleSendMessage = () => {
-    if (!inputText.trim() || isSending) return;
+    if (!inputText.trim() || isSending || isDisconnected) return;
     onSendMessage(inputText);
     setInputText("");
   };
@@ -37,13 +38,14 @@ export function ChatInput({ session, isSending, onSendMessage }: ChatInputProps)
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Digite sua mensagem (Enter para enviar, Shift+Enter para quebrar linha)..."
-          className="flex-1 min-h-[44px] max-h-32 p-3 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+          placeholder={isDisconnected ? "Conecte o WhatsApp para enviar mensagens" : "Digite sua mensagem (Enter para enviar, Shift+Enter para quebrar linha)..."}
+          className="flex-1 min-h-[44px] max-h-32 p-3 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary resize-y disabled:opacity-50 disabled:cursor-not-allowed"
           rows={1}
+          disabled={isDisconnected}
         />
         <button
           onClick={handleSendMessage}
-          disabled={!inputText.trim() || isSending}
+          disabled={!inputText.trim() || isSending || isDisconnected}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shrink-0 h-[44px]"
         >
           <Send className="w-4 h-4" />

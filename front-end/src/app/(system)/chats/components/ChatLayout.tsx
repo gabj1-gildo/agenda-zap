@@ -103,44 +103,7 @@ export function ChatLayout({ tenantId, token }: ChatLayoutProps) {
         />
       )}
 
-      {!isCheckingConnection && hasConnectedWhatsapp ? (
-        <div className="w-full flex flex-col items-center justify-center p-8 text-center space-y-4">
-          <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mb-2">
-            <Smartphone className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-2xl font-semibold">WhatsApp Desconectado</h3>
-          <p className="text-muted-foreground max-w-md">
-            Para acessar suas conversas e enviar mensagens, é necessário que o WhatsApp do seu estabelecimento esteja pareado com o sistema.
-          </p>
-          {(session?.user as any)?.role !== "ATTENDANT" ? (
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <Button onClick={() => setShowPhoneModal(true)}>
-                Conectar WhatsApp Agora
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={async () => {
-                  const toastId = toast.loading("Sincronizando status...");
-                  const isConnected = await loadTenantData();
-                  if (isConnected) {
-                    toast.success("WhatsApp conectado!", { id: toastId });
-                  } else {
-                    toast.error("Ainda desconectado.", { id: toastId });
-                  }
-                }}
-              >
-                Verificar Conexão
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm font-semibold text-destructive mt-4">
-              Solicite ao administrador para conectar o WhatsApp da empresa.
-            </p>
-          )}
-        </div>
-      ) : (
-        <>
-          <ChatSidebar 
+      <ChatSidebar 
             sessions={sessions}
             isLoading={isChatsLoading || isCheckingConnection}
             selectedSessionId={selectedSessionId}
@@ -157,9 +120,20 @@ export function ChatLayout({ tenantId, token }: ChatLayoutProps) {
             isSending={isSending}
             onSendMessage={sendMessage}
             onEditName={handleEditName}
+            isDisconnected={hasConnectedWhatsapp}
+            isCheckingConnection={isCheckingConnection}
+            onConnect={() => setShowPhoneModal(true)}
+            onCheckConnection={async () => {
+              const toastId = toast.loading("Sincronizando status...");
+              const isConnected = await loadTenantData();
+              if (isConnected) {
+                toast.success("WhatsApp conectado!", { id: toastId });
+              } else {
+                toast.error("Ainda desconectado.", { id: toastId });
+              }
+            }}
+            userRole={(session?.user as any)?.role}
           />
-        </>
-      )}
     </div>
   );
 }
