@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { ClientProfileContent } from "./components/ClientProfileContent";
-import { ClientProfileSkeleton } from "./components/ClientProfileSkeleton";
+import { ClientProfileWrapper } from "./components/ClientProfileWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +12,6 @@ export default async function ClientProfilePage({ params }: { params: { id: stri
   if (!token || !tenantId) return <div>Acesso negado.</div>;
 
   return (
-    <Suspense fallback={<ClientProfileSkeleton />}>
-      <ClientProfileContent tenantId={tenantId} token={token} clientId={params.id} />
-    </Suspense>
+    <ClientProfileWrapper tenantId={tenantId} token={token} clientId={params.id} />
   );
 }

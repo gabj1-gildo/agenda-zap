@@ -1,49 +1,37 @@
-export const dynamic = "force-dynamic";
-
-import { Suspense } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { AppointmentsContent } from "./components/AppointmentsContent";
-import { AppointmentsSkeleton } from "./components/AppointmentsSkeleton";
+import { AppointmentsWrapper } from "./components/AppointmentsWrapper";
+import { Calendar } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default async function AppointmentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string; search?: string }>;
-}) {
+export const dynamic = "force-dynamic";
+
+export default async function AppointmentsPage() {
   const session = await getServerSession(authOptions);
   const token = (session?.user as any)?.accessToken;
-  const tenantId = (session?.user as any)?.tenantId;
+  const tenantId = (session as any)?.tenantId;
 
-  if (!token || !tenantId) return (
-    <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-muted text-muted-foreground">
-        📅
-      </div>
-      <h2 className="font-display font-extrabold text-2xl text-foreground mb-2">Agendamentos indisponíveis</h2>
-      <p className="text-sm text-muted-foreground">
-        Selecione uma empresa no topo da tela para acessar os agendamentos.
-      </p>
-    </div>
-  );
+  if (!token || !tenantId) return <div>Acesso Restrito</div>;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header instantly rendered */}
+    <div className="max-w-7xl mx-auto space-y-6 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            Agenda
-          </p>
-          <h1 className="font-display font-extrabold text-4xl text-foreground">
-            Agendamentos
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Listagem de Agendamentos</h1>
+          <p className="text-muted-foreground mt-1">Acompanhe e gerencie todos os agendamentos realizados.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/calendar">
+            <Button variant="outline" className="border-border">
+              <Calendar className="w-4 h-4 mr-2"/>
+              Ver no Calendário
+            </Button>
+          </Link>
         </div>
       </div>
 
-      <Suspense fallback={<AppointmentsSkeleton />}>
-        <AppointmentsContent searchParams={searchParams} tenantId={tenantId} token={token} />
-      </Suspense>
+      <AppointmentsWrapper tenantId={tenantId} token={token} />
     </div>
   );
 }

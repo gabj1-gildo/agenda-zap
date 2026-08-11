@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { ClientsContent } from "./components/ClientsContent";
-import { ClientsSkeleton } from "./components/ClientsSkeleton";
+import { ClientsWrapper } from "./components/ClientsWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -22,20 +20,10 @@ export default async function ClientsPage() {
     );
   }
 
-  // The Header is removed from here because the ClientsClient already contains its own header for the layout to look good.
-  // Wait, if ClientsClient contains the header ("Clientes" and "Novo Cliente"), then the skeleton must NOT have it,
-  // OR the skeleton DOES have it, and it just gets replaced.
-  // Actually, the skeleton doesn't have the "Clientes" header, let me check `ClientsClient`.
-  // `ClientsClient` has the "Clientes" h1 inside it!
-  // It's better to move the header out to `ClientsPage` so it renders instantly, or just keep it in `ClientsClient`.
-  // Wait, if it's in `ClientsClient` which is INSIDE `<Suspense>`, then the header won't be visible until data loads!
-  // Let me just wrap the `ClientsContent` in Suspense.
+  // Purely structural Server Component. Returns instantly. Data is fetched via SWR on the client.
   return (
     <div className="max-w-7xl mx-auto">
-      {/* We can place the Suspsense boundary directly. The skeleton handles the fake layout. */}
-      <Suspense fallback={<ClientsSkeleton />}>
-        <ClientsContent tenantId={tenantId} token={token} />
-      </Suspense>
+      <ClientsWrapper tenantId={tenantId} token={token} />
     </div>
   );
 }
