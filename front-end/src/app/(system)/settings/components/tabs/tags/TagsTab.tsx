@@ -1,33 +1,30 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Tag, Check, X } from "lucide-react";
-import { toast } from "sonner";
-import { getBackendUrl } from "@/lib/api";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { PRESET_COLORS } from "../../hooks/useTagsSettings";
 
-const PRESET_COLORS = [
-  '#3b82f6', '#8b5cf6', '#f43f5e', '#f5a524', '#22c55e',
-  '#14b8a6', '#ec4899', '#f97316', '#06b6d4', '#64748b',
-];
+interface TagsTabProps {
+  tags: any[];
+  loading: boolean;
+  saving: boolean;
+  createTag: (name: string, color: string) => Promise<boolean>;
+  updateTag: (id: string, name: string, color: string) => Promise<boolean>;
+  deleteTag: (id: string) => Promise<boolean>;
+}
 
-export function TagsSettings({ tenantId }: { tenantId: string }) {
-  const { data: session } = useSession();
-  const token = (session?.user as any)?.accessToken;
-  const headers = () => ({
-    'tenant-id': tenantId,
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  });
-
-  const [tags, setTags] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+export function TagsTab({
+  tags,
+  loading,
+  saving,
+  createTag,
+  updateTag,
+  deleteTag
+}: TagsTabProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -36,91 +33,30 @@ export function TagsSettings({ tenantId }: { tenantId: string }) {
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
 
-  const loadTags = async () => {
-    try {
-      const res = await fetch(getBackendUrl('/api/tags'), { headers: headers() });
-      const data = await res.json();
-      if (data.success) setTags(data.data);
-    } catch {
-      toast.error("Erro ao carregar tags");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { if (tenantId) loadTags(); }, [tenantId]);
-
   const handleCreate = async () => {
-    if (!newName.trim()) { toast.error("Nome da tag é obrigatório"); return; }
-    setSaving(true);
-    try {
-      const res = await fetch(getBackendUrl('/api/tags'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers() },
-        body: JSON.stringify({ name: newName.trim(), color: newColor })
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Tag criada!");
-        setNewName("");
-        setNewColor(PRESET_COLORS[0]);
-        loadTags();
-      } else {
-        toast.error(data.error || "Erro ao criar tag");
-      }
-    } catch {
-      toast.error("Erro de conexão");
-    } finally {
-      setSaving(false);
+    const success = await createTag(newName, newColor);
+    if (success) {
+      setNewName("");
+      setNewColor(PRESET_COLORS[0]);
     }
   };
 
   const handleUpdate = async (id: string) => {
-    if (!editName.trim()) { toast.error("Nome é obrigatório"); return; }
-    setSaving(true);
-    try {
-      const res = await fetch(getBackendUrl(`/api/tags/${id}`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...headers() },
-        body: JSON.stringify({ name: editName.trim(), color: editColor })
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Tag atualizada!");
-        setEditingId(null);
-        loadTags();
-      } else {
-        toast.error(data.error || "Erro ao atualizar tag");
-      }
-    } catch {
-      toast.error("Erro de conexão");
-    } finally {
-      setSaving(false);
+    const success = await updateTag(id, editName, editColor);
+    if (success) {
+      setEditingId(null);
     }
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    try {
-      const res = await fetch(getBackendUrl(`/api/tags/${deleteId}`), {
-        method: 'DELETE',
-        headers: headers()
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Tag removida!");
-        loadTags();
-      } else {
-        toast.error(data.error || "Erro ao remover tag");
-      }
-    } catch {
-      toast.error("Erro de conexão");
-    } finally {
+    const success = await deleteTag(deleteId);
+    if (success) {
       setDeleteId(null);
     }
   };
 
-  if (loading) return <div className="py-4 text-center text-muted-foreground text-sm">Carregando tags...</div>;
+  if (loading && tags.length === 0) return <div className="py-4 text-center text-muted-foreground text-sm">Carregando tags...</div>;
 
   return (
     <div className="space-y-6">
@@ -154,7 +90,7 @@ export function TagsSettings({ tenantId }: { tenantId: string }) {
             </div>
           ) : (
             <div className="space-y-2">
-              {tags.map(tag => (
+              {tags.map((tag: any) => (
                 <div key={tag.id} className="flex items-center gap-3 p-3 border rounded-xl">
                   {editingId === tag.id ? (
                     <>
