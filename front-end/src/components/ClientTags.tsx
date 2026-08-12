@@ -38,6 +38,7 @@ export function ClientTags({ clientId, tenantId, token, initialTags = [] }: { cl
       if (!tags.find(t => t.id === tag.id)) {
         setTags([...tags, tag]);
       }
+      setIsOpen(false);
     } catch (err) {
       console.error(err);
     }

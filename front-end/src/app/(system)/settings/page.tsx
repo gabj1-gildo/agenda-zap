@@ -1474,10 +1474,6 @@ function SettingsContent() {
               </CardContent>
             </Card>
         </TabsContent>
-
-        <TabsContent value="tags">
-          <TagsSettings tenantId={targetTenantId as string} />
-        </TabsContent>
       </Tabs>
       {showPhoneModal && (
         <TenantPhoneModal 
