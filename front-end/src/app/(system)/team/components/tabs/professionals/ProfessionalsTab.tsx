@@ -77,7 +77,7 @@ export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
             </div>
           ) : (
             <div className="divide-y">
-              {professionals.map((prof) => {
+              {professionals.map((prof: any) => {
                 const profServices = services.filter(s => (prof.serviceIds || []).includes(s.id));
                 return (
                   <div key={prof.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">

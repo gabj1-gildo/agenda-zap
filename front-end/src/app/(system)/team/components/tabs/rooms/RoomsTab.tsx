@@ -56,7 +56,7 @@ export function RoomsTab({ tenantId }: { tenantId: string }) {
             </div>
           ) : (
             <div className="divide-y">
-              {rooms.map((room) => (
+              {rooms.map((room: any) => (
                 <div key={room.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
