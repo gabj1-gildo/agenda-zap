@@ -4,9 +4,9 @@ import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TeamSettings } from "@/components/TeamSettings";
-import { ProfessionalsSettings } from "@/components/ProfessionalsSettings";
-import { RoomsSettings } from "@/components/RoomsSettings";
+import { TeamTab } from "./components/tabs/team/TeamTab";
+import { ProfessionalsTab } from "./components/tabs/professionals/ProfessionalsTab";
+import { RoomsTab } from "./components/tabs/rooms/RoomsTab";
 
 function TeamContent() {
   const { data: session } = useSession();
@@ -35,15 +35,15 @@ function TeamContent() {
         </TabsList>
 
         <TabsContent value="acessos" className="space-y-6 mt-4">
-          <TeamSettings tenantId={targetTenantId as string} />
+          <TeamTab tenantId={targetTenantId as string} />
         </TabsContent>
 
         <TabsContent value="profissionais" className="space-y-6 mt-4">
-          <ProfessionalsSettings tenantId={targetTenantId as string} />
+          <ProfessionalsTab tenantId={targetTenantId as string} />
         </TabsContent>
 
         <TabsContent value="salas" className="space-y-6 mt-4">
-          <RoomsSettings tenantId={targetTenantId as string} />
+          <RoomsTab tenantId={targetTenantId as string} />
         </TabsContent>
       </Tabs>
     </div>
