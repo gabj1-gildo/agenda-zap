@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Pencil, Tag, Check, X } from "lucide-react";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { PRESET_COLORS } from "../../hooks/useTagsSettings";
+import { PRESET_COLORS } from "../../../hooks/useTagsSettings";
 
 interface TagsTabProps {
   tags: any[];
