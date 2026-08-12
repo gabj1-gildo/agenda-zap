@@ -6,6 +6,7 @@ import { ChatSession, Message } from "../types/chats.types";
 export function useChats(tenantId: string | undefined, token: string | undefined) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
   
   // States for specific actions
   const [isSyncing, setIsSyncing] = useState(false);
@@ -23,14 +24,6 @@ export function useChats(tenantId: string | undefined, token: string | undefined
     { refreshInterval: 3000 }
   );
 
-  useEffect(() => {
-    if (chatsResponse?.success) {
-      setSessions(chatsResponse.data);
-    }
-  }, [chatsResponse]);
-
-  const selectedSession = sessions.find(s => s.id === selectedSessionId) || null;
-
   const handleSelectSession = async (session: ChatSession) => {
     setSelectedSessionId(session.id);
     if (session.hasUnread) {
@@ -45,6 +38,27 @@ export function useChats(tenantId: string | undefined, token: string | undefined
       }
     }
   };
+
+
+  useEffect(() => {
+    if (chatsResponse?.success) {
+      setSessions(chatsResponse.data);
+
+      if (!hasAutoSelected && typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const clientId = params.get('clientId');
+        if (clientId) {
+          const sessionForClient = chatsResponse.data.find((s: ChatSession) => s.client?.id === clientId);
+          if (sessionForClient) {
+            handleSelectSession(sessionForClient);
+          }
+        }
+        setHasAutoSelected(true);
+      }
+    }
+  }, [chatsResponse, hasAutoSelected]);
+
+  const selectedSession = sessions.find(s => s.id === selectedSessionId) || null;
 
   const syncHistory = async () => {
     if (!selectedSession) return;

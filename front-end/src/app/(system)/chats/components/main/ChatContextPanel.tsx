@@ -78,6 +78,7 @@ export function ChatContextPanel({ session, tenantId, token, onEditName }: ChatC
           <ClientTags 
             clientId={session.client.id}
             tenantId={tenantId}
+            token={token}
             initialTags={session.client.clientTags?.map((ct: any) => ct.tag) || []}
           />
         </div>

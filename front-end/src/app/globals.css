@@ -822,3 +822,56 @@
   --shadow: 0 10px 24px -12px rgba(0, 0, 0, .55);
   --avatar-text: #0a0f1a;
 }
+
+@theme inline {
+  --animate-funil-shimmer: funil-shimmer 2.6s linear infinite;
+  --animate-funil-flowDot: funil-flowDot 2.4s linear infinite;
+  --animate-funil-badgePulse: funil-badgePulse .5s ease;
+  --animate-funil-cardIn: funil-cardIn .35s cubic-bezier(.2, .8, .2, 1) backwards;
+  --animate-funil-ringPulse: funil-ringPulse 1.6s ease-out infinite;
+  --animate-funil-typeBounce: funil-typeBounce 1.1s ease-in-out infinite;
+  --animate-funil-sparkle: funil-sparkle 2.2s ease-in-out infinite;
+}
+
+@keyframes funil-shimmer {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(340%); }
+}
+
+@keyframes funil-flowDot {
+  0% { left: -2px; opacity: 0; }
+  14% { opacity: 1; }
+  86% { opacity: 1; }
+  100% { left: calc(100% - 4px); opacity: 0; }
+}
+
+@keyframes funil-badgePulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+@keyframes funil-cardIn {
+  from { opacity: 0; transform: translateY(8px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes funil-ringPulse {
+  0% { transform: scale(.5); opacity: .9; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+@keyframes funil-typeBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+@keyframes funil-sparkle {
+  0%, 100% { opacity: .25; transform: scale(.7); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+body.dragging-card, body.dragging-card * {
+  cursor: grabbing !important;
+}
+

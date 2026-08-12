@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Plus, X, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { getBackendUrl } from '@/lib/api';
 
 type TagType = { id: string; name: string; color: string; };
 
-export function ClientTags({ clientId, tenantId, initialTags = [] }: { clientId: string, tenantId: string, initialTags?: TagType[] }) {
+export function ClientTags({ clientId, tenantId, token, initialTags = [] }: { clientId: string, tenantId: string, token: string, initialTags?: TagType[] }) {
   const [tags, setTags] = useState<TagType[]>(initialTags);
   const [allTags, setAllTags] = useState<TagType[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('#3b82f6');
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && allTags.length === 0) {
@@ -20,7 +18,9 @@ export function ClientTags({ clientId, tenantId, initialTags = [] }: { clientId:
 
   const fetchTags = async () => {
     try {
-      const res = await fetch('/api/tags', { headers: { 'tenant-id': tenantId } });
+      const res = await fetch(getBackendUrl('/api/tags'), { 
+        headers: { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` } 
+      });
       const json = await res.json();
       if (json.success) setAllTags(json.data);
     } catch (err) {
@@ -28,32 +28,11 @@ export function ClientTags({ clientId, tenantId, initialTags = [] }: { clientId:
     }
   };
 
-  const createTag = async () => {
-    if (!newTagName.trim()) return;
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId },
-        body: JSON.stringify({ name: newTagName, color: newTagColor }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setAllTags([json.data, ...allTags]);
-        setNewTagName('');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const assignTag = async (tag: TagType) => {
     try {
-      await fetch(`/api/clients/${clientId}/tags`, {
+      await fetch(getBackendUrl(`/api/clients/${clientId}/tags`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ tagId: tag.id }),
       });
       if (!tags.find(t => t.id === tag.id)) {
@@ -66,9 +45,9 @@ export function ClientTags({ clientId, tenantId, initialTags = [] }: { clientId:
 
   const removeTag = async (tagId: string) => {
     try {
-      await fetch(`/api/clients/${clientId}/tags`, {
+      await fetch(getBackendUrl(`/api/clients/${clientId}/tags`), {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ tagId }),
       });
       setTags(tags.filter(t => t.id !== tagId));
@@ -119,32 +98,6 @@ export function ClientTags({ clientId, tenantId, initialTags = [] }: { clientId:
             {allTags.length === 0 && (
               <div className="text-xs text-muted-foreground italic px-2">Nenhuma tag criada.</div>
             )}
-          </div>
-
-          <div className="border-t pt-2 mt-2">
-            <p className="text-xs text-muted-foreground mb-2">Criar nova tag</p>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                value={newTagName}
-                onChange={e => setNewTagName(e.target.value)}
-                placeholder="Nome da tag"
-                className="flex-1 text-xs border rounded px-2 h-7"
-              />
-              <input 
-                type="color" 
-                value={newTagColor}
-                onChange={e => setNewTagColor(e.target.value)}
-                className="w-7 h-7 rounded cursor-pointer border-none p-0"
-              />
-              <button 
-                onClick={createTag}
-                disabled={isLoading || !newTagName.trim()}
-                className="bg-primary text-primary-foreground w-7 h-7 flex items-center justify-center rounded disabled:opacity-50"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
           </div>
         </div>
       )}
