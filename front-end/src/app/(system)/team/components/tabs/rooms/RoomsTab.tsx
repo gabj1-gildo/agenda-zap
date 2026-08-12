@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRoomsSettings } from "../../hooks/useRoomsSettings";
+import { useRoomsSettings } from "../../../hooks/useRoomsSettings";
 
 export function RoomsTab({ tenantId }: { tenantId: string }) {
   const {

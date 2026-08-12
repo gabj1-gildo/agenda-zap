@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useProfessionalsSettings } from "../../hooks/useProfessionalsSettings";
+import { useProfessionalsSettings } from "../../../hooks/useProfessionalsSettings";
 
 export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
   const {

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, UserPlus, Shield } from "lucide-react";
 import { ConfirmModal } from "@/components/ConfirmModal";
-import { useTeamSettings, MODULES } from "../../hooks/useTeamSettings";
+import { useTeamSettings, MODULES } from "../../../hooks/useTeamSettings";
 
 export function TeamTab({ tenantId }: { tenantId: string }) {
   const {
