@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
+import useSWR from "swr";
 
 export const MODULES = [
   { id: "agenda", label: "Agenda e Agendamentos" },
@@ -15,9 +16,30 @@ export const MODULES = [
 
 export function useTeamSettings(tenantId: string) {
   const { data: session } = useSession();
-  const [team, setTeam] = useState<any[]>([]);
-  const [maxUsers, setMaxUsers] = useState<number>(3);
-  const [loading, setLoading] = useState(true);
+  
+  const fetcher = async (url: string) => {
+    const headers = { 
+      'tenant-id': tenantId, 
+      'Authorization': `Bearer ${(session?.user as any)?.accessToken}` 
+    };
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  };
+
+  const { data: team = [], mutate: mutateTeam, isLoading: teamLoading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/team') : null,
+    fetcher
+  );
+
+  const { data: tenantData, isLoading: tenantLoading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/tenant') : null,
+    fetcher
+  );
+
+  const maxUsers = tenantData?.maxUsers ?? 3;
+  const loading = teamLoading || tenantLoading;
+
   const [saving, setSaving] = useState(false);
   
   const [newUserEmail, setNewUserEmail] = useState("");
@@ -27,28 +49,6 @@ export function useTeamSettings(tenantId: string) {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingPermissions, setEditingPermissions] = useState<string[]>([]);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
-
-  const loadTeam = async () => {
-    try {
-      const headers = { 'tenant-id': tenantId, 'Authorization': `Bearer ${(session?.user as any)?.accessToken}` };
-      const [teamRes, tenantRes] = await Promise.all([
-        fetch(getBackendUrl('/api/settings/team'), { headers }),
-        fetch(getBackendUrl('/api/settings/tenant'), { headers })
-      ]);
-      const data = await teamRes.json();
-      const tenantData = await tenantRes.json();
-      if (data.success) setTeam(data.data);
-      if (tenantData.success) setMaxUsers(tenantData.data?.maxUsers ?? 3);
-    } catch (e) {
-      toast.error("Erro ao carregar equipe");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (tenantId) loadTeam();
-  }, [tenantId]);
 
   const handleAddUser = async () => {
     if (!newUserEmail) return toast.error("Preencha o e-mail");
@@ -72,7 +72,7 @@ export function useTeamSettings(tenantId: string) {
         toast.success("Usuário adicionado à equipe!");
         setNewUserEmail("");
         setNewUserPermissions([]);
-        loadTeam();
+        mutateTeam();
       } else {
         toast.error(data.message || "Erro ao adicionar usuário");
       }
@@ -98,7 +98,7 @@ export function useTeamSettings(tenantId: string) {
       if (data.success) {
         toast.success("Permissões atualizadas!");
         setEditingUserId(null);
-        loadTeam();
+        mutateTeam();
       } else {
         toast.error("Erro ao salvar permissões");
       }
@@ -120,7 +120,7 @@ export function useTeamSettings(tenantId: string) {
       const data = await res.json();
       if (data.success) {
         toast.success("Usuário removido da equipe");
-        loadTeam();
+        mutateTeam();
       } else {
         toast.error("Erro ao remover usuário");
       }

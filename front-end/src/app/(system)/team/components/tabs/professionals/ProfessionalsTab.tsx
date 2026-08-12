@@ -38,7 +38,7 @@ export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
     confirmDelete
   } = useProfessionalsSettings(tenantId);
 
-  if (loading) return <div className="text-center p-4 text-muted-foreground">Carregando profissionais...</div>;
+
 
   return (
     <div className="space-y-4">

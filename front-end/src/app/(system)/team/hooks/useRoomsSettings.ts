@@ -1,13 +1,28 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
+import useSWR from "swr";
 
 export function useRoomsSettings(tenantId: string) {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const fetcher = async (url: string) => {
+    const headers = { 
+      'tenant-id': tenantId, 
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+    };
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  };
+
+  const { data: rooms = [], mutate: mutateRooms, isLoading: loading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/rooms') : null,
+    fetcher
+  );
+
   const [saving, setSaving] = useState(false);
   
   const [showModal, setShowModal] = useState(false);
@@ -19,29 +34,6 @@ export function useRoomsSettings(tenantId: string) {
     capacity: "1",
     isActive: true
   });
-
-  useEffect(() => {
-    if (!tenantId) return;
-    loadRooms();
-  }, [tenantId]);
-
-  const loadRooms = async () => {
-    try {
-      const res = await fetch(getBackendUrl('/api/settings/rooms'), {
-        headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setRooms(data.data);
-      } else {
-        toast.error("Erro ao carregar salas");
-      }
-    } catch (e) {
-      toast.error("Erro de conexão ao carregar salas");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOpenNew = () => {
     setEditingId(null);
@@ -81,7 +73,7 @@ export function useRoomsSettings(tenantId: string) {
         const data = await res.json();
         if (data.success) {
           toast.success("Sala atualizada com sucesso");
-          setRooms(rooms.map(r => r.id === editingId ? data.data : r));
+          mutateRooms();
           setShowModal(false);
         } else {
           toast.error(data.error || "Erro ao atualizar");
@@ -95,7 +87,7 @@ export function useRoomsSettings(tenantId: string) {
         const data = await res.json();
         if (data.success) {
           toast.success("Sala cadastrada com sucesso");
-          setRooms([data.data, ...rooms]);
+          mutateRooms();
           setShowModal(false);
         } else {
           toast.error(data.error || "Erro ao cadastrar");
@@ -118,7 +110,7 @@ export function useRoomsSettings(tenantId: string) {
       const data = await res.json();
       if (data.success) {
         toast.success("Sala excluída");
-        setRooms(rooms.filter(r => r.id !== deleteId));
+        mutateRooms();
       } else {
         toast.error(data.error || "Erro ao excluir");
       }

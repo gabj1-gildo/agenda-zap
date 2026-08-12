@@ -33,7 +33,7 @@ export function TeamTab({ tenantId }: { tenantId: string }) {
   const atLimit = team.length >= maxUsers;
   const usedPct = Math.min((team.length / maxUsers) * 100, 100);
 
-  if (loading) return <div>Carregando equipe...</div>;
+
 
   return (
     <div className="space-y-6">

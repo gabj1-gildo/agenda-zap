@@ -34,7 +34,7 @@ export function RoomsTab({ tenantId }: { tenantId: string }) {
     confirmDelete
   } = useRoomsSettings(tenantId);
 
-  if (loading) return <div className="text-center p-4 text-muted-foreground">Carregando salas...</div>;
+
 
   return (
     <div className="space-y-4">

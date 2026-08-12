@@ -1,18 +1,47 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
+import useSWR from "swr";
 
 export function useProfessionalsSettings(tenantId: string) {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
-  const [professionals, setProfessionals] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
-  const [team, setTeam] = useState<any[]>([]);
-  const [maxProfessionals, setMaxProfessionals] = useState<number>(5);
-  const [loading, setLoading] = useState(true);
+
+  const fetcher = async (url: string) => {
+    const headers = { 
+      'tenant-id': tenantId, 
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+    };
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  };
+
+  const { data: professionals = [], mutate: mutateProfessionals, isLoading: professionalsLoading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/professionals') : null,
+    fetcher
+  );
+
+  const { data: services = [], isLoading: servicesLoading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/services') : null,
+    fetcher
+  );
+
+  const { data: team = [], isLoading: teamLoading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/team') : null,
+    fetcher
+  );
+
+  const { data: tenantData, isLoading: tenantLoading } = useSWR(
+    tenantId ? getBackendUrl('/api/settings/tenant') : null,
+    fetcher
+  );
+
+  const maxProfessionals = tenantData?.maxUsers ?? 5;
+  const loading = professionalsLoading || servicesLoading || teamLoading || tenantLoading;
+
   const [saving, setSaving] = useState(false);
-  
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -24,36 +53,6 @@ export function useProfessionalsSettings(tenantId: string) {
     serviceIds: [] as string[],
     isActive: true
   });
-
-  useEffect(() => {
-    if (!tenantId) return;
-    loadAllData();
-  }, [tenantId]);
-
-  const loadAllData = async () => {
-    try {
-      const hdrs = { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) };
-      const [profRes, svcRes, teamRes, tenantRes] = await Promise.all([
-        fetch(getBackendUrl('/api/settings/professionals'), { headers: hdrs }),
-        fetch(getBackendUrl('/api/settings/services'), { headers: hdrs }),
-        fetch(getBackendUrl('/api/settings/team'), { headers: hdrs }),
-        fetch(getBackendUrl('/api/settings/tenant'), { headers: hdrs })
-      ]);
-      const profData = await profRes.json();
-      const svcData = await svcRes.json();
-      const teamData = await teamRes.json();
-      const tenantData = await tenantRes.json();
-      
-      if (profData.success) setProfessionals(profData.data);
-      if (svcData.success) setServices(svcData.data);
-      if (teamData.success) setTeam(teamData.data);
-      if (tenantData.success) setMaxProfessionals(tenantData.data?.maxUsers ?? 5);
-    } catch (e) {
-      toast.error("Erro de conexão ao carregar dados");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOpenNew = () => {
     setEditingId(null);
@@ -109,7 +108,7 @@ export function useProfessionalsSettings(tenantId: string) {
         const data = await res.json();
         if (data.success) {
           toast.success("Profissional atualizado com sucesso");
-          setProfessionals(professionals.map(p => p.id === editingId ? data.data : p));
+          mutateProfessionals();
           setShowModal(false);
         } else {
           toast.error(data.error || "Erro ao atualizar");
@@ -123,7 +122,7 @@ export function useProfessionalsSettings(tenantId: string) {
         const data = await res.json();
         if (data.success) {
           toast.success("Profissional cadastrado com sucesso");
-          setProfessionals([data.data, ...professionals]);
+          mutateProfessionals();
           setShowModal(false);
         } else {
           toast.error(data.error || "Erro ao cadastrar");
@@ -146,7 +145,7 @@ export function useProfessionalsSettings(tenantId: string) {
       const data = await res.json();
       if (data.success) {
         toast.success("Profissional excluído");
-        setProfessionals(professionals.filter(p => p.id !== deleteId));
+        mutateProfessionals();
       } else {
         toast.error(data.error || "Erro ao excluir");
       }
