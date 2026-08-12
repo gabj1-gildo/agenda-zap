@@ -108,7 +108,7 @@ export function TeamTab({ tenantId }: { tenantId: string }) {
                     <div className="bg-muted/30 p-3 rounded-lg border">
                       <p className="text-sm font-semibold mb-2">Módulos Permitidos:</p>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {MODULES.map(mod => {
+                        {MODULES.map((mod: any) => {
                           const isChecked = editingUserId === member.id 
                             ? editingPermissions.includes(mod.id)
                             : (member.permissions || []).includes(mod.id);
@@ -168,7 +168,7 @@ export function TeamTab({ tenantId }: { tenantId: string }) {
           <div className="space-y-2">
             <Label>Permissões Iniciais (Módulos de Acesso)</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-              {MODULES.map(mod => (
+              {MODULES.map((mod: any) => (
                 <div key={`new-${mod.id}`} className="flex items-center space-x-2">
                   <Checkbox 
                     id={`new-${mod.id}`}

@@ -78,7 +78,7 @@ export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
           ) : (
             <div className="divide-y">
               {professionals.map((prof: any) => {
-                const profServices = services.filter(s => (prof.serviceIds || []).includes(s.id));
+                const profServices = services.filter((s: any) => (prof.serviceIds || []).includes(s.id));
                 return (
                   <div key={prof.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
                     <div className="flex flex-col gap-1">
@@ -89,7 +89,7 @@ export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {profServices.length > 0 
-                          ? profServices.map(s => s.name).join(', ') 
+                          ? profServices.map((s: any) => s.name).join(', ') 
                           : "Nenhum serviço associado"}
                       </div>
                     </div>
@@ -142,7 +142,7 @@ export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
                 onChange={e => setFormData({ ...formData, userId: e.target.value })}
               >
                 <option value="">Nenhuma</option>
-                {team.map(u => (
+                {team.map((u: any) => (
                   <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                 ))}
               </select>
@@ -153,7 +153,7 @@ export function ProfessionalsTab({ tenantId }: { tenantId: string }) {
               <Label>Serviços Realizados</Label>
               <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto p-2 border rounded-md">
                 {services.length === 0 && <p className="text-xs text-muted-foreground col-span-2">Nenhum serviço cadastrado na aba Serviços.</p>}
-                {services.map(svc => (
+                {services.map((svc: any) => (
                   <label key={svc.id} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50 cursor-pointer">
                     <input 
                       type="checkbox" 
