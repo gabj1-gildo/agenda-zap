@@ -56,7 +56,6 @@ export function TagsTab({
     }
   };
 
-  if (loading && tags.length === 0) return <div className="py-4 text-center text-muted-foreground text-sm">Carregando tags...</div>;
 
   return (
     <div className="space-y-6">
@@ -84,7 +83,9 @@ export function TagsTab({
           </div>
         </CardHeader>
         <CardContent>
-          {tags.length === 0 ? (
+          {loading && tags.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground text-sm animate-pulse">Carregando tags...</div>
+          ) : tags.length === 0 ? (
             <div className="text-center text-muted-foreground text-sm py-6">
               Nenhuma tag cadastrada ainda. Crie sua primeira tag abaixo!
             </div>

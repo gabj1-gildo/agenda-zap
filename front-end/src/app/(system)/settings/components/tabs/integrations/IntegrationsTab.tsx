@@ -5,7 +5,7 @@ import { PaymentGatewaysManager } from "./PaymentGatewaysManager";
 import { TenantConfig, PaymentKey } from "../../../types/settings.types";
 
 interface IntegrationsTabProps {
-  tenant: TenantConfig;
+  tenant: TenantConfig | null;
   keys: PaymentKey[];
   updateTenantLocal: (updates: Partial<TenantConfig>) => void;
   saveGeneral: () => Promise<boolean>;
@@ -25,6 +25,10 @@ export function IntegrationsTab({
 }: IntegrationsTabProps) {
   return (
     <div className="space-y-6">
+      {!tenant ? (
+        <div className="py-8 text-center text-muted-foreground text-sm animate-pulse">Carregando integrações...</div>
+      ) : (
+        <>
       <ReceiveOnSiteToggle 
         acceptPaymentOnSite={tenant?.acceptPaymentOnSite || false}
         onToggle={(checked) => updateTenantLocal({ acceptPaymentOnSite: checked })}
@@ -41,12 +45,14 @@ export function IntegrationsTab({
         hasToken={!!tenant?.googleCalendarToken}
       />
 
-      <PaymentGatewaysManager 
-        tenantId={tenant.id}
-        keys={keys}
-        onAddKey={onAddKey}
-        onDeleteKey={onDeleteKey}
-      />
+          <PaymentGatewaysManager 
+            tenantId={tenant.id}
+            keys={keys}
+            onAddKey={onAddKey}
+            onDeleteKey={onDeleteKey}
+          />
+        </>
+      )}
     </div>
   );
 }

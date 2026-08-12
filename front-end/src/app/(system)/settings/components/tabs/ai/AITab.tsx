@@ -7,7 +7,7 @@ import { AIModel, AIPreset, TenantConfig } from "../../../types/settings.types";
 import { toast } from "sonner";
 
 interface AITabProps {
-  tenant: TenantConfig;
+  tenant: TenantConfig | null;
   availableModels: AIModel[];
   aiPresets: any;
   saving: boolean;
@@ -92,7 +92,13 @@ export function AITab({
         <CardTitle>Comportamento da Inteligência Artificial</CardTitle>
         <CardDescription>Defina como a IA deve conversar com seus clientes, seus preços e regras de agendamento.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      {!tenant ? (
+        <CardContent className="space-y-6 min-h-[300px] flex items-center justify-center">
+          <div className="text-muted-foreground animate-pulse">Carregando dados da IA...</div>
+        </CardContent>
+      ) : (
+        <>
+          <CardContent className="space-y-6">
         <AIProviderOverride 
           tenant={tenant}
           availableModels={availableModels}
@@ -113,10 +119,12 @@ export function AITab({
             onSelectAdvancedPreset={handleSelectAdvancedPreset}
           />
         </div>
-      </CardContent>
-      <CardFooter className="flex justify-end border-t p-6">
-        <Button onClick={saveGeneral} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
-      </CardFooter>
+          </CardContent>
+          <CardFooter className="flex justify-end border-t p-6">
+            <Button onClick={saveGeneral} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 }

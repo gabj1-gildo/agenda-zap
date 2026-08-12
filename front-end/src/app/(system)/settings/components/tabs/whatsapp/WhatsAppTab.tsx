@@ -9,7 +9,7 @@ import { AIToggleConfig } from "./AIToggleConfig";
 import { WhatsAppInstance, TenantConfig } from "../../../types/settings.types";
 
 interface WhatsAppTabProps {
-  tenant: TenantConfig;
+  tenant: TenantConfig | null;
   instances: WhatsAppInstance[];
   onProviderSelect: () => void;
   onMetaConfigure: () => void;
@@ -41,7 +41,12 @@ export function WhatsAppTab({
         <CardTitle>WhatsApp API</CardTitle>
         <CardDescription>Conecte o número do seu estabelecimento para enviar e receber mensagens automaticamente.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      {!tenant ? (
+        <CardContent className="space-y-4 min-h-[300px] flex items-center justify-center">
+          <div className="text-muted-foreground animate-pulse">Carregando dados...</div>
+        </CardContent>
+      ) : (
+        <CardContent className="space-y-4">
         <InstanceUsageLimit usedInstances={usedWhatsAppInstances} maxInstances={maxWhatsAppInstances} />
 
         {!tenant?._isProfileComplete && (
@@ -84,8 +89,9 @@ export function WhatsAppTab({
             onToggle={onAIToggle}
             disabled={!tenant?._isProfileComplete}
           />
-        </div>
-      </CardContent>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }

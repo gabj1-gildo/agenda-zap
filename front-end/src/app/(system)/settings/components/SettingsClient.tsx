@@ -38,10 +38,9 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
 
   // No manual load needed anymore, handled by SWR
 
-  const isLoading = companySettings.loading || whatsappSettings.loading || aiSettings.loading || integrationsSettings.loading;
-  
-  if (!companySettings.tenant && isLoading) return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
-  if (!companySettings.tenant) return <div className="p-8 text-center text-muted-foreground">Selecione uma empresa para ver as configurações.</div>;
+  if (!targetTenantId) {
+    return <div className="p-8 text-center text-muted-foreground">Nenhuma empresa selecionada.</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">

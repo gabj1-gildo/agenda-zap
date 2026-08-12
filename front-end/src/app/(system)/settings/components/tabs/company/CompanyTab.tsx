@@ -8,7 +8,7 @@ import { TenantConfig } from "../../../types/settings.types";
 import { toast } from "sonner";
 
 interface CompanyTabProps {
-  tenant: TenantConfig;
+  tenant: TenantConfig | null;
   saving: boolean;
   docValidating: boolean;
   docError: string | null;
@@ -71,7 +71,13 @@ export function CompanyTab({
           <CardTitle>Dados do Estabelecimento</CardTitle>
           <CardDescription>Essas informações serão exibidas para seus clientes.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        {!tenant ? (
+          <CardContent className="space-y-6 min-h-[300px] flex items-center justify-center">
+            <div className="text-muted-foreground animate-pulse">Carregando dados da empresa...</div>
+          </CardContent>
+        ) : (
+          <>
+            <CardContent className="space-y-6">
           <LogoUpload 
             currentLogoUrl={tenant?.logoUrl || tenant?.logo_url}
             onUpload={uploadLogo}
@@ -98,12 +104,14 @@ export function CompanyTab({
             tenant={tenant}
             updateTenant={updateTenantLocal}
           />
-        </CardContent>
-        <CardFooter className="flex justify-end border-t p-6">
-          <Button onClick={handleSaveWithValidation} disabled={saving || docValidating}>
-            {saving ? "Salvando..." : "Salvar Alterações"}
-          </Button>
-        </CardFooter>
+            </CardContent>
+            <CardFooter className="flex justify-end border-t p-6">
+              <Button onClick={handleSaveWithValidation} disabled={saving || docValidating}>
+                {saving ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </CardFooter>
+          </>
+        )}
       </Card>
     </div>
   );
