@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
 import { getBackendUrl } from "@/lib/api";
 import { TenantConfig } from "../types/settings.types";
 import { useSession } from "next-auth/react";
@@ -8,36 +9,26 @@ export function useCompanySettings(targetTenantId: string | null) {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
   
-  const [tenant, setTenant] = useState<TenantConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  const fetcher = async (url: string) => {
+    if (!targetTenantId) return null;
+    const headers: any = { 'tenant-id': targetTenantId };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  };
+
+  const { data: tenant, mutate: mutateTenant, isLoading: loading } = useSWR(
+    targetTenantId ? getBackendUrl('/api/settings/tenant') : null,
+    fetcher
+  );
+
   const [saving, setSaving] = useState(false);
   const [docValidating, setDocValidating] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
 
-  const loadTenant = useCallback(async () => {
-    if (!targetTenantId) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const headers: any = { 'tenant-id': targetTenantId };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      
-      const res = await fetch(getBackendUrl('/api/settings/tenant'), { headers });
-      const data = await res.json();
-      
-      if (data.success) {
-        setTenant(data.data);
-      }
-    } catch (err) {
-      toast.error("Erro ao carregar dados da empresa");
-    } finally {
-      setLoading(false);
-    }
-  }, [targetTenantId, token]);
-
   const updateTenantLocal = (updates: Partial<TenantConfig>) => {
-    setTenant(prev => prev ? { ...prev, ...updates } : null);
+    mutateTenant((prev: any) => prev ? { ...prev, ...updates } : null, false);
   };
 
   const saveGeneral = async (extraPayload: any = {}) => {
@@ -273,7 +264,7 @@ export function useCompanySettings(targetTenantId: string | null) {
     docValidating,
     docError,
     setDocError,
-    loadTenant,
+    mutateTenant,
     updateTenantLocal,
     saveGeneral,
     uploadLogo,

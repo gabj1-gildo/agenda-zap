@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
 import { getBackendUrl } from "@/lib/api";
 import { PaymentKey } from "../types/settings.types";
 import { useSession } from "next-auth/react";
@@ -8,30 +8,19 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
   
-  const [keys, setKeys] = useState<PaymentKey[]>([]);
-  const [loading, setLoading] = useState(true);
+  const fetcher = async (url: string) => {
+    if (!targetTenantId) return [];
+    const headers: any = { 'tenant-id': targetTenantId };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { headers });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  };
 
-  const loadKeys = useCallback(async () => {
-    if (!targetTenantId) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const headers: any = { 'tenant-id': targetTenantId };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      
-      const res = await fetch(getBackendUrl('/api/settings/payment-keys'), { headers });
-      const data = await res.json();
-      
-      if (data.success) {
-        setKeys(data.data);
-      }
-    } catch (err) {
-      toast.error("Erro ao carregar chaves de pagamento");
-    } finally {
-      setLoading(false);
-    }
-  }, [targetTenantId, token]);
+  const { data: keys = [], mutate: mutateKeys, isLoading: loading } = useSWR(
+    targetTenantId ? getBackendUrl('/api/settings/payment-keys') : null,
+    fetcher
+  );
 
   const addKey = async (newKey: Partial<PaymentKey>) => {
     if (!targetTenantId) return false;
@@ -47,7 +36,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
       });
       const data = await res.json();
       if (data.success) {
-        setKeys(prev => [data.data, ...prev]);
+        mutateKeys((prev: any) => [data.data, ...prev], false);
         toast.success("Chave adicionada!");
         return true;
       }
@@ -70,7 +59,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
         },
         body: JSON.stringify({ isActive })
       });
-      setKeys(prev => prev.map(k => ({ ...k, isActive: k.id === id ? isActive : false })));
+      mutateKeys((prev: any) => prev.map((k: any) => ({ ...k, isActive: k.id === id ? isActive : false })), false);
       toast.success(isActive ? "Chave ativada!" : "Chave desativada!");
     } catch (e) {
       toast.error("Erro ao alterar chave");
@@ -87,7 +76,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
           'Authorization': `Bearer ${token}` 
         }
       });
-      setKeys(prev => prev.filter(k => k.id !== id));
+      mutateKeys((prev: any) => prev.filter((k: any) => k.id !== id), false);
       toast.success("Chave excluída!");
       return true;
     } catch (e) {
@@ -99,7 +88,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
   return {
     keys,
     loading,
-    loadKeys,
+    mutateKeys,
     addKey,
     toggleKey,
     deleteKey

@@ -36,18 +36,11 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
   const [showMetaModal, setShowMetaModal] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (targetTenantId) {
-      companySettings.loadTenant();
-      whatsappSettings.loadInstances();
-      aiSettings.loadAIData();
-      integrationsSettings.loadKeys();
-    }
-  }, [targetTenantId]);
+  // No manual load needed anymore, handled by SWR
 
   const isLoading = companySettings.loading || whatsappSettings.loading || aiSettings.loading || integrationsSettings.loading;
-
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
+  
+  if (!companySettings.tenant && isLoading) return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
   if (!companySettings.tenant) return <div className="p-8 text-center text-muted-foreground">Selecione uma empresa para ver as configurações.</div>;
 
   return (
@@ -60,7 +53,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
           existingInstanceId={typeof showPhoneModal === 'string' ? showPhoneModal : undefined}
           onClose={() => {
             setShowPhoneModal(false);
-            whatsappSettings.loadInstances();
+            whatsappSettings.mutateInstances();
           }} 
         />
       )}
