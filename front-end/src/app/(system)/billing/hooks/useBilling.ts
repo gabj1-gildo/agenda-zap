@@ -1,16 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
-import { toast } from "sonner";
 import { getBillingStatus, getPlans, BillingApiError } from "../services/billing.service";
 import type { Subscription, Invoice, Plan } from "../types/billing";
 
-interface BillingState {
+interface BillingData {
   subscription: Subscription | null;
   invoices: Invoice[];
   usage: { tenants: number; users: number; chats: number } | null;
   plans: Plan[];
-  loading: boolean;
-  error: string | null;
 }
 
 function mapErrorToMessage(err: unknown): string {
@@ -21,52 +18,46 @@ function mapErrorToMessage(err: unknown): string {
 
 export function useBilling() {
   const { data: session, status: sessionStatus } = useSession();
-  const [state, setState] = useState<BillingState>({
-    subscription: null,
-    invoices: [],
-    usage: null,
-    plans: [],
-    loading: true,
-    error: null,
-  });
 
-  const fetchAll = useCallback(async () => {
-    if (sessionStatus !== 'authenticated' || !session) return;
+  const fetcher = async (): Promise<BillingData> => {
+    if (sessionStatus !== 'authenticated' || !session) {
+      throw new Error("Não autenticado");
+    }
     
-    setState(s => ({ ...s, loading: true, error: null }));
-    try {
-      const auth = { 
-        token: (session.user as any)?.accessToken, 
-        tenantId: (session.user as any)?.tenantId 
-      };
-      
-      const [statusRes, plansRes] = await Promise.all([
-        getBillingStatus(auth),
-        getPlans(auth),
-      ]);
+    const auth = { 
+      token: (session.user as any)?.accessToken, 
+      tenantId: (session.user as any)?.tenantId 
+    };
+    
+    const [statusRes, plansRes] = await Promise.all([
+      getBillingStatus(auth),
+      getPlans(auth),
+    ]);
 
-      setState({
-        subscription: statusRes.success && statusRes.data ? statusRes.data.subscription : null,
-        invoices: statusRes.success && statusRes.data ? statusRes.data.invoices ?? [] : [],
-        usage: statusRes.success && statusRes.data && statusRes.data.usage ? statusRes.data.usage : null,
-        plans: plansRes.success ? plansRes.data : [],
-        loading: false,
-        error: null,
-      });
-    } catch (err) {
-      const errorMessage = mapErrorToMessage(err);
-      setState(s => ({ ...s, loading: false, error: errorMessage }));
-      toast.error(errorMessage);
-    }
-  }, [session, sessionStatus]);
+    if (!statusRes.success) throw new Error(statusRes.error || "Falha ao carregar status");
+    
+    return {
+      subscription: statusRes.data?.subscription || null,
+      invoices: statusRes.data?.invoices || [],
+      usage: statusRes.data?.usage || null,
+      plans: plansRes.success ? plansRes.data || [] : [],
+    };
+  };
 
-  useEffect(() => {
-    if (sessionStatus === 'authenticated') {
-      fetchAll();
-    } else if (sessionStatus === 'unauthenticated') {
-      setState(s => ({ ...s, loading: false }));
-    }
-  }, [fetchAll, sessionStatus]);
+  const shouldFetch = sessionStatus === 'authenticated' && !!session;
 
-  return { ...state, refetch: fetchAll };
+  const { data, error, mutate, isLoading } = useSWR<BillingData>(
+    shouldFetch ? ['billing_data', (session.user as any)?.tenantId] : null,
+    fetcher
+  );
+
+  return {
+    subscription: data?.subscription || null,
+    invoices: data?.invoices || [],
+    usage: data?.usage || null,
+    plans: data?.plans || [],
+    loading: isLoading && shouldFetch,
+    error: error ? mapErrorToMessage(error) : null,
+    refetch: mutate,
+  };
 }

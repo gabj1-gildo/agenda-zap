@@ -13,7 +13,7 @@ import { BillingSkeleton } from "./components/BillingSkeleton";
 import { ActiveSubscription } from "./components/ActiveSubscription";
 import { PendingInvoices } from "./components/PendingInvoices";
 import { PlanSelector } from "./components/PlanSelector";
-import { CheckoutForm } from "./components/CheckoutForm";
+import { CheckoutForm } from "./components/checkout/CheckoutForm";
 import { UpgradeModal } from "./components/UpgradeModal";
 import { ChangeCardModal } from "./components/ChangeCardModal";
 import type { Plan } from "./types/billing";
