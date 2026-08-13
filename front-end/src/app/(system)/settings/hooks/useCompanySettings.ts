@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { getBackendUrl } from "@/lib/api";
@@ -18,17 +18,25 @@ export function useCompanySettings(targetTenantId: string | null) {
     return data.success ? data.data : null;
   };
 
-  const { data: tenant, mutate: mutateTenant, isLoading: loading } = useSWR(
+  const { data: originalTenant, mutate: mutateTenant, isLoading: loading } = useSWR(
     (targetTenantId && token) ? getBackendUrl('/api/settings/tenant') : null,
     fetcher
   );
+
+  const [tenant, setTenant] = useState<TenantConfig | null>(null);
+
+  useEffect(() => {
+    if (originalTenant) {
+      setTenant(originalTenant);
+    }
+  }, [originalTenant]);
 
   const [saving, setSaving] = useState(false);
   const [docValidating, setDocValidating] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
 
   const updateTenantLocal = (updates: Partial<TenantConfig>) => {
-    mutateTenant((prev: any) => prev ? { ...prev, ...updates } : null, false);
+    setTenant((prev: any) => prev ? { ...prev, ...updates } : null);
   };
 
   const saveTenantData = async (payload: Partial<TenantConfig>) => {
@@ -232,6 +240,7 @@ export function useCompanySettings(targetTenantId: string | null) {
 
   return {
     tenant,
+    originalTenant,
     loading,
     saving,
     docValidating,

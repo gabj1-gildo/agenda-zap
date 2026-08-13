@@ -48,7 +48,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
       {showPhoneModal && (
         <TenantPhoneModal 
           tenantId={targetTenantId as string} 
-          tenantPhone={companySettings.tenant.phone}
+          tenantPhone={companySettings.tenant?.phone || ""}
           existingInstanceId={typeof showPhoneModal === 'string' ? showPhoneModal : undefined}
           onClose={() => {
             setShowPhoneModal(false);
@@ -84,7 +84,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
       <MetaCloudModal 
         open={showMetaModal}
         onOpenChange={setShowMetaModal}
-        tenant={companySettings.tenant}
+        tenant={companySettings.tenant!}
         updateTenantLocal={companySettings.updateTenantLocal}
         onSave={async () => {
           await companySettings.saveTenantData({
@@ -112,6 +112,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
         <TabsContent value="empresa" className="space-y-6">
           <CompanyTab 
             tenant={companySettings.tenant}
+            originalTenant={companySettings.originalTenant}
             saving={companySettings.saving}
             docValidating={companySettings.docValidating}
             docError={companySettings.docError}
@@ -127,6 +128,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
         <TabsContent value="notificacoes" className="space-y-6">
           <WhatsAppTab 
             tenant={companySettings.tenant}
+            originalTenant={companySettings.originalTenant}
             instances={whatsappSettings.instances}
             onProviderSelect={() => setShowProviderSelect(true)}
             onMetaConfigure={() => setShowMetaModal(true)}
@@ -148,6 +150,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
         <TabsContent value="ia" className="space-y-6">
           <AITab 
             tenant={companySettings.tenant}
+            originalTenant={companySettings.originalTenant}
             availableModels={aiSettings.availableModels}
             aiPresets={aiSettings.aiPresets}
             saving={companySettings.saving}
@@ -184,6 +187,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
         <TabsContent value="integracoes" className="space-y-6">
           <IntegrationsTab 
             tenant={companySettings.tenant}
+            originalTenant={companySettings.originalTenant}
             keys={integrationsSettings.keys}
             updateTenantLocal={companySettings.updateTenantLocal}
             saveTenantData={companySettings.saveTenantData}

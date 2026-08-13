@@ -10,6 +10,7 @@ import { WhatsAppInstance, TenantConfig } from "../../../types/settings.types";
 
 interface WhatsAppTabProps {
   tenant: TenantConfig | null;
+  originalTenant?: TenantConfig | null;
   instances: WhatsAppInstance[];
   onProviderSelect: () => void;
   onMetaConfigure: () => void;
@@ -21,6 +22,7 @@ interface WhatsAppTabProps {
 
 export function WhatsAppTab({
   tenant,
+  originalTenant,
   instances,
   onProviderSelect,
   onMetaConfigure,

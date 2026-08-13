@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 interface AITabProps {
   tenant: TenantConfig | null;
+  originalTenant?: TenantConfig | null;
   availableModels: AIModel[];
   aiPresets: any;
   saving: boolean;
@@ -19,6 +20,7 @@ interface AITabProps {
 
 export function AITab({
   tenant,
+  originalTenant,
   availableModels,
   aiPresets,
   saving,
@@ -86,6 +88,8 @@ export function AITab({
     }
   };
 
+  const isAIDirty = JSON.stringify(tenant?.aiConfig || {}) !== JSON.stringify(originalTenant?.aiConfig || {});
+
   return (
     <Card>
       <CardHeader>
@@ -120,9 +124,11 @@ export function AITab({
           />
         </div>
           </CardContent>
-          <CardFooter className="flex justify-end border-t p-6">
-            <Button onClick={() => saveTenantData({ aiConfig: tenant.aiConfig })} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
-          </CardFooter>
+          {isAIDirty && (
+            <CardFooter className="flex justify-end border-t p-6">
+              <Button onClick={() => saveTenantData({ aiConfig: tenant.aiConfig })} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
+            </CardFooter>
+          )}
         </>
       )}
     </Card>

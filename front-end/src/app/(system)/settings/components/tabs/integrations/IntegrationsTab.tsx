@@ -6,6 +6,7 @@ import { TenantConfig, PaymentKey } from "../../../types/settings.types";
 
 interface IntegrationsTabProps {
   tenant: TenantConfig | null;
+  originalTenant?: TenantConfig | null;
   keys: PaymentKey[];
   updateTenantLocal: (updates: Partial<TenantConfig>) => void;
   saveTenantData: (payload: Partial<TenantConfig>) => Promise<boolean>;
@@ -16,6 +17,7 @@ interface IntegrationsTabProps {
 
 export function IntegrationsTab({
   tenant,
+  originalTenant,
   keys,
   updateTenantLocal,
   saveTenantData,
@@ -31,6 +33,7 @@ export function IntegrationsTab({
         <>
       <ReceiveOnSiteToggle 
         acceptPaymentOnSite={tenant?.acceptPaymentOnSite || false}
+        originalAcceptPaymentOnSite={originalTenant?.acceptPaymentOnSite || false}
         onToggle={(checked) => updateTenantLocal({ acceptPaymentOnSite: checked })}
         onSave={() => saveTenantData({ acceptPaymentOnSite: tenant?.acceptPaymentOnSite })}
       />

@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 
 interface ReceiveOnSiteToggleProps {
   acceptPaymentOnSite: boolean;
+  originalAcceptPaymentOnSite: boolean;
   onToggle: (checked: boolean) => void;
   onSave: () => void;
 }
 
-export function ReceiveOnSiteToggle({ acceptPaymentOnSite, onToggle, onSave }: ReceiveOnSiteToggleProps) {
+export function ReceiveOnSiteToggle({ acceptPaymentOnSite, originalAcceptPaymentOnSite, onToggle, onSave }: ReceiveOnSiteToggleProps) {
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -25,7 +26,9 @@ export function ReceiveOnSiteToggle({ acceptPaymentOnSite, onToggle, onSave }: R
           />
           <Label htmlFor="acceptOnSite">Disponibilizar opção de receber no local (dinheiro/maquininha)</Label>
         </div>
-        <Button className="mt-4" variant="outline" onClick={onSave}>Salvar Opção</Button>
+        {acceptPaymentOnSite !== originalAcceptPaymentOnSite && (
+          <Button className="mt-4" variant="outline" onClick={onSave}>Salvar Opção</Button>
+        )}
       </CardContent>
     </Card>
   );

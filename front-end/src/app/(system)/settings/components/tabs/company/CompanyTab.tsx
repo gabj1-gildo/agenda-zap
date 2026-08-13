@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 interface CompanyTabProps {
   tenant: TenantConfig | null;
+  originalTenant?: TenantConfig | null;
   saving: boolean;
   docValidating: boolean;
   docError: string | null;
@@ -23,6 +24,7 @@ interface CompanyTabProps {
 
 export function CompanyTab({
   tenant,
+  originalTenant,
   saving,
   docValidating,
   docError,
@@ -115,6 +117,28 @@ export function CompanyTab({
     );
   }
 
+  const isBasicInfoDirty = tenant.name !== originalTenant?.name ||
+    tenant.phone !== originalTenant?.phone ||
+    tenant.email !== originalTenant?.email ||
+    tenant.document !== originalTenant?.document ||
+    tenant.cpfBirthDate !== originalTenant?.cpfBirthDate ||
+    tenant.cpfGender !== originalTenant?.cpfGender ||
+    tenant.description !== originalTenant?.description ||
+    tenant.schedulingMode !== originalTenant?.schedulingMode ||
+    tenant.dailyReportEnabled !== originalTenant?.dailyReportEnabled;
+
+  const isAddressDirty = tenant.cep !== originalTenant?.cep ||
+    tenant.addressStreet !== originalTenant?.addressStreet ||
+    tenant.addressNumber !== originalTenant?.addressNumber ||
+    tenant.addressComplement !== originalTenant?.addressComplement ||
+    tenant.addressNeighborhood !== originalTenant?.addressNeighborhood ||
+    tenant.addressCity !== originalTenant?.addressCity ||
+    tenant.addressState !== originalTenant?.addressState;
+
+  const isServiceLocationDirty = tenant.serviceLocationType !== originalTenant?.serviceLocationType ||
+    tenant.servicePerimeter !== originalTenant?.servicePerimeter ||
+    tenant.acceptPaymentOnSite !== originalTenant?.acceptPaymentOnSite;
+
   return (
     <div className="space-y-8">
       {/* Logotipo */}
@@ -155,11 +179,13 @@ export function CompanyTab({
             docValidating={docValidating}
           />
         </CardContent>
-        <CardFooter className="flex justify-end border-t p-6">
-          <Button onClick={handleSaveBasicInfo} disabled={saving || docValidating}>
-            {saving ? "Salvando..." : "Salvar Informações"}
-          </Button>
-        </CardFooter>
+        {isBasicInfoDirty && (
+          <CardFooter className="flex justify-end border-t p-6">
+            <Button onClick={handleSaveBasicInfo} disabled={saving || docValidating}>
+              {saving ? "Salvando..." : "Salvar Informações"}
+            </Button>
+          </CardFooter>
+        )}
       </Card>
 
       {/* Address */}
@@ -175,11 +201,13 @@ export function CompanyTab({
             onCepChange={fetchCep}
           />
         </CardContent>
-        <CardFooter className="flex justify-end border-t p-6">
-          <Button onClick={handleSaveAddress} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar Endereço"}
-          </Button>
-        </CardFooter>
+        {isAddressDirty && (
+          <CardFooter className="flex justify-end border-t p-6">
+            <Button onClick={handleSaveAddress} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar Endereço"}
+            </Button>
+          </CardFooter>
+        )}
       </Card>
 
       {/* Service Location */}
@@ -194,11 +222,13 @@ export function CompanyTab({
             updateTenant={updateTenantLocal}
           />
         </CardContent>
-        <CardFooter className="flex justify-end border-t p-6">
-          <Button onClick={handleSaveServiceLocation} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar Local de Atendimento"}
-          </Button>
-        </CardFooter>
+        {isServiceLocationDirty && (
+          <CardFooter className="flex justify-end border-t p-6">
+            <Button onClick={handleSaveServiceLocation} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar Local de Atendimento"}
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
