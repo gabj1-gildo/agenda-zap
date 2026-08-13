@@ -19,7 +19,7 @@ export function useProfessionalsSettings(tenantId: string) {
   };
 
   const { data: professionals = [], mutate: mutateProfessionals, isLoading: professionalsLoading } = useSWR(
-    tenantId ? getBackendUrl('/api/settings/professionals') : null,
+    (tenantId && token) ? getBackendUrl('/api/settings/professionals') : null,
     fetcher
   );
 

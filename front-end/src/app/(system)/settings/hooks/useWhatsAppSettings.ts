@@ -18,7 +18,7 @@ export function useWhatsAppSettings(targetTenantId: string | null) {
   };
 
   const { data: instances = [], mutate: mutateInstances, isLoading: loading } = useSWR(
-    targetTenantId ? getBackendUrl('/api/settings/whatsapp') : null,
+    (targetTenantId && token) ? getBackendUrl('/api/settings/whatsapp') : null,
     fetcher
   );
 

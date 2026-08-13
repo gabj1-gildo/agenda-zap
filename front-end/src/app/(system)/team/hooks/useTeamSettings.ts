@@ -28,7 +28,7 @@ export function useTeamSettings(tenantId: string) {
   };
 
   const { data: team = [], mutate: mutateTeam, isLoading: teamLoading } = useSWR(
-    tenantId ? getBackendUrl('/api/settings/team') : null,
+    (tenantId && token) ? getBackendUrl('/api/settings/team') : null,
     fetcher
   );
 

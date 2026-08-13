@@ -19,7 +19,7 @@ export function useCompanySettings(targetTenantId: string | null) {
   };
 
   const { data: tenant, mutate: mutateTenant, isLoading: loading } = useSWR(
-    targetTenantId ? getBackendUrl('/api/settings/tenant') : null,
+    (targetTenantId && token) ? getBackendUrl('/api/settings/tenant') : null,
     fetcher
   );
 

@@ -19,7 +19,7 @@ export function useSchedulesSettings(tenantId: string) {
   };
 
   const { data: schedules = [], mutate: mutateSchedules, isLoading: loading } = useSWR(
-    tenantId ? getBackendUrl('/api/settings/schedules') : null,
+    (tenantId && token) ? getBackendUrl('/api/settings/schedules') : null,
     fetcher
   );
 

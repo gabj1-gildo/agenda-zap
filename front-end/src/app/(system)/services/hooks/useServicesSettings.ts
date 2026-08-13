@@ -19,7 +19,7 @@ export function useServicesSettings(tenantId: string) {
   };
 
   const { data: services = [], mutate: mutateServices, isLoading: loading } = useSWR(
-    tenantId ? getBackendUrl('/api/settings/services') : null,
+    (tenantId && token) ? getBackendUrl('/api/settings/services') : null,
     fetcher
   );
 

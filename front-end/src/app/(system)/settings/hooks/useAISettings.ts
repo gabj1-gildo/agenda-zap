@@ -28,7 +28,7 @@ export function useAISettings(targetTenantId: string | null) {
   };
 
   const { data, mutate: mutateAIData, isLoading: loading } = useSWR(
-    targetTenantId ? "ai-settings" : null,
+    (targetTenantId && token) ? "ai-settings" : null,
     fetcher
   );
 

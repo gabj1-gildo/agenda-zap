@@ -19,7 +19,7 @@ export function useRoomsSettings(tenantId: string) {
   };
 
   const { data: rooms = [], mutate: mutateRooms, isLoading: loading } = useSWR(
-    tenantId ? getBackendUrl('/api/settings/rooms') : null,
+    (tenantId && token) ? getBackendUrl('/api/settings/rooms') : null,
     fetcher
   );
 

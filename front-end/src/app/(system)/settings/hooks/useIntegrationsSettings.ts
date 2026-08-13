@@ -18,7 +18,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
   };
 
   const { data: keys = [], mutate: mutateKeys, isLoading: loading } = useSWR(
-    targetTenantId ? getBackendUrl('/api/settings/payment-keys') : null,
+    (targetTenantId && token) ? getBackendUrl('/api/settings/payment-keys') : null,
     fetcher
   );
 

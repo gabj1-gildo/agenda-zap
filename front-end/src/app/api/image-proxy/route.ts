@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(fetchUrl, {
       headers: isInternal ? {
         Authorization: `Bearer ${token.accessToken}`,
+        'x-authorization': `Bearer ${token.accessToken}`,
       } : undefined,
     });
 

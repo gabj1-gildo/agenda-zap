@@ -27,7 +27,7 @@ export function useTagsSettings(tenantId: string | null) {
   };
 
   const { data: tags = [], mutate, isLoading: loading } = useSWR(
-    tenantId ? getBackendUrl('/api/tags') : null,
+    (tenantId && token) ? getBackendUrl('/api/tags') : null,
     fetcher
   );
 

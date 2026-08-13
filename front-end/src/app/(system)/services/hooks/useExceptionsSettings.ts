@@ -19,7 +19,7 @@ export function useExceptionsSettings(tenantId: string) {
   };
 
   const { data: exceptions = [], mutate: mutateExceptions, isLoading: loading } = useSWR(
-    tenantId ? getBackendUrl('/api/settings/schedule-exceptions') : null,
+    (tenantId && token) ? getBackendUrl('/api/settings/schedule-exceptions') : null,
     fetcher
   );
 
