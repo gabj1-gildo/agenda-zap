@@ -19,7 +19,7 @@ interface WhatsAppTabProps {
   onEvolutionRemove: (id: string) => void;
   onAIToggle: (checked: boolean) => void;
   updateTenantLocal: (data: Partial<TenantConfig>) => void;
-  saveTenantData: (data: Partial<TenantConfig>) => Promise<void>;
+  saveTenantData: (data: Partial<TenantConfig>) => Promise<boolean>;
 }
 
 export function WhatsAppTab({
