@@ -16,6 +16,7 @@ export const MODULES = [
 
 export function useTeamSettings(tenantId: string) {
   const { data: session } = useSession();
+  const token = (session?.user as any)?.accessToken;
   
   const fetcher = async (url: string) => {
     const headers = { 
