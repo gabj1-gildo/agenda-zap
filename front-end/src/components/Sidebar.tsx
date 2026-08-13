@@ -19,6 +19,7 @@ type NavItem = {
   icon: React.ElementType;
   badgeKey?: string;
   requiresTenant?: boolean;
+  roles?: string[];
 };
 
 type NavCategory = {
@@ -36,11 +37,24 @@ const NAV_STRUCTURE: NavCategory[] = [
       { href: "/dashboard",     label: "Painel",           icon: LayoutDashboard },
       { href: "/calendar",      label: "Agenda",            icon: CalendarDays,   requiresTenant: true },
       { href: "/appointments",  label: "Agendamentos",      icon: CalendarCheck,  requiresTenant: true },
-      { href: "/clients",       label: "Clientes",          icon: Contact,        requiresTenant: true },
-      { href: "/assinantes",    label: "Assinantes",        icon: UserCheck,      requiresTenant: true },
       { href: "/funil",         label: "Funil de Vendas",   icon: Filter,         requiresTenant: true },
+    ],
+  },
+  {
+    key: "relacionamento",
+    label: "Relacionamento",
+    items: [
       { href: "/chats",         label: "Conversas",         icon: MessageSquare,  badgeKey: "chats", requiresTenant: true },
       { href: "/broadcast",     label: "Disparos",          icon: Megaphone,      requiresTenant: true },
+    ],
+  },
+  {
+    key: "planos",
+    label: "Planos",
+    items: [
+      { href: "/planos",     label: "Planos",     icon: Package,   requiresTenant: true, roles: ["ADMIN", "SUPERADMIN"] },
+      { href: "/assinantes", label: "Assinantes", icon: UserCheck, requiresTenant: true },
+      { href: "/clients",    label: "Clientes",   icon: Contact,   requiresTenant: true },
     ],
   },
   {
@@ -53,20 +67,12 @@ const NAV_STRUCTURE: NavCategory[] = [
     ],
   },
   {
-    key: "planos",
-    label: "Planos",
-    roles: ["ADMIN", "SUPERADMIN"],
-    items: [
-      { href: "/planos", label: "Planos", icon: Package, requiresTenant: true },
-    ],
-  },
-  {
-    key: "configuracoes",
-    label: "Configurações",
+    key: "gerenciamento",
+    label: "Gerenciamento",
     roles: ["ADMIN", "SUPERADMIN"],
     items: [
       { href: "/settings",  label: "Configurações",    icon: Settings,  requiresTenant: true },
-      { href: "/team",      label: "Equipe e Acessos", icon: Users,     requiresTenant: true },
+      { href: "/team",      label: "Equipe",           icon: Users,     requiresTenant: true },
       { href: "/services",  label: "Serviços",         icon: Briefcase, requiresTenant: true },
       { href: "/billing",   label: "Minha Assinatura", icon: CreditCard, requiresTenant: true },
     ],
@@ -207,7 +213,9 @@ export function Sidebar() {
 
               {isOpen && (
                 <div className={styles.accordionItems}>
-                  {cat.items.map(({ href, label, icon: Icon, badgeKey, requiresTenant }) => {
+                  {cat.items.map(({ href, label, icon: Icon, badgeKey, requiresTenant, roles: itemRoles }) => {
+                    if (itemRoles && !isSuperAdmin && !itemRoles.includes(role)) return null;
+
                     const locked = requiresTenant && isSuperAdmin && !activeTenantId;
                     const active = isActive(href);
 
