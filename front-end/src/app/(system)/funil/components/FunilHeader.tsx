@@ -26,26 +26,6 @@ export function FunilHeader({
 }: FunilHeaderProps) {
   return (
     <>
-      <div className="flex items-start justify-end gap-[18px] mb-[20px] flex-wrap">
-        
-        <div className="flex items-center gap-[10px]">
-          <div className="relative w-[250px]">
-            <Search className="absolute left-[11px] top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-[var(--muted-foreground)]" />
-            <input 
-              type="text" 
-              placeholder="Buscar leads..." 
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-[13px] p-[9px_40px_9px_34px] rounded-[10px] outline-none transition-colors duration-150 focus:border-[var(--violet-line)] focus:bg-[var(--surface-3)] placeholder:text-[var(--muted-foreground)]"
-            />
-            <span className="absolute right-[9px] top-1/2 -translate-y-1/2 text-[10px] text-[var(--muted-foreground)] border border-[var(--border)] rounded-[5px] p-[1px_5px] font-mono-custom">
-              ⌘K
-            </span>
-          </div>
-          <button className="w-[36px] h-[36px] rounded-[10px] bg-[var(--surface-2)] border border-[var(--border)] text-[var(--muted-foreground)] flex items-center justify-center cursor-pointer relative transition-all duration-150 shrink-0 hover:text-[var(--text)] hover:border-[var(--violet-line)] active:scale-95">
-            <Zap className="w-[16px] h-[16px]" />
-            <span className="absolute top-[6px] right-[6px] w-[6px] h-[6px] rounded-full bg-[#f43f5e] border-[1.5px] border-[var(--surface-2)]"></span>
-          </button>
-        </div>
-      </div>
 
       <div className="flex gap-[12px] mb-[20px] flex-wrap items-stretch">
         <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-[14px] p-[14px_15px] flex items-center gap-[12px] min-w-[150px] transition-all duration-250 hover:-translate-y-[2px]">

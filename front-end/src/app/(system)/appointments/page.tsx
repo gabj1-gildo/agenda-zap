@@ -16,17 +16,6 @@ export default async function AppointmentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-10">
-      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Link href="/calendar">
-            <Button variant="outline" className="border-border">
-              <Calendar className="w-4 h-4 mr-2"/>
-              Ver no Calendário
-            </Button>
-          </Link>
-        </div>
-      </div>
-
       <AppointmentsWrapper tenantId={tenantId} token={token} />
     </div>
   );

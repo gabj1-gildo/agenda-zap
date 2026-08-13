@@ -6,7 +6,9 @@ import { AppointmentsHeader } from "./AppointmentsHeader";
 import { AppointmentsTable } from "./AppointmentsTable";
 import { NewAppointmentModal } from "@/components/NewAppointmentModal";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { ExportButton } from "@/components/ExportButton";
+import Link from "next/link";
+import { Calendar, Plus } from "lucide-react";
 
 interface AppointmentsWrapperProps {
   tenantId: string;
@@ -54,18 +56,27 @@ export function AppointmentsWrapper({ tenantId, token }: AppointmentsWrapperProp
   ];
 
   return (
-    <div className="space-y-8 mt-4">
-      <div className="flex justify-between items-center">
-        <AppointmentsHeader 
-          currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          tabs={tabs}
-          stats={stats}
-          filteredAppointments={filtered}
-        />
-        <div className="flex items-center gap-2 mb-6">
+    <div className="space-y-6 mt-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
+        <div className="flex-1 w-full">
+          <AppointmentsHeader 
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            tabs={tabs}
+            stats={stats}
+            filteredAppointments={filtered}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end shrink-0">
+          <ExportButton data={filtered} />
+          <Link href="/calendar">
+            <Button variant="outline" className="border-border">
+              <Calendar className="w-4 h-4 mr-2"/>
+              Ver no Calendário
+            </Button>
+          </Link>
           <Button onClick={() => setIsModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Novo Agendamento

@@ -14,12 +14,7 @@ export function AppointmentsHeader({
   currentTab, setCurrentTab, searchTerm, setSearchTerm, tabs, stats, filteredAppointments
 }: AppointmentsHeaderProps) {
   return (
-    <div className="space-y-6">
-      {/* Export Button */}
-      <div className="flex justify-end">
-        <ExportButton data={filteredAppointments} />
-      </div>
-
+    <div className="space-y-6 w-full">
       {/* Stat mini cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {stats.map((s) => (
@@ -54,7 +49,7 @@ export function AppointmentsHeader({
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                 currentTab === t.key
                   ? "bg-ink text-white shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-foreground hover:bg-black/5"
               }`}
             >
               {t.label}
