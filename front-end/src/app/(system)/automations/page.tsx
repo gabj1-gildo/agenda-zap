@@ -66,7 +66,7 @@ export default function AutomationsPage() {
           'Content-Type': 'application/json',
           'tenant-id': tenantId,
           ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
-        }
+        },
         body: JSON.stringify({ isActive: !currentStatus })
       });
       const data = await res.json();
