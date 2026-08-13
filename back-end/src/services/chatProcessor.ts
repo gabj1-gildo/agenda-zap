@@ -113,3 +113,47 @@ export async function processIncomingMessage(
     console.error('Erro ao processar a mensagem no banco:', error);
   }
 }
+
+export async function processCloseChats() {
+  try {
+    const { subHours, subMinutes } = await import('date-fns');
+    const { lt, or } = await import('drizzle-orm');
+    
+    const now = new Date();
+    const updatedThreshold = subMinutes(now, 1439); // 23h 59m
+    const createdThreshold = subHours(now, 36);
+
+    const staleSessions = await db.query.chatSessions.findMany({
+      where: and(
+        eq(chatSessions.status, 'ACTIVE'),
+        or(
+          lt(chatSessions.updatedAt, updatedThreshold),
+          lt(chatSessions.createdAt, createdThreshold)
+        )
+      )
+    });
+
+    if (staleSessions.length > 0) {
+      await db.update(chatSessions)
+        .set({ status: 'CLOSED' })
+        .where(
+          and(
+            eq(chatSessions.status, 'ACTIVE'),
+            or(
+              lt(chatSessions.updatedAt, updatedThreshold),
+              lt(chatSessions.createdAt, createdThreshold)
+            )
+          )
+        );
+    }
+
+    return {
+      success: true,
+      closedCount: staleSessions.length,
+      message: `${staleSessions.length} chat sessions were closed due to timeout.`
+    };
+  } catch (error: any) {
+    console.error('Error closing chats:', error);
+    return { success: false, error: error.message };
+  }
+}

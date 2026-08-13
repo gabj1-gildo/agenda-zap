@@ -12,6 +12,7 @@ import { processReminders } from '@/app/api/cron/reminders/route';
 import { processDailyReport } from '@/app/api/cron/daily-report/route';
 import { processCheckInstances } from '@/app/api/cron/check-instances/route';
 import { processBillingRenewals } from '@/services/billingService';
+import { processCloseChats } from '@/services/chatProcessor';
 
 let isCronRunning = false;
 
@@ -98,6 +99,15 @@ export function initCron() {
       await processReminders();
     } catch (error) {
       console.error('Erro no cron reminders:', error);
+    }
+  });
+
+  // 4.5 Fechar Chats Ociosos (a cada 1 hora)
+  cron.schedule('0 * * * *', async () => {
+    try {
+      await processCloseChats();
+    } catch (error) {
+      console.error('Erro no cron close-chats:', error);
     }
   });
 

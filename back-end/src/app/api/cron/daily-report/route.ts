@@ -62,7 +62,7 @@ export async function processDailyReport() {
     let reportsSent = 0;
 
     for (const tenant of tenantsList) {
-      if (!tenant.phone) continue;
+      if (!tenant.phone || !tenant.dailyReportEnabled) continue;
 
       const tenantTodayAppts = todayAppointments.filter(a => a.tenantId === tenant.id);
       const tenantTomorrowAppts = tomorrowAppointments.filter(a => a.tenantId === tenant.id);

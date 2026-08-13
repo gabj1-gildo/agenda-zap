@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { formatPhone } from "@/lib/utils";
 import { TenantConfig } from "../../../types/settings.types";
 
@@ -106,6 +107,19 @@ export function BasicInfoForm({ tenant, updateTenant, formatDocument, onValidate
           value={tenant?.description || ""} 
           onChange={e => updateTenant({ description: e.target.value })} 
           placeholder="Um pequeno resumo sobre o seu negócio..."
+        />
+      </div>
+
+      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+        <div className="space-y-0.5">
+          <Label className="text-base">Relatório Diário</Label>
+          <p className="text-sm text-muted-foreground">
+            Receba um resumo de fechamento de caixa e próximos agendamentos no seu WhatsApp, todos os dias às 20h.
+          </p>
+        </div>
+        <Switch
+          checked={tenant?.dailyReportEnabled ?? true}
+          onCheckedChange={(checked) => updateTenant({ dailyReportEnabled: checked })}
         />
       </div>
 

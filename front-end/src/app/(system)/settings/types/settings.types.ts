@@ -76,4 +76,5 @@ export interface TenantConfig {
   _isProfileComplete?: boolean;
   _missingRequirements?: string[];
   customMaxWhatsAppInstances?: number;
+  dailyReportEnabled?: boolean;
 }

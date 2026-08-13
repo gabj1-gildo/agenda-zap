@@ -60,7 +60,8 @@ export function CompanyTab({
       cpfBirthDate: tenant?.cpfBirthDate,
       cpfGender: tenant?.cpfGender,
       description: tenant?.description,
-      schedulingMode: tenant?.schedulingMode
+      schedulingMode: tenant?.schedulingMode,
+      dailyReportEnabled: tenant?.dailyReportEnabled
     });
   };
 

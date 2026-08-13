@@ -21,6 +21,7 @@ export const tenants = pgTable('tenants', {
   maxUsers: integer('max_users').default(3).notNull(),
   acceptPaymentOnSite: boolean('accept_payment_on_site').default(true),
   googleCalendarToken: text('google_calendar_token'),
+  dailyReportEnabled: boolean('daily_report_enabled').default(true).notNull(),
 
   // Regras de Agendamento
   minAdvanceMinutes: integer('min_advance_minutes').default(60).notNull(),
