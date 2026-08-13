@@ -41,7 +41,7 @@ export function LogoUpload({ currentLogoUrl, newLogoUrl, onUpload, onDeleteNew, 
       <div className="flex flex-col sm:flex-row items-center gap-8 mb-8 p-6 bg-muted/30 rounded-2xl border border-border/50">
         <div className="flex flex-col items-center gap-3">
           <div className="relative group w-32 h-32 rounded-2xl border-4 border-background shadow-md overflow-hidden bg-muted flex items-center justify-center transition-all hover:shadow-lg">
-            {currentLogoUrl ? (
+            {(currentLogoUrl && currentLogoUrl !== 'null' && currentLogoUrl !== '') ? (
               <img src={`/api/image-proxy?url=${encodeURIComponent(currentLogoUrl)}`} alt="Logo Atual" className="w-full h-full object-cover" />
             ) : (
               <div className="text-muted-foreground text-xs text-center px-2 font-semibold">Sem Logo</div>
@@ -55,7 +55,7 @@ export function LogoUpload({ currentLogoUrl, newLogoUrl, onUpload, onDeleteNew, 
           </div>
           
           <div className="flex gap-2">
-            {currentLogoUrl && (
+            {(currentLogoUrl && currentLogoUrl !== 'null' && currentLogoUrl !== '') && (
               <Button 
                 variant="ghost" 
                 size="sm" 
