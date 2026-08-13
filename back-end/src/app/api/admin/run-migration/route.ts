@@ -41,6 +41,22 @@ export async function GET(req: Request) {
     )`,
     // funnel_stage column on clients (if not exists)
     `ALTER TABLE clients ADD COLUMN IF NOT EXISTS funnel_stage varchar(50) DEFAULT 'espera'`,
+    // daily_report_enabled on tenants
+    `ALTER TABLE tenants ADD COLUMN IF NOT EXISTS daily_report_enabled boolean DEFAULT true NOT NULL`,
+    // automations table
+    `CREATE TABLE IF NOT EXISTS automations (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id uuid NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      automation_type varchar(50) NOT NULL DEFAULT 'WEEKLY_CHECKIN',
+      message_template text NOT NULL,
+      day_of_week integer NOT NULL,
+      time varchar(5) NOT NULL,
+      next_run_at timestamp NOT NULL,
+      is_active boolean NOT NULL DEFAULT true,
+      created_at timestamp NOT NULL DEFAULT now(),
+      updated_at timestamp NOT NULL DEFAULT now()
+    )`
   ];
 
   for (const migration of migrations) {
