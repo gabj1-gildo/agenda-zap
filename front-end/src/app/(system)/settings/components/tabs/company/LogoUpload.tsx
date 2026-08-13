@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 
 interface LogoUploadProps {
   currentLogoUrl?: string;
+  newLogoUrl: string | null;
   onUpload: (file: File) => Promise<string | null>;
   onDeleteNew: (url: string) => Promise<void>;
-  onNewLogoSelect: (url: string) => void;
+  onNewLogoSelect: (url: string | null) => void;
 }
 
-export function LogoUpload({ currentLogoUrl, onUpload, onDeleteNew, onNewLogoSelect }: LogoUploadProps) {
-  const [newLogoUrl, setNewLogoUrl] = useState<string | null>(null);
+export function LogoUpload({ currentLogoUrl, newLogoUrl, onUpload, onDeleteNew, onNewLogoSelect }: LogoUploadProps) {
   const [viewImage, setViewImage] = useState<string | null>(null);
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,7 +18,6 @@ export function LogoUpload({ currentLogoUrl, onUpload, onDeleteNew, onNewLogoSel
     if (file) {
       const url = await onUpload(file);
       if (url) {
-        setNewLogoUrl(url);
         onNewLogoSelect(url);
       }
     }
@@ -27,8 +26,7 @@ export function LogoUpload({ currentLogoUrl, onUpload, onDeleteNew, onNewLogoSel
   const handleDiscard = async () => {
     if (newLogoUrl) {
       await onDeleteNew(newLogoUrl);
-      setNewLogoUrl(null);
-      onNewLogoSelect("");
+      onNewLogoSelect(null);
     }
   };
 

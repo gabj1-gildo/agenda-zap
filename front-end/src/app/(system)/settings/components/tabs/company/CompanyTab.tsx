@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogoUpload } from "./LogoUpload";
@@ -32,6 +33,16 @@ export function CompanyTab({
   fetchCep,
   validateDocument
 }: CompanyTabProps) {
+  const [pendingLogoUrl, setPendingLogoUrl] = useState<string | null>(null);
+
+  const handleSaveLogo = async () => {
+    if (pendingLogoUrl) {
+      const success = await saveTenantData({ logoUrl: pendingLogoUrl });
+      if (success) {
+        setPendingLogoUrl(null);
+      }
+    }
+  };
 
   const handleSaveBasicInfo = async () => {
     if (tenant?.document) {
@@ -82,10 +93,8 @@ export function CompanyTab({
     });
   };
 
-  const handleNewLogoSelect = (url: string) => {
-    updateTenantLocal({ logoUrl: url });
-    // Save logo instantly
-    saveTenantData({ logoUrl: url });
+  const handleNewLogoSelect = (url: string | null) => {
+    setPendingLogoUrl(url);
   };
 
   const formatDocument = (value: string) => {
@@ -116,11 +125,17 @@ export function CompanyTab({
         <CardContent>
           <LogoUpload 
             currentLogoUrl={tenant?.logoUrl || tenant?.logo_url}
+            newLogoUrl={pendingLogoUrl}
             onUpload={uploadLogo}
             onDeleteNew={deleteLogo}
             onNewLogoSelect={handleNewLogoSelect}
           />
         </CardContent>
+        <CardFooter className="flex justify-end border-t p-6">
+          <Button onClick={handleSaveLogo} disabled={saving || !pendingLogoUrl}>
+            {saving ? "Salvando..." : "Salvar Logotipo"}
+          </Button>
+        </CardFooter>
       </Card>
 
       {/* Basic Info */}
