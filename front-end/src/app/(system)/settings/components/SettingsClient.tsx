@@ -87,7 +87,10 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
         tenant={companySettings.tenant}
         updateTenantLocal={companySettings.updateTenantLocal}
         onSave={async () => {
-          await companySettings.saveGeneral();
+          await companySettings.saveTenantData({
+            whatsappMetaToken: companySettings.tenant?.whatsappMetaToken,
+            whatsappMetaPhoneNumberId: companySettings.tenant?.whatsappMetaPhoneNumberId
+          });
           setShowMetaModal(false);
         }}
       />
@@ -113,7 +116,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
             docValidating={companySettings.docValidating}
             docError={companySettings.docError}
             updateTenantLocal={companySettings.updateTenantLocal}
-            saveGeneral={companySettings.saveGeneral}
+            saveTenantData={companySettings.saveTenantData}
             uploadLogo={companySettings.uploadLogo}
             deleteLogo={companySettings.deleteLogo}
             fetchCep={companySettings.fetchCep}
@@ -130,14 +133,14 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
             onMetaRemove={async () => {
               if (confirm("Remover conexão Meta Cloud?")) {
                 companySettings.updateTenantLocal({ whatsappMetaToken: undefined, whatsappMetaPhoneNumberId: undefined });
-                setTimeout(() => companySettings.saveGeneral({ whatsappMetaToken: null, whatsappMetaPhoneNumberId: null }), 0);
+                setTimeout(() => companySettings.saveTenantData({ whatsappMetaToken: null as any, whatsappMetaPhoneNumberId: null as any }), 0);
               }
             }}
             onEvolutionReconnect={(id) => setShowPhoneModal(id)}
             onEvolutionRemove={(id) => setShowDisconnectConfirm(id)}
             onAIToggle={(checked) => {
               companySettings.updateTenantLocal({ aiEnabled: checked });
-              setTimeout(() => companySettings.saveGeneral({ aiEnabled: checked }), 0);
+              setTimeout(() => companySettings.saveTenantData({ aiEnabled: checked }), 0);
             }}
           />
         </TabsContent>
@@ -157,7 +160,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
                 }
               });
             }}
-            saveGeneral={companySettings.saveGeneral}
+            saveTenantData={companySettings.saveTenantData}
             getTenantVarValue={(v) => {
               if (v === 'nome_empresa') return companySettings.tenant?.name || "";
               if (v === 'telefone') return companySettings.tenant?.phone || "";
@@ -183,7 +186,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
             tenant={companySettings.tenant}
             keys={integrationsSettings.keys}
             updateTenantLocal={companySettings.updateTenantLocal}
-            saveGeneral={companySettings.saveGeneral}
+            saveTenantData={companySettings.saveTenantData}
             onToggleKey={integrationsSettings.toggleKey}
             onAddKey={integrationsSettings.addKey}
             onDeleteKey={integrationsSettings.deleteKey}

@@ -13,7 +13,7 @@ interface CompanyTabProps {
   docValidating: boolean;
   docError: string | null;
   updateTenantLocal: (updates: Partial<TenantConfig>) => void;
-  saveGeneral: (extraPayload?: any) => Promise<boolean>;
+  saveTenantData: (payload: Partial<TenantConfig>) => Promise<boolean>;
   uploadLogo: (file: File) => Promise<string | null>;
   deleteLogo: (url: string) => Promise<void>;
   fetchCep: (cep: string) => void;
@@ -26,14 +26,34 @@ export function CompanyTab({
   docValidating,
   docError,
   updateTenantLocal,
-  saveGeneral,
+  saveTenantData,
   uploadLogo,
   deleteLogo,
   fetchCep,
   validateDocument
 }: CompanyTabProps) {
 
-  const handleSaveWithValidation = async () => {
+  const handleSaveBasicInfo = async () => {
+    if (tenant?.document) {
+      const isValid = await validateDocument(tenant.document);
+      if (!isValid) {
+        toast.error("Corrija os erros no documento antes de salvar.");
+        return;
+      }
+    }
+    saveTenantData({
+      name: tenant?.name,
+      phone: tenant?.phone,
+      email: tenant?.email,
+      document: tenant?.document,
+      cpfBirthDate: tenant?.cpfBirthDate,
+      cpfGender: tenant?.cpfGender,
+      description: tenant?.description,
+      schedulingMode: tenant?.schedulingMode
+    });
+  };
+
+  const handleSaveAddress = async () => {
     if (tenant?.document) {
       const raw = tenant.document.replace(/\D/g, '');
       if (raw.length > 11) { // CNPJ
@@ -42,17 +62,30 @@ export function CompanyTab({
           return;
         }
       }
-      const isValid = await validateDocument(tenant.document);
-      if (!isValid) {
-        toast.error("Corrija os erros no documento antes de salvar.");
-        return;
-      }
     }
-    saveGeneral();
+    saveTenantData({
+      cep: tenant?.cep,
+      addressStreet: tenant?.addressStreet,
+      addressNumber: tenant?.addressNumber,
+      addressComplement: tenant?.addressComplement,
+      addressNeighborhood: tenant?.addressNeighborhood,
+      addressCity: tenant?.addressCity,
+      addressState: tenant?.addressState
+    });
+  };
+
+  const handleSaveServiceLocation = async () => {
+    saveTenantData({
+      serviceLocationType: tenant?.serviceLocationType,
+      servicePerimeter: tenant?.servicePerimeter,
+      acceptPaymentOnSite: tenant?.acceptPaymentOnSite
+    });
   };
 
   const handleNewLogoSelect = (url: string) => {
     updateTenantLocal({ logoUrl: url });
+    // Save logo instantly
+    saveTenantData({ logoUrl: url });
   };
 
   const formatDocument = (value: string) => {
@@ -64,27 +97,39 @@ export function CompanyTab({
     }
   };
 
+  if (!tenant) {
+    return (
+      <div className="space-y-6 min-h-[300px] flex items-center justify-center">
+        <div className="text-muted-foreground animate-pulse">Carregando dados da empresa...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
+      {/* Logotipo */}
       <Card>
         <CardHeader>
-          <CardTitle>Dados do Estabelecimento</CardTitle>
-          <CardDescription>Essas informações serão exibidas para seus clientes.</CardDescription>
+          <CardTitle>Logotipo da Empresa</CardTitle>
+          <CardDescription>A logo que será exibida para os seus clientes no sistema e WhatsApp.</CardDescription>
         </CardHeader>
-        {!tenant ? (
-          <CardContent className="space-y-6 min-h-[300px] flex items-center justify-center">
-            <div className="text-muted-foreground animate-pulse">Carregando dados da empresa...</div>
-          </CardContent>
-        ) : (
-          <>
-            <CardContent className="space-y-6">
+        <CardContent>
           <LogoUpload 
             currentLogoUrl={tenant?.logoUrl || tenant?.logo_url}
             onUpload={uploadLogo}
             onDeleteNew={deleteLogo}
             onNewLogoSelect={handleNewLogoSelect}
           />
-          
+        </CardContent>
+      </Card>
+
+      {/* Basic Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações Básicas</CardTitle>
+          <CardDescription>O nome, contato e documento da sua empresa.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <BasicInfoForm 
             tenant={tenant}
             updateTenant={updateTenantLocal}
@@ -93,25 +138,51 @@ export function CompanyTab({
             docError={docError}
             docValidating={docValidating}
           />
+        </CardContent>
+        <CardFooter className="flex justify-end border-t p-6">
+          <Button onClick={handleSaveBasicInfo} disabled={saving || docValidating}>
+            {saving ? "Salvando..." : "Salvar Informações"}
+          </Button>
+        </CardFooter>
+      </Card>
 
+      {/* Address */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Endereço</CardTitle>
+          <CardDescription>O endereço físico do seu estabelecimento.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <AddressForm 
             tenant={tenant}
             updateTenant={updateTenantLocal}
             onCepChange={fetchCep}
           />
+        </CardContent>
+        <CardFooter className="flex justify-end border-t p-6">
+          <Button onClick={handleSaveAddress} disabled={saving}>
+            {saving ? "Salvando..." : "Salvar Endereço"}
+          </Button>
+        </CardFooter>
+      </Card>
 
+      {/* Service Location */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Locais e Raio de Atendimento</CardTitle>
+          <CardDescription>Defina como e onde você atende seus clientes.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <ServiceLocationForm 
             tenant={tenant}
             updateTenant={updateTenantLocal}
           />
-            </CardContent>
-            <CardFooter className="flex justify-end border-t p-6">
-              <Button onClick={handleSaveWithValidation} disabled={saving || docValidating}>
-                {saving ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            </CardFooter>
-          </>
-        )}
+        </CardContent>
+        <CardFooter className="flex justify-end border-t p-6">
+          <Button onClick={handleSaveServiceLocation} disabled={saving}>
+            {saving ? "Salvando..." : "Salvar Local de Atendimento"}
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

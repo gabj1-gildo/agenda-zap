@@ -31,7 +31,7 @@ export function useCompanySettings(targetTenantId: string | null) {
     mutateTenant((prev: any) => prev ? { ...prev, ...updates } : null, false);
   };
 
-  const saveGeneral = async (extraPayload: any = {}) => {
+  const saveTenantData = async (payload: Partial<TenantConfig>) => {
     if (!tenant || !targetTenantId) return false;
     setSaving(true);
     try {
@@ -42,32 +42,7 @@ export function useCompanySettings(targetTenantId: string | null) {
           'tenant-id': targetTenantId, 
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ 
-          name: tenant.name, 
-          phone: tenant.phone, 
-          email: tenant.email,
-          document: tenant.document,
-          description: tenant.description,
-          cep: tenant.cep,
-          addressStreet: tenant.addressStreet,
-          addressNumber: tenant.addressNumber,
-          addressComplement: tenant.addressComplement,
-          addressNeighborhood: tenant.addressNeighborhood,
-          addressCity: tenant.addressCity,
-          addressState: tenant.addressState,
-          serviceLocationType: tenant.serviceLocationType,
-          servicePerimeter: tenant.servicePerimeter,
-          acceptPaymentOnSite: tenant.acceptPaymentOnSite,
-          schedulingMode: tenant.schedulingMode,
-          whatsappProvider: tenant.whatsappProvider,
-          whatsappMetaToken: tenant.whatsappMetaToken,
-          whatsappMetaPhoneNumberId: tenant.whatsappMetaPhoneNumberId,
-          cpfBirthDate: tenant.cpfBirthDate,
-          cpfGender: tenant.cpfGender,
-          logoUrl: tenant.logoUrl || tenant.logo_url,
-          aiConfig: tenant.aiConfig || {},
-          ...extraPayload
-        })
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
       
@@ -81,6 +56,7 @@ export function useCompanySettings(targetTenantId: string | null) {
       } else {
         toast.success("Dados salvos com sucesso!");
       }
+      mutateTenant();
       return true;
     } catch (e) {
       toast.error("Erro ao salvar dados");
@@ -266,7 +242,7 @@ export function useCompanySettings(targetTenantId: string | null) {
     setDocError,
     mutateTenant,
     updateTenantLocal,
-    saveGeneral,
+    saveTenantData,
     uploadLogo,
     deleteLogo,
     fetchCep,

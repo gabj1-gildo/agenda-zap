@@ -13,7 +13,7 @@ interface AITabProps {
   saving: boolean;
   isSuperAdmin: boolean;
   updateAiConfig: (key: string, value: string) => void;
-  saveGeneral: () => Promise<boolean>;
+  saveTenantData: (payload: Partial<TenantConfig>) => Promise<boolean>;
   getTenantVarValue: (v: string) => string;
 }
 
@@ -24,7 +24,7 @@ export function AITab({
   saving,
   isSuperAdmin,
   updateAiConfig,
-  saveGeneral,
+  saveTenantData,
   getTenantVarValue
 }: AITabProps) {
 
@@ -121,7 +121,7 @@ export function AITab({
         </div>
           </CardContent>
           <CardFooter className="flex justify-end border-t p-6">
-            <Button onClick={saveGeneral} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
+            <Button onClick={() => saveTenantData({ aiConfig: tenant.aiConfig })} disabled={saving}>{saving ? "Salvando..." : "Salvar Configurações da IA"}</Button>
           </CardFooter>
         </>
       )}

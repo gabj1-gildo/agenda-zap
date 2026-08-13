@@ -8,7 +8,7 @@ interface IntegrationsTabProps {
   tenant: TenantConfig | null;
   keys: PaymentKey[];
   updateTenantLocal: (updates: Partial<TenantConfig>) => void;
-  saveGeneral: () => Promise<boolean>;
+  saveTenantData: (payload: Partial<TenantConfig>) => Promise<boolean>;
   onToggleKey: (id: string, isActive: boolean) => void;
   onAddKey: (newKey: Partial<PaymentKey>) => Promise<boolean>;
   onDeleteKey: (id: string) => void;
@@ -18,7 +18,7 @@ export function IntegrationsTab({
   tenant,
   keys,
   updateTenantLocal,
-  saveGeneral,
+  saveTenantData,
   onToggleKey,
   onAddKey,
   onDeleteKey
@@ -32,7 +32,7 @@ export function IntegrationsTab({
       <ReceiveOnSiteToggle 
         acceptPaymentOnSite={tenant?.acceptPaymentOnSite || false}
         onToggle={(checked) => updateTenantLocal({ acceptPaymentOnSite: checked })}
-        onSave={saveGeneral}
+        onSave={() => saveTenantData({ acceptPaymentOnSite: tenant?.acceptPaymentOnSite })}
       />
 
       <ActiveGatewaySelect 
