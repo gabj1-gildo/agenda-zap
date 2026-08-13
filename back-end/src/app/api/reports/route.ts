@@ -41,7 +41,7 @@ export async function GET(req: Request) {
       if (serviceId && serviceId !== 'ALL') conditions.push(eq(appointments.serviceId, serviceId));
       if (professionalId && professionalId !== 'ALL') conditions.push(eq(appointments.professionalId, professionalId));
       if (clientId && clientId !== 'ALL') conditions.push(eq(appointments.clientId, clientId));
-      if (status && status !== 'ALL') conditions.push(eq(appointments.status, status));
+      if (status && status !== 'ALL') conditions.push(eq(appointments.status, status as any));
 
       // Fetch appointments within date range with filters
       const data = await tx.select({
