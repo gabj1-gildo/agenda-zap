@@ -11,7 +11,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
   const fetcher = async (url: string) => {
     if (!targetTenantId) return [];
     const headers: any = { 'tenant-id': targetTenantId };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
     const res = await fetch(url, { headers });
     const data = await res.json();
     return data.success ? data.data : [];
@@ -30,7 +30,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
         headers: { 
           'Content-Type': 'application/json', 
           'tenant-id': targetTenantId, 
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` 
         },
         body: JSON.stringify(newKey)
       });
@@ -55,7 +55,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
         headers: { 
           'Content-Type': 'application/json', 
           'tenant-id': targetTenantId, 
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({ isActive })
       });
@@ -73,7 +73,7 @@ export function useIntegrationsSettings(targetTenantId: string | null) {
         method: 'DELETE',
         headers: { 
           'tenant-id': targetTenantId, 
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` 
         }
       });
       mutateKeys((prev: any) => prev.filter((k: any) => k.id !== id), false);

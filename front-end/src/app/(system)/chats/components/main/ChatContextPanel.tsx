@@ -37,7 +37,7 @@ export function ChatContextPanel({ session, tenantId, token, onEditName }: ChatC
       try {
         await fetch(getBackendUrl(`/api/chats/${session.id}/notes`), {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
           body: JSON.stringify({ notes: newNotes })
         });
       } catch (err) {

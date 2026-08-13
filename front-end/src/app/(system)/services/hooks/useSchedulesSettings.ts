@@ -11,7 +11,7 @@ export function useSchedulesSettings(tenantId: string) {
   const fetcher = async (url: string) => {
     const headers = { 
       'tenant-id': tenantId, 
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+      ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) 
     };
     const res = await fetch(url, { headers });
     const data = await res.json();
@@ -33,7 +33,7 @@ export function useSchedulesSettings(tenantId: string) {
         headers: { 
           'Content-Type': 'application/json', 
           'tenant-id': tenantId, 
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+          ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) 
         },
         body: JSON.stringify({ schedules: currentSchedules })
       });

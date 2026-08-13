@@ -11,7 +11,7 @@ export function useWhatsAppSettings(targetTenantId: string | null) {
   const fetcher = async (url: string) => {
     if (!targetTenantId) return [];
     const headers: any = { 'tenant-id': targetTenantId };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
     const res = await fetch(url, { headers });
     const data = await res.json();
     return data.success ? data.data : [];
@@ -26,7 +26,7 @@ export function useWhatsAppSettings(targetTenantId: string | null) {
     if (!targetTenantId) return false;
     try {
       const headers: any = { 'tenant-id': targetTenantId };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
       
       const res = await fetch(getBackendUrl(`/api/settings/whatsapp/${id}`), {
         method: "DELETE",

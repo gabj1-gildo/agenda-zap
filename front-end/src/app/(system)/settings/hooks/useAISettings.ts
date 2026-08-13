@@ -11,7 +11,7 @@ export function useAISettings(targetTenantId: string | null) {
   const fetcher = async (url: string) => {
     if (!targetTenantId) return { modelsData: null, presetsData: null };
     const headers: any = { 'tenant-id': targetTenantId };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
     
     const [modelsRes, presetsRes] = await Promise.all([
       fetch(getBackendUrl('/api/admin/ai-models'), { headers }),

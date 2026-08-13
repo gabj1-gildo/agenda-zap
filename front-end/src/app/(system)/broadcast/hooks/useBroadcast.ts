@@ -18,7 +18,7 @@ export function useBroadcast({ tenantId, token, initialTemplates, initialTags }:
   const getHeaders = () => {
     return {
       'tenant-id': tenantId,
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
     };
   };
 

@@ -35,7 +35,7 @@ export function NewAppointmentModal({ tenantId, onClose, onSuccess }: Props) {
       const datetime = new Date(`${formData.date}T${formData.time}:00`);
       
       const headers: any = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
 
       const res = await fetch(getBackendUrl('/api/dashboard/appointments'), {
         method: 'POST',

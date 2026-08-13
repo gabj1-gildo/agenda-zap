@@ -32,7 +32,7 @@ export default function ClientProfileTabs({ clientId, tenantId, token }: { clien
   const fetchPlan = async () => {
     try {
       const res = await fetch(getBackendUrl(`/api/clients/${clientId}/plans`), {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success && data.data) {
@@ -46,7 +46,7 @@ export default function ClientProfileTabs({ clientId, tenantId, token }: { clien
   const fetchAutomations = async () => {
     try {
       const res = await fetch(getBackendUrl(`/api/clients/${clientId}/automations`), {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success && data.data && data.data.length > 0) {
@@ -67,7 +67,7 @@ export default function ClientProfileTabs({ clientId, tenantId, token }: { clien
       const res = await fetch(getBackendUrl(`/api/clients/${clientId}/plans`), {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ durationMonths: Number(planMonths), tenantId })
@@ -92,7 +92,7 @@ export default function ClientProfileTabs({ clientId, tenantId, token }: { clien
       const res = await fetch(getBackendUrl(`/api/clients/${clientId}/automations`), {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

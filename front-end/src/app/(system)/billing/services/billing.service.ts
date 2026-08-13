@@ -50,7 +50,7 @@ async function fetchWithTimeout(url: string | URL | Request, options: RequestIni
 export async function getBillingStatus({ token, tenantId }: AuthContext): Promise<BillingStatusResponse> {
   const res = await fetchWithTimeout(getBackendUrl('/api/admin/billing/status'), {
     headers: { 
-      'Authorization': `Bearer ${token}`, 
+      'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`, 
       'tenant-id': tenantId ?? '' 
     }
   });
@@ -59,7 +59,7 @@ export async function getBillingStatus({ token, tenantId }: AuthContext): Promis
 
 export async function getPlans({ token }: AuthContext): Promise<PlansResponse> {
   const res = await fetchWithTimeout(getBackendUrl('/api/admin/plans'), {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
   });
   return handleResponse<PlansResponse>(res);
 }
@@ -71,7 +71,7 @@ export async function createCheckout(
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json', 
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` 
     },
     body: JSON.stringify(body)
   });
@@ -85,7 +85,7 @@ export async function changePlan(
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json', 
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` 
     },
     body: JSON.stringify(body)
   });

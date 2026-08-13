@@ -45,7 +45,7 @@ export function ChatLayout({ tenantId, token }: ChatLayoutProps) {
     if (!tenantId) return false;
     try {
       const headers: Record<string, string> = { 'tenant-id': tenantId };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
 
       const [tenantRes, whatsappRes] = await Promise.all([
         fetch(getBackendUrl('/api/settings/tenant'), { headers, cache: 'no-store' }),

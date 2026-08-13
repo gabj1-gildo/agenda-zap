@@ -49,7 +49,7 @@ export default function BroadcastPage() {
     try {
       const headers: any = { 
         'tenant-id': tenantId,
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
       };
 
       const [tenantRes, tagsRes, templatesRes, whatsappRes] = await Promise.all([
@@ -94,7 +94,7 @@ export default function BroadcastPage() {
         headers: { 
           "Content-Type": "application/json", 
           "tenant-id": tenantId,
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ 
           message, 
@@ -133,7 +133,7 @@ export default function BroadcastPage() {
         headers: { 
           'Content-Type': 'application/json',
           'tenant-id': tenantId,
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ name: templateName, content: message, mediaUrl })
       });
@@ -162,7 +162,7 @@ export default function BroadcastPage() {
 
     try {
       const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
       if (tenantId) headers['tenant-id'] = tenantId;
 
       const res = await fetch(getBackendUrl('/api/upload'), {

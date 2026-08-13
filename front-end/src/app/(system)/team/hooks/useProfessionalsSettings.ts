@@ -11,7 +11,7 @@ export function useProfessionalsSettings(tenantId: string) {
   const fetcher = async (url: string) => {
     const headers = { 
       'tenant-id': tenantId, 
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+      ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) 
     };
     const res = await fetch(url, { headers });
     const data = await res.json();
@@ -102,7 +102,7 @@ export function useProfessionalsSettings(tenantId: string) {
       if (editingId) {
         const res = await fetch(getBackendUrl(`/api/settings/professionals/${editingId}`), {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -116,7 +116,7 @@ export function useProfessionalsSettings(tenantId: string) {
       } else {
         const res = await fetch(getBackendUrl('/api/settings/professionals'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -140,7 +140,7 @@ export function useProfessionalsSettings(tenantId: string) {
     try {
       const res = await fetch(getBackendUrl(`/api/settings/professionals/${deleteId}`), {
         method: 'DELETE',
-        headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+        headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) }
       });
       const data = await res.json();
       if (data.success) {

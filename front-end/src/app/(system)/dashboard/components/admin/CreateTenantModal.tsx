@@ -22,7 +22,7 @@ export function CreateTenantModal({ onClose, onCreated, token }: Props) {
     setLoading(true);
     try {
       const headers: any = { "Content-Type": "application/json" };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
 
       const res = await fetch(getBackendUrl('/api/tenants'), {
         method: "POST",

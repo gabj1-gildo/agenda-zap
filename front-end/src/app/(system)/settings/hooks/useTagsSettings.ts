@@ -16,7 +16,7 @@ export function useTagsSettings(tenantId: string | null) {
   const headers = useCallback(() => {
     const h: any = {};
     if (tenantId) h['tenant-id'] = tenantId;
-    if (token) h['Authorization'] = `Bearer ${token}`;
+    if (token) { h['Authorization'] = `Bearer ${token}`; h['x-authorization'] = `Bearer ${token}`; }
     return h;
   }, [tenantId, token]);
 

@@ -15,7 +15,7 @@ export function PaymentConfig({ tenantId, token }: { tenantId: string; token?: s
     async function loadConfig() {
       try {
         const res = await fetch(getBackendUrl('/api/payments/config'), {
-          headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+          headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) }
         });
         const json = await res.json();
         if (json.success && json.data) {
@@ -37,7 +37,7 @@ export function PaymentConfig({ tenantId, token }: { tenantId: string; token?: s
     try {
       const res = await fetch(getBackendUrl('/api/payments/config'), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) },
         body: JSON.stringify({ 
           pixExpirationTime: pixTime,
           cardExpirationTime: cardTime 

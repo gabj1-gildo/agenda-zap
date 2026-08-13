@@ -35,7 +35,7 @@ export default function ReportsPage() {
     setLoading(true);
     fetch(getBackendUrl(`/api/reports?tenantId=${tenantId}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`), {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`
       }
     })
       .then(res => res.json())

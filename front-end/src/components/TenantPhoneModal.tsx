@@ -45,7 +45,7 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess, existingInstanc
         headers: { 
           "Content-Type": "application/json",
           "tenant-id": tenantId,
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ phone, evolutionInstanceName: instanceName }),
       });
@@ -77,7 +77,7 @@ export function TenantPhoneModal({ tenantId, onClose, onSuccess, existingInstanc
       const res = await fetch(getBackendUrl(`/api/settings/whatsapp/${currentPhoneId}`), {
         headers: {
           "tenant-id": tenantId,
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
         }
       });
       const data = await res.json();

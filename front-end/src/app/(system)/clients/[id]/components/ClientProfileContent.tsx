@@ -8,7 +8,7 @@ async function getClient(tenantId: string, token: string, clientId: string) {
   try {
     const res = await fetch(getBackendUrl(`/api/dashboard/clients?tenantId=${tenantId}`), { 
       cache: 'no-store',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
     });
     if (!res.ok) return null;
     const json = await res.json();

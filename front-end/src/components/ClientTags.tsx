@@ -19,7 +19,7 @@ export function ClientTags({ clientId, tenantId, token, initialTags = [] }: { cl
   const fetchTags = async () => {
     try {
       const res = await fetch(getBackendUrl('/api/tags'), { 
-        headers: { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` } 
+        headers: { 'tenant-id': tenantId, 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } 
       });
       const json = await res.json();
       if (json.success) setAllTags(json.data);
@@ -32,7 +32,7 @@ export function ClientTags({ clientId, tenantId, token, initialTags = [] }: { cl
     try {
       await fetch(getBackendUrl(`/api/clients/${clientId}/tags`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
         body: JSON.stringify({ tagId: tag.id }),
       });
       if (!tags.find(t => t.id === tag.id)) {
@@ -48,7 +48,7 @@ export function ClientTags({ clientId, tenantId, token, initialTags = [] }: { cl
     try {
       await fetch(getBackendUrl(`/api/clients/${clientId}/tags`), {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
         body: JSON.stringify({ tagId }),
       });
       setTags(tags.filter(t => t.id !== tagId));

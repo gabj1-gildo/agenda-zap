@@ -22,7 +22,7 @@ export function AppointmentActions({
     setLoading(true);
     try {
       const res = await fetch(getBackendUrl(`/api/dashboard/appointments/${appointmentId}/logs?tenantId=${tenantId}`), {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success) {

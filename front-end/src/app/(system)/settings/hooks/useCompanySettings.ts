@@ -12,7 +12,7 @@ export function useCompanySettings(targetTenantId: string | null) {
   const fetcher = async (url: string) => {
     if (!targetTenantId) return null;
     const headers: any = { 'tenant-id': targetTenantId };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
     const res = await fetch(url, { headers });
     const data = await res.json();
     return data.success ? data.data : null;
@@ -40,7 +40,7 @@ export function useCompanySettings(targetTenantId: string | null) {
         headers: { 
           'Content-Type': 'application/json', 
           'tenant-id': targetTenantId, 
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` 
         },
         body: JSON.stringify(payload)
       });
@@ -75,10 +75,7 @@ export function useCompanySettings(targetTenantId: string | null) {
 
     try {
       const headers: any = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        headers['x-authorization'] = `Bearer ${token}`;
-      }
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
       headers['tenant-id'] = targetTenantId;
 
       const res = await fetch(getBackendUrl('/api/upload'), {
@@ -103,7 +100,7 @@ export function useCompanySettings(targetTenantId: string | null) {
   const deleteLogo = async (url: string) => {
     try {
       const headers: any = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
       if (targetTenantId) headers['tenant-id'] = targetTenantId;
       await fetch(getBackendUrl('/api/upload'), {
         method: 'DELETE',

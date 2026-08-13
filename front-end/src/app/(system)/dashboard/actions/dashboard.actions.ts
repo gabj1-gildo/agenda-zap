@@ -18,7 +18,7 @@ export async function fetchDashboardMetrics(
     const res = await fetch(
       getBackendUrl(`/api/dashboard/metrics?tenantId=${tenantId}&startDate=${startDate}&endDate=${endDate}`),
       {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
         cache: "no-store", // force dynamic
       }
     );
@@ -40,7 +40,7 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics | null> {
 
   try {
     const res = await fetch(getBackendUrl('/api/admin/metrics'), {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
       cache: "no-store",
     });
     const data = await res.json();
@@ -61,7 +61,7 @@ export async function fetchTenants(): Promise<Tenant[]> {
 
   try {
     const res = await fetch(getBackendUrl('/api/tenants'), {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
       cache: "no-store",
     });
     const data = await res.json();

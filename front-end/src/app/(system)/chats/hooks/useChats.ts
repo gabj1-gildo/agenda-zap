@@ -14,7 +14,7 @@ export function useChats(tenantId: string | undefined, token: string | undefined
 
   const fetcher = (url: string) => {
     const headers: Record<string, string> = { 'tenant-id': tenantId || '' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
     return fetch(url, { headers }).then(res => res.json());
   };
 
@@ -31,7 +31,7 @@ export function useChats(tenantId: string | undefined, token: string | undefined
       try {
         await fetch(getBackendUrl(`/api/chats/${session.id}/read`), {
           method: 'POST',
-          headers: { 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}` },
+          headers: { 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
         });
       } catch (err) {
         console.error('Failed to mark as read', err);
@@ -66,7 +66,7 @@ export function useChats(tenantId: string | undefined, token: string | undefined
     try {
       const response = await fetch(getBackendUrl(`/api/chats/${selectedSession.id}/sync`), {
         method: 'POST',
-        headers: { 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}` }
+        headers: { 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
       });
       const json = await response.json();
       if (json.success) {
@@ -96,7 +96,7 @@ export function useChats(tenantId: string | undefined, token: string | undefined
     try {
       const response = await fetch(getBackendUrl(`/api/chats/${selectedSession.id}`), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus })
       });
       const json = await response.json();
@@ -131,7 +131,7 @@ export function useChats(tenantId: string | undefined, token: string | undefined
     try {
       const response = await fetch(getBackendUrl(`/api/chats/${selectedSession.id}/send`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId || '', 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` },
         body: JSON.stringify({ message: messageText })
       });
       const json = await response.json();

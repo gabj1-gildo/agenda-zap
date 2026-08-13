@@ -11,7 +11,7 @@ export function useServicesSettings(tenantId: string) {
   const fetcher = async (url: string) => {
     const headers = { 
       'tenant-id': tenantId, 
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}) 
+      ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) 
     };
     const res = await fetch(url, { headers });
     const data = await res.json();
@@ -94,7 +94,7 @@ export function useServicesSettings(tenantId: string) {
       if (editingId) {
         const res = await fetch(getBackendUrl('/api/settings/services'), {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify({ id: editingId, ...payload })
         });
         const data = await res.json();
@@ -108,7 +108,7 @@ export function useServicesSettings(tenantId: string) {
       } else {
         const res = await fetch(getBackendUrl('/api/settings/services'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          headers: { 'Content-Type': 'application/json', 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -132,7 +132,7 @@ export function useServicesSettings(tenantId: string) {
     try {
       const res = await fetch(getBackendUrl(`/api/settings/services?id=${deleteId}`), {
         method: 'DELETE',
-        headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+        headers: { 'tenant-id': tenantId, ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {}) }
       });
       const data = await res.json();
       if (data.success) {

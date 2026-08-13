@@ -56,7 +56,7 @@ export function Header() {
     if ((session?.user as any)?.role === "SUPERADMIN") {
       const token = (session?.user as any)?.accessToken;
       const headers: any = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
 
       fetch(getBackendUrl('/api/tenants'), { headers })
         .then((r) => r.json())

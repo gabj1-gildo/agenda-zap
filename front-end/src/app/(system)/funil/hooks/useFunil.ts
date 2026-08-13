@@ -54,7 +54,7 @@ export function useFunil(tenantId: string) {
         headers: {
           'Content-Type': 'application/json',
           'tenant-id': tenantId,
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ funnelStage: toDbKey })
       });

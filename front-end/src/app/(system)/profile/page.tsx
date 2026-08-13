@@ -61,7 +61,7 @@ export default function ProfilePage() {
         // Assumindo que a sessão tem accessToken se necessário, mas geralmente os cookies cuidam disso.
         const token = (session?.user as any)?.accessToken;
         const headers: any = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
 
         const res = await fetch(getBackendUrl('/api/auth/profile'), { headers });
         const data = await res.json();
@@ -97,10 +97,7 @@ export default function ProfilePage() {
     const token = (session?.user as any)?.accessToken;
     const headers: any = {};
     if (!isUpload) headers['Content-Type'] = 'application/json';
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-      headers['x-authorization'] = `Bearer ${token}`;
-    }
+    if (token) { headers['Authorization'] = `Bearer ${token}`; headers['x-authorization'] = `Bearer ${token}`; }
     return headers;
   };
 

@@ -38,8 +38,8 @@ export default function AdminPlansPage() {
       const token = (session?.user as any)?.accessToken;
       
       const [plansRes, featuresRes] = await Promise.all([
-        fetch(getBackendUrl('/api/admin/plans'), { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(getBackendUrl('/api/admin/plan-features'), { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(getBackendUrl('/api/admin/plans'), { headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } }),
+        fetch(getBackendUrl('/api/admin/plan-features'), { headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } })
       ]);
       
       const plansData = await plansRes.json();
@@ -64,7 +64,7 @@ export default function AdminPlansPage() {
       const token = (session?.user as any)?.accessToken;
       const res = await fetch(getBackendUrl('/api/admin/plan-features'), {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newFeatureName.trim() })
       });
       const data = await res.json();
@@ -85,7 +85,7 @@ export default function AdminPlansPage() {
       const token = (session?.user as any)?.accessToken;
       const res = await fetch(getBackendUrl(`/api/admin/plan-features?id=${id}`), {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success) {
@@ -190,7 +190,7 @@ export default function AdminPlansPage() {
       const res = await fetch(getBackendUrl('/api/admin/plans'), {
         method,
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
