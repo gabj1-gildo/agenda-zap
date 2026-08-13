@@ -77,4 +77,6 @@ export interface TenantConfig {
   _missingRequirements?: string[];
   customMaxWhatsAppInstances?: number;
   dailyReportEnabled?: boolean;
+  autoCloseChats?: boolean;
+  autoCloseHours?: number;
 }

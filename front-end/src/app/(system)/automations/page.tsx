@@ -1,11 +1,14 @@
+"use client";
+
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { getBackendUrl } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Trash2, Plus, Clock, CalendarDays, Loader2, PlayCircle, PauseCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { NewAutomationModal } from "./NewAutomationModal";
+import { NewAutomationModal } from "./components/NewAutomationModal";
 
 const DAYS_OF_WEEK = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -23,7 +26,11 @@ interface Automation {
   createdAt: string;
 }
 
-export function AutomationsTab({ tenantId, token }: { tenantId: string; token?: string }) {
+export default function AutomationsPage() {
+  const { data: session } = useSession();
+  const token = (session?.user as any)?.accessToken;
+  const tenantId = (session as any)?.tenantId;
+
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -59,7 +66,7 @@ export function AutomationsTab({ tenantId, token }: { tenantId: string; token?: 
           'Content-Type': 'application/json',
           'tenant-id': tenantId,
           ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
-        },
+        }
         body: JSON.stringify({ isActive: !currentStatus })
       });
       const data = await res.json();
@@ -101,7 +108,8 @@ export function AutomationsTab({ tenantId, token }: { tenantId: string; token?: 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 md:p-8 w-full max-w-6xl mx-auto space-y-6">
+      
       <div className="flex justify-between items-center bg-card p-5 rounded-2xl border shadow-sm">
         <div>
           <h3 className="font-semibold text-lg flex items-center gap-2">

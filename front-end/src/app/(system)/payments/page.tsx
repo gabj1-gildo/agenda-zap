@@ -54,18 +54,6 @@ export default async function PaymentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-          Financeiro
-        </p>
-        <h1 className="font-display font-extrabold text-4xl text-foreground">
-          Pagamentos
-        </h1>
-      </div>
-
-
-
       {/* Summary cards */}
       <div className="flex gap-4 flex-wrap">
         {[

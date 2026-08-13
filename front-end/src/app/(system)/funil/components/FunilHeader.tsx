@@ -26,16 +26,7 @@ export function FunilHeader({
 }: FunilHeaderProps) {
   return (
     <>
-      <div className="flex items-start justify-between gap-[18px] mb-[20px] flex-wrap">
-        <div className="flex items-center gap-[12px]">
-          <div className="w-[42px] h-[42px] rounded-[12px] shrink-0 bg-gradient-to-br from-[var(--violet)] to-[#6d28d9] flex items-center justify-center shadow-[0_8px_20px_-8px_rgba(139,92,246,.55)]">
-            <Filter className="w-[20px] h-[20px] text-white" />
-          </div>
-          <div>
-            <h1 className="font-display font-bold text-[21px] tracking-[-.2px] m-0 leading-tight">Pipeline</h1>
-            <p className="text-[12.5px] text-[var(--muted-foreground)] mt-[2px] m-0">Gerencie e converta seus leads</p>
-          </div>
-        </div>
+      <div className="flex items-start justify-end gap-[18px] mb-[20px] flex-wrap">
         
         <div className="flex items-center gap-[10px]">
           <div className="relative w-[250px]">

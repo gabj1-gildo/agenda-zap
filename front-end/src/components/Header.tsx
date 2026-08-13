@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, Building2, ChevronDown, Menu, LayoutDashboard, Calendar, CalendarDays, CalendarCheck, MessageSquare, CreditCard, Settings, Building2 as Building2Icon, Users, Server, Contact, Filter, Megaphone, UserCircle, Wand2 } from "lucide-react";
+import { Bell, Search, Building2, ChevronDown, Menu, LayoutDashboard, Calendar, CalendarDays, CalendarCheck, MessageSquare, CreditCard, Settings, Building2 as Building2Icon, Users, Server, Contact, Filter, Megaphone, UserCircle, Wand2, Package, UserCheck, FileText, Briefcase } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PaletteToggle } from "@/components/PaletteToggle";
@@ -70,26 +70,30 @@ export function Header() {
 
   const activeTenant = tenants.find((t) => t.id === (session as any)?.tenantId);
 
-  const pageTitles: Record<string, { title: string; sub: string }> = {
-    "/dashboard":        { title: "Painel",               sub: "Visão geral do sistema" },
-    "/calendar":         { title: "Agenda",               sub: "Controle de horários" },
-    "/appointments":     { title: "Agendamentos",         sub: "Histórico e status" },
-    "/clients":          { title: "Clientes",             sub: "Base de contatos" },
-    "/assinantes":       { title: "Assinantes",           sub: "Quem assinou seus planos" },
-    "/funil":            { title: "Funil de Vendas",      sub: "Pipeline de leads" },
-    "/chats":            { title: "Conversas",            sub: "Inbox de mensagens" },
-    "/broadcast":        { title: "Disparos",             sub: "Mensagens em massa" },
-    "/payments":         { title: "Recibos",              sub: "Cobranças e recebimentos" },
-    "/reports":          { title: "Relatórios",          sub: "Análise de desempenho" },
-    "/planos":           { title: "Planos",               sub: "Planos oferecidos" },
-    "/settings":         { title: "Configurações",       sub: "Dados e preferências" },
-    "/team":             { title: "Equipe e Acessos",    sub: "Usuários e permissões" },
-    "/services":         { title: "Serviços",            sub: "Catálogo de serviços" },
-    "/billing":          { title: "Minha Assinatura",    sub: "Plano atual e faturamento" },
-    "/profile":          { title: "Meu Perfil",          sub: "Dados da sua conta" },
-    "/admin/tenants":    { title: "Empresas",             sub: "Gestão de tenants" },
-    "/admin/settings":   { title: "Sistema",             sub: "Configurações globais" },
-    "/admin/ai-presets": { title: "Templates IA",        sub: "Modelos de inteligência artificial" },
+  const pageTitles: Record<string, { title: string; sub: string; icon?: any }> = {
+    "/dashboard":        { title: "Painel",               sub: "Visão geral do sistema", icon: LayoutDashboard },
+    "/calendar":         { title: "Agenda",               sub: "Controle de horários", icon: CalendarDays },
+    "/appointments":     { title: "Agendamentos",         sub: "Histórico e status", icon: CalendarCheck },
+    "/clients":          { title: "Clientes",             sub: "Base de contatos", icon: Contact },
+    "/assinantes":       { title: "Assinantes",           sub: "Quem assinou seus planos", icon: UserCheck },
+    "/funil":            { title: "Funil de Vendas",      sub: "Pipeline de leads", icon: Filter },
+    "/chats":            { title: "Conversas",            sub: "Inbox de mensagens", icon: MessageSquare },
+    "/broadcast":        { title: "Disparos",             sub: "Mensagens em massa", icon: Megaphone },
+    "/payments":         { title: "Recibos",              sub: "Cobranças e recebimentos", icon: CreditCard },
+    "/reports":          { title: "Relatórios",          sub: "Análise de desempenho", icon: FileText },
+    "/planos":           { title: "Planos",               sub: "Planos e assinaturas", icon: Package },
+    "/settings":         { title: "Configurações",       sub: "Dados e preferências", icon: Settings },
+    "/team":             { title: "Equipe",              sub: "Usuários e acessos", icon: Users },
+    "/services":         { title: "Serviços",            sub: "Catálogo de serviços", icon: Briefcase },
+    "/billing":          { title: "Minha Assinatura",    sub: "Plano atual e faturamento", icon: CreditCard },
+    "/profile":          { title: "Meu Perfil",          sub: "Dados da sua conta", icon: UserCircle },
+    "/empresas":         { title: "Minhas Empresas",     sub: "Gestão de empresas", icon: Building2 },
+    "/admin/tenants":    { title: "Empresas",             sub: "Gestão de tenants", icon: Building2 },
+    "/admin/users":      { title: "Usuários",            sub: "Controle de todos usuários", icon: Users },
+    "/admin/plans":      { title: "Gestão de Planos",    sub: "Planos oferecidos no app", icon: Package },
+    "/admin/broadcast":  { title: "Disparos Globais",    sub: "Mensagens para todos os tenants", icon: Megaphone },
+    "/admin/settings":   { title: "Sistema",             sub: "Configurações globais", icon: Server },
+    "/admin/ai-presets": { title: "Templates IA",        sub: "Modelos de inteligência artificial", icon: Wand2 },
   };
 
   const current = Object.entries(pageTitles).reverse().find(([k]) =>
@@ -203,11 +207,18 @@ export function Header() {
         </Sheet>
 
         {/* Page title */}
-        <div>
-          <h1 className="font-display font-extrabold text-lg sm:text-2xl leading-none text-foreground truncate max-w-[120px] sm:max-w-none">
-            {pageInfo.title}
-          </h1>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 hidden sm:block">{pageInfo.sub}</p>
+        <div className="flex items-center gap-3">
+          {pageInfo.icon && (
+            <div className="hidden sm:flex w-9 h-9 items-center justify-center rounded-xl bg-muted/50 border border-border/50 text-foreground">
+              <pageInfo.icon className="w-5 h-5 opacity-80" />
+            </div>
+          )}
+          <div>
+            <h1 className="font-display font-extrabold text-lg sm:text-[22px] leading-none text-foreground truncate max-w-[150px] sm:max-w-none tracking-tight">
+              {pageInfo.title}
+            </h1>
+            <p className="text-[10px] sm:text-[13px] text-muted-foreground mt-0.5 hidden sm:block tracking-tight font-medium opacity-80">{pageInfo.sub}</p>
+          </div>
         </div>
 
         {/* Tenant selector */}

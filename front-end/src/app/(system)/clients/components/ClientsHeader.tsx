@@ -11,11 +11,7 @@ interface ClientsHeaderProps {
 export function ClientsHeader({ searchTerm, setSearchTerm, onOpenNewModal }: ClientsHeaderProps) {
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Clientes</h1>
-          <p className="text-muted-foreground mt-1">Gerencie a base de clientes do seu estabelecimento.</p>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-8">
         <Button onClick={onOpenNewModal}><Plus className="w-4 h-4 mr-2"/> Novo Cliente</Button>
       </div>
 

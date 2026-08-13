@@ -135,13 +135,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <Settings className="w-8 h-8 text-primary" />
-          Configurações Globais do Sistema
-        </h1>
-        <p className="text-muted-foreground mt-1">Gerencie os parâmetros globais da aplicação.</p>
-      </div>
+
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <div className="p-6 border-b border-border bg-muted/30">

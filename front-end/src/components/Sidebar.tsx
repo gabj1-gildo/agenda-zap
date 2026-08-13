@@ -46,6 +46,7 @@ const NAV_STRUCTURE: NavCategory[] = [
     items: [
       { href: "/chats",         label: "Conversas",         icon: MessageSquare,  badgeKey: "chats", requiresTenant: true },
       { href: "/broadcast",     label: "Disparos",          icon: Megaphone,      requiresTenant: true },
+      { href: "/automations",   label: "Automações",        icon: Wand2,          requiresTenant: true },
     ],
   },
   {

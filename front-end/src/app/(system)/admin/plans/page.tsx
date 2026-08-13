@@ -212,12 +212,7 @@ export default function AdminPlansPage() {
 
   return (
     <div className="flex flex-col gap-8 p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestão de Planos</h1>
-          <p className="text-muted-foreground mt-1">Configure os planos e o banco global de funcionalidades.</p>
-        </div>
-      </div>
+
 
       <div className="grid md:grid-cols-3 gap-8">
         

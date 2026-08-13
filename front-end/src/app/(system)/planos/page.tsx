@@ -149,11 +149,7 @@ export default function PlanosPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Planos e Assinaturas</h1>
-          <p className="text-muted-foreground mt-1">Crie planos para vender aos seus clientes via IA.</p>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
         <Button onClick={openNewModal}><Plus className="w-4 h-4 mr-2"/> Novo Plano</Button>
       </div>
 

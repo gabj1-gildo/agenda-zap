@@ -14,6 +14,10 @@ export async function GET(req: Request) {
     const tenantId = url.searchParams.get('tenantId') || req.headers.get('x-tenant-id');
     const startDateStr = url.searchParams.get('startDate');
     const endDateStr = url.searchParams.get('endDate');
+    const serviceId = url.searchParams.get('serviceId');
+    const professionalId = url.searchParams.get('professionalId');
+    const clientId = url.searchParams.get('clientId');
+    const status = url.searchParams.get('status');
 
     if (!tenantId) {
       return NextResponse.json({ success: false, error: 'Unauthorized: missing tenantId' }, { status: 401 });
@@ -27,7 +31,19 @@ export async function GET(req: Request) {
     const endDate = endDateStr ? new Date(endDateStr) : new Date();
 
     const result = await withTenant(tenantId, async (tx) => {
-      // Fetch appointments within date range
+      // Build conditions array dynamically
+      const conditions = [
+        eq(appointments.tenantId, tenantId),
+        gte(appointments.date, startDate),
+        lte(appointments.date, endDate)
+      ];
+
+      if (serviceId && serviceId !== 'ALL') conditions.push(eq(appointments.serviceId, serviceId));
+      if (professionalId && professionalId !== 'ALL') conditions.push(eq(appointments.professionalId, professionalId));
+      if (clientId && clientId !== 'ALL') conditions.push(eq(appointments.clientId, clientId));
+      if (status && status !== 'ALL') conditions.push(eq(appointments.status, status));
+
+      // Fetch appointments within date range with filters
       const data = await tx.select({
         id: appointments.id,
         date: appointments.date,
@@ -43,13 +59,7 @@ export async function GET(req: Request) {
       .innerJoin(clients, eq(appointments.clientId, clients.id))
       .leftJoin(professionals, eq(appointments.professionalId, professionals.id))
       .leftJoin(rooms, eq(appointments.roomId, rooms.id))
-      .where(
-        and(
-          eq(appointments.tenantId, tenantId),
-          gte(appointments.date, startDate),
-          lte(appointments.date, endDate)
-        )
-      )
+      .where(and(...conditions))
       .orderBy(desc(appointments.date));
 
       return data;

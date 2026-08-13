@@ -20,13 +20,7 @@ function ServicesPageContent() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <Calendar className="w-8 h-8 text-primary" />
-          Serviços e Horários
-        </h1>
-        <p className="text-muted-foreground mt-1">Configure seus serviços, preços e sua agenda de atendimento.</p>
-      </div>
+
 
       <Tabs defaultValue="servicos" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-4 h-auto md:h-10 gap-2">

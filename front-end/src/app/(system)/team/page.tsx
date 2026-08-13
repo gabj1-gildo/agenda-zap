@@ -20,12 +20,7 @@ function TeamContent() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Equipe e Acessos</h1>
-          <p className="text-muted-foreground mt-2">Gerencie os acessos ao sistema, profissionais que prestam serviço e as salas físicas.</p>
-        </div>
-      </div>
+
       
       <Tabs defaultValue="acessos" className="w-full">
         <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-4 h-auto gap-2">

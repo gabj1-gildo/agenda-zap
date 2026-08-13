@@ -345,10 +345,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-10">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Meu Perfil</h1>
-        <p className="text-muted-foreground mt-1">Gerencie suas informações pessoais e credenciais de acesso.</p>
-      </div>
+
 
       <Tabs defaultValue="dados" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">

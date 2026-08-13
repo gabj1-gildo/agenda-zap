@@ -101,6 +101,8 @@ export async function PATCH(req: Request) {
     if (body.whatsappProvider !== undefined) updateData.whatsappProvider = body.whatsappProvider;
     if (body.whatsappMetaToken !== undefined) updateData.whatsappMetaToken = body.whatsappMetaToken;
     if (body.whatsappMetaPhoneNumberId !== undefined) updateData.whatsappMetaPhoneNumberId = body.whatsappMetaPhoneNumberId;
+    if (body.autoCloseChats !== undefined) updateData.autoCloseChats = body.autoCloseChats;
+    if (body.autoCloseHours !== undefined) updateData.autoCloseHours = body.autoCloseHours;
     
     let ignoredFields: string[] = [];
     if (body.aiConfig !== undefined) {

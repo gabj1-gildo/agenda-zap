@@ -12,21 +12,12 @@ interface Props {
 export function DashboardHeader({ role, userName, dateRange, setDateRange, isRefreshing }: Props) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-2">
-          {role === "ATTENDANT" ? "Área de Trabalho" : "Visão Geral"}
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px]">
-            <span className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${isRefreshing ? "animate-spin" : "animate-pulse"}`}></span> 
-            {isRefreshing ? "Atualizando" : "Ao vivo"}
+        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isRefreshing ? "animate-spin" : "animate-pulse"}`}></span> 
+            {isRefreshing ? "Atualizando" : "Dashboard Ao vivo"}
           </span>
         </p>
-        <h1 className="font-display font-extrabold text-4xl text-foreground">
-          {role === "ATTENDANT" ? `Olá, ${(userName)?.split(' ')[0] || 'Atendente'}!` : "Painel"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {role === "ATTENDANT" ? "Acompanhe o resumo das suas operações no período." : "Acompanhe seus indicadores."}
-        </p>
-      </div>
       
       <div className="flex items-center gap-3 bg-muted/40 p-1.5 rounded-2xl border" style={{ borderColor: "var(--border)" }}>
         <div className="flex items-center gap-2 pl-3 pr-1 text-sm font-bold text-muted-foreground">

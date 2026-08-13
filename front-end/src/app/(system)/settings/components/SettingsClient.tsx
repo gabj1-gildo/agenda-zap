@@ -95,10 +95,7 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
         }}
       />
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Configurações {isSuperAdmin ? "da Empresa" : ""}</h1>
-        <p className="text-muted-foreground mt-1">Gerencie as preferências, horários e dados do estabelecimento{isSuperAdmin ? " selecionado" : ""}.</p>
-      </div>
+
 
       <Tabs defaultValue="empresa" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4 h-auto md:h-10 gap-2">
@@ -144,6 +141,8 @@ export function SettingsClient({ targetTenantId, isSuperAdmin }: SettingsClientP
               companySettings.updateTenantLocal({ aiEnabled: checked });
               setTimeout(() => companySettings.saveTenantData({ aiEnabled: checked }), 0);
             }}
+            updateTenantLocal={companySettings.updateTenantLocal}
+            saveTenantData={companySettings.saveTenantData}
           />
         </TabsContent>
 

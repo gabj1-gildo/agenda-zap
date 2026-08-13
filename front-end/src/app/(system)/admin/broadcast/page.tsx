@@ -58,13 +58,7 @@ export default function AdminBroadcastPage() {
         confirmText="Disparar"
       />
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <Megaphone className="w-8 h-8 text-blue-500" />
-          Disparo Global (Broadcast)
-        </h1>
-        <p className="text-muted-foreground mt-1">Envie mensagens via WhatsApp para as empresas e usuários da plataforma utilizando a instância padrão.</p>
-      </div>
+
 
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <div className="p-6 border-b border-border bg-muted/30">

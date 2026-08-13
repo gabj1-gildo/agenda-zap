@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { AutomationsTab } from "./components/AutomationsTab";
+
 
 export default function BroadcastPage() {
   const { data: session } = useSession();
@@ -233,31 +233,17 @@ export default function BroadcastPage() {
         />
       )}
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-              <Megaphone className="w-5 h-5" />
-            </span>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">Marketing</p>
-          </div>
-          <h1 className="font-display font-extrabold text-4xl text-foreground tracking-tight">Disparo em Massa</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-            Envie mensagens de marketing, avisos e promoções diretamente no WhatsApp dos seus clientes.
-          </p>
-        </div>
-      </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Lado Esquerdo: Abas de Criação e Destinatários */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="nova-mensagem" className="w-full">
-            <TabsList className="w-full grid grid-cols-3 bg-muted/50 p-1 rounded-xl">
+            <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1 rounded-xl">
               <TabsTrigger value="nova-mensagem" className="rounded-lg">Nova Mensagem</TabsTrigger>
               <TabsTrigger value="templates" className="rounded-lg">Meus Templates</TabsTrigger>
-              <TabsTrigger value="automations" className="rounded-lg">Automações</TabsTrigger>
+
             </TabsList>
             
             <TabsContent value="nova-mensagem" className="space-y-6 mt-6">
@@ -462,9 +448,7 @@ export default function BroadcastPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="automations" className="mt-6">
-              <AutomationsTab tenantId={tenantId} token={token} />
-            </TabsContent>
+
           </Tabs>
         </div>
 

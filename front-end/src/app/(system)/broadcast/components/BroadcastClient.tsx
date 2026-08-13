@@ -85,21 +85,7 @@ export function BroadcastClient({ initialData, tenantId, token }: BroadcastClien
         />
       )}
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-              <Megaphone className="w-5 h-5" />
-            </span>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">Marketing</p>
-          </div>
-          <h1 className="font-display font-extrabold text-4xl text-foreground tracking-tight">Disparo em Massa</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-            Envie mensagens de marketing, avisos e promoções diretamente no WhatsApp dos seus clientes.
-          </p>
-        </div>
-      </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Lado Esquerdo: Abas de Criação e Destinatários */}

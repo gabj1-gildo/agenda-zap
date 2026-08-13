@@ -79,11 +79,7 @@ export default function EmpresasPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Minhas Empresas</h1>
-          <p className="text-muted-foreground mt-1">Gerencie suas filiais e instâncias de WhatsApp.</p>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
         <Button onClick={() => setIsModalOpen(true)}><Plus className="w-4 h-4 mr-2"/> Nova Empresa / Filial</Button>
       </div>
 

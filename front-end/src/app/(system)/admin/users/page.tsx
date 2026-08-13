@@ -185,22 +185,7 @@ export default function UsersPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            {role === "SUPERADMIN" ? "Administrador da Plataforma" : "Empresa"}
-          </p>
-          <h1 className="font-display font-extrabold text-4xl text-foreground flex items-center gap-3">
-            <Users className="w-8 h-8" style={{ color: "var(--primary)" }} />
-            Gestão de Usuários
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {role === "SUPERADMIN" 
-              ? "Gerencie todos os acessos e permissões globais." 
-              : "Gerencie os membros da sua empresa."}
-          </p>
-        </div>
-        
+      <div className="flex items-start justify-end">
         <button
           onClick={() => openModal()}
           style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}

@@ -197,11 +197,8 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
       )}
 
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between flex-wrap gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Empresa</p>
-          <div className="flex items-center gap-4">
-            <h1 className="font-display font-extrabold text-3xl text-foreground">Agenda</h1>
+      <div className="flex shrink-0 items-center justify-end flex-wrap gap-4">
+        <div className="flex items-center gap-3">
             
             {schedulingMode === 'PROFISSIONAL' && (
               <select
@@ -225,7 +222,7 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
               </select>
             )}
           </div>
-        </div>
+
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowNewApptModal(true)}

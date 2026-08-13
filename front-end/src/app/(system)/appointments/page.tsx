@@ -16,11 +16,7 @@ export default async function AppointmentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Listagem de Agendamentos</h1>
-          <p className="text-muted-foreground mt-1">Acompanhe e gerencie todos os agendamentos realizados.</p>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
           <Link href="/calendar">
             <Button variant="outline" className="border-border">

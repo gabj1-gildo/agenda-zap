@@ -116,41 +116,48 @@ export async function processIncomingMessage(
 
 export async function processCloseChats() {
   try {
-    const { subHours, subMinutes } = await import('date-fns');
-    const { lt, or } = await import('drizzle-orm');
+    const { subHours } = await import('date-fns');
+    const { lt } = await import('drizzle-orm');
     
     const now = new Date();
-    const updatedThreshold = subMinutes(now, 1439); // 23h 59m
-    const createdThreshold = subHours(now, 36);
-
-    const staleSessions = await db.query.chatSessions.findMany({
-      where: and(
-        eq(chatSessions.status, 'ACTIVE'),
-        or(
-          lt(chatSessions.updatedAt, updatedThreshold),
-          lt(chatSessions.createdAt, createdThreshold)
-        )
-      )
+    
+    // Buscar todos os tenants com a feature ativada
+    const activeTenants = await db.query.tenants.findMany({
+      where: eq(tenants.autoCloseChats, true)
     });
 
-    if (staleSessions.length > 0) {
-      await db.update(chatSessions)
-        .set({ status: 'CLOSED' })
-        .where(
-          and(
-            eq(chatSessions.status, 'ACTIVE'),
-            or(
-              lt(chatSessions.updatedAt, updatedThreshold),
-              lt(chatSessions.createdAt, createdThreshold)
+    let totalClosed = 0;
+
+    for (const tenant of activeTenants) {
+      const thresholdHours = tenant.autoCloseHours || 24;
+      const updatedThreshold = subHours(now, thresholdHours);
+
+      const staleSessions = await db.query.chatSessions.findMany({
+        where: and(
+          eq(chatSessions.tenantId, tenant.id),
+          eq(chatSessions.status, 'ACTIVE'),
+          lt(chatSessions.updatedAt, updatedThreshold)
+        )
+      });
+
+      if (staleSessions.length > 0) {
+        await db.update(chatSessions)
+          .set({ status: 'CLOSED' })
+          .where(
+            and(
+              eq(chatSessions.tenantId, tenant.id),
+              eq(chatSessions.status, 'ACTIVE'),
+              lt(chatSessions.updatedAt, updatedThreshold)
             )
-          )
-        );
+          );
+        totalClosed += staleSessions.length;
+      }
     }
 
     return {
       success: true,
-      closedCount: staleSessions.length,
-      message: `${staleSessions.length} chat sessions were closed due to timeout.`
+      closedCount: totalClosed,
+      message: `${totalClosed} chat sessions were closed due to timeout.`
     };
   } catch (error: any) {
     console.error('Error closing chats:', error);

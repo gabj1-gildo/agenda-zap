@@ -29,17 +29,8 @@ export function AdminDashboard({ initialTenants, initialMetrics, token, activeTe
         />
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-            Administrador da Plataforma
-          </p>
-          <h1 className="font-display font-extrabold text-4xl text-foreground">Painel</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gerencie todas as empresas cadastradas na plataforma.
-          </p>
-        </div>
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-4">
         <button
           onClick={() => setShowModal(true)}
           style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}

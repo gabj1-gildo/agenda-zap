@@ -84,16 +84,7 @@ export default function AiPresetsAdminPage() {
 
   return (
     <div className="p-6 md:p-8 w-full max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Wand2 className="w-8 h-8 text-purple-600" />
-            Templates da IA
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie os "Modelos Prontos" disponíveis para os lojistas configurarem a Inteligência Artificial.
-          </p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <Button onClick={handleSave} disabled={saving} className="gap-2">
           <Save className="w-4 h-4" />
           {saving ? "Salvando..." : "Salvar Alterações Globais"}
