@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { db } from '@/db';
 import { automations } from '@/db/schema/automations';
 import { clientPlans } from '@/db/schema/clientPlans';
+import { clientSubscriptions } from '@/db/schema/clientSubscriptions';
 import { clients } from '@/db/schema/clients';
 import { tenants } from '@/db/schema/tenants';
 import { lte, eq, and } from 'drizzle-orm';
@@ -48,12 +49,12 @@ export function initCron() {
         } else if (automation.targetType === 'PLAN' && automation.targetValue) {
           const matchingClients = await db.select({ client: clients })
             .from(clients)
-            .innerJoin(clientPlans, eq(clientPlans.clientId, clients.id))
+            .innerJoin(clientSubscriptions, eq(clientSubscriptions.clientId, clients.id))
             .where(
               and(
                 eq(clients.tenantId, tenant.id),
-                eq(clientPlans.planId, automation.targetValue),
-                eq(clientPlans.status, 'ACTIVE')
+                eq(clientSubscriptions.tenantPlanId, automation.targetValue),
+                eq(clientSubscriptions.status, 'ACTIVE')
               )
             );
           targetClients = matchingClients.map(row => row.client);
