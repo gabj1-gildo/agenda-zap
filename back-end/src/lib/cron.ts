@@ -40,7 +40,7 @@ export function initCron() {
         const tenant = await db.select().from(tenants).where(eq(tenants.id, automation.tenantId)).limit(1).then(res => res[0]);
         if (!tenant || tenant.evolutionInstanceStatus !== 'CONNECTED') continue;
 
-        let targetClients = [];
+        let targetClients: any[] = [];
 
         if (automation.targetType === 'CLIENT' && automation.clientId) {
           const client = await db.select().from(clients).where(eq(clients.id, automation.clientId)).limit(1).then(res => res[0]);
