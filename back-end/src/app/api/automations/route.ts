@@ -16,6 +16,9 @@ export async function GET(req: Request) {
     const data = await db
       .select({
         id: automations.id,
+        name: automations.name,
+        targetType: automations.targetType,
+        targetValue: automations.targetValue,
         clientId: automations.clientId,
         automationType: automations.automationType,
         messageTemplate: automations.messageTemplate,
@@ -48,10 +51,14 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { clientId, messageTemplate, dayOfWeek, time } = body;
+    const { name, targetType, targetValue, clientId, messageTemplate, dayOfWeek, time } = body;
 
-    if (!clientId || !messageTemplate || typeof dayOfWeek !== 'number' || !time) {
+    if (!messageTemplate || typeof dayOfWeek !== 'number' || !time) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+    
+    if (targetType === 'CLIENT' && !clientId) {
+      return NextResponse.json({ success: false, error: 'Client ID is required for target type CLIENT' }, { status: 400 });
     }
 
     // Calculate next run
@@ -71,7 +78,10 @@ export async function POST(req: Request) {
     nextRunAt.setDate(nextRunAt.getDate() + daysToAdd);
 
     const [newAutomation] = await db.insert(automations).values({
-      clientId,
+      name: name || 'Automação',
+      targetType: targetType || 'CLIENT',
+      targetValue: targetValue || null,
+      clientId: clientId || null,
       tenantId,
       automationType: 'CUSTOM_RECURRING',
       messageTemplate,

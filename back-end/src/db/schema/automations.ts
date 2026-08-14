@@ -4,7 +4,10 @@ import { tenants } from './tenants';
 
 export const automations = pgTable('automations', {
   id: uuid('id').primaryKey().defaultRandom(),
-  clientId: uuid('client_id').references(() => clients.id).notNull(),
+  name: varchar('name', { length: 255 }).default('Automação').notNull(),
+  targetType: varchar('target_type', { length: 50 }).default('CLIENT').notNull(),
+  targetValue: varchar('target_value', { length: 255 }),
+  clientId: uuid('client_id').references(() => clients.id),
   tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
   automationType: varchar('automation_type', { length: 50 }).default('WEEKLY_CHECKIN').notNull(),
   messageTemplate: text('message_template').notNull(),

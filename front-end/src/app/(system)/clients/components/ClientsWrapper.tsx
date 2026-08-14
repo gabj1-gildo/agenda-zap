@@ -42,10 +42,16 @@ export function ClientsWrapper({ tenantId, token }: ClientsWrapperProps) {
       .catch(err => console.error("Error fetching plans:", err));
   }, [tenantId, token]);
 
-  const filteredClients = clients.filter((c: any) => 
-    (c.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (c.phone || "").includes(searchTerm)
-  );
+  const searchLower = searchTerm.toLowerCase().trim();
+  const normalizedSearch = searchLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const filteredClients = clients.filter((c: any) => {
+    const name = (c.name || "").toLowerCase();
+    const normalizedName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const phone = String(c.phone || "").toLowerCase();
+    
+    return normalizedName.includes(normalizedSearch) || phone.includes(searchLower);
+  });
 
   const openNewModal = () => {
     setEditingClient(null);

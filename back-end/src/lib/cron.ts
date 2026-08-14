@@ -27,14 +27,8 @@ export function initCron() {
     try {
       const now = new Date();
       
-      const pendingAutomations = await db.select({
-        automation: automations,
-        client: clients,
-        tenant: tenants
-      })
+      const pendingAutomations = await db.select()
       .from(automations)
-      .innerJoin(clients, eq(automations.clientId, clients.id))
-      .innerJoin(tenants, eq(automations.tenantId, tenants.id))
       .where(
         and(
           eq(automations.isActive, true),
@@ -42,23 +36,56 @@ export function initCron() {
         )
       );
 
-      for (const row of pendingAutomations) {
-        const { automation, client, tenant } = row;
+      for (const automation of pendingAutomations) {
+        const tenant = await db.select().from(tenants).where(eq(tenants.id, automation.tenantId)).limit(1).then(res => res[0]);
+        if (!tenant || tenant.evolutionInstanceStatus !== 'CONNECTED') continue;
 
-        const [plan] = await db.select().from(clientPlans)
-          .where(eq(clientPlans.clientId, client.id))
-          .limit(1);
+        let targetClients = [];
 
-        if (!plan || plan.status !== 'ACTIVE' || new Date(plan.endDate) < now) {
-          await db.update(automations).set({ isActive: false }).where(eq(automations.id, automation.id));
-          continue;
+        if (automation.targetType === 'CLIENT' && automation.clientId) {
+          const client = await db.select().from(clients).where(eq(clients.id, automation.clientId)).limit(1).then(res => res[0]);
+          if (client) targetClients.push(client);
+        } else if (automation.targetType === 'PLAN' && automation.targetValue) {
+          const matchingClients = await db.select({ client: clients })
+            .from(clients)
+            .innerJoin(clientPlans, eq(clientPlans.clientId, clients.id))
+            .where(
+              and(
+                eq(clients.tenantId, tenant.id),
+                eq(clientPlans.planId, automation.targetValue),
+                eq(clientPlans.status, 'ACTIVE')
+              )
+            );
+          targetClients = matchingClients.map(row => row.client);
+        } else if (automation.targetType === 'ALL') {
+          targetClients = await db.select().from(clients).where(eq(clients.tenantId, tenant.id));
         }
 
-        if (client.phone && tenant.evolutionInstanceName && tenant.evolutionInstanceStatus === 'CONNECTED') {
+        // Send messages
+        for (const client of targetClients) {
+          if (!client.phone) continue;
+          
+          // Verify plan expiration for the target client
+          const plan = await db.select().from(clientPlans)
+            .where(eq(clientPlans.clientId, client.id))
+            .limit(1).then(res => res[0]);
+
+          if (!plan || plan.status !== 'ACTIVE' || new Date(plan.endDate) < now) {
+            continue; // Skip this client if their plan is expired, but don't deactivate the rule
+          }
+
           const phoneJid = client.phone.includes('@') ? client.phone : `${client.phone.replace(/\D/g, '')}@s.whatsapp.net`;
-          await sendWhatsAppMessage(phoneJid, automation.messageTemplate, tenant.id);
+          
+          // Replace {nome} variable
+          let personalizedMessage = automation.messageTemplate;
+          if (client.name) {
+            personalizedMessage = personalizedMessage.replace(/{nome}/g, client.name.split(' ')[0]);
+          }
+
+          await sendWhatsAppMessage(phoneJid, personalizedMessage, tenant.id);
         }
 
+        // Reschedule
         const nextRun = new Date(automation.nextRunAt);
         nextRun.setDate(nextRun.getDate() + 7);
         while (nextRun <= now) {

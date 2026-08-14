@@ -18,13 +18,18 @@ export function NewAutomationModal({ tenantId, token, onClose, onSuccess }: { te
   const [clients, setClients] = useState<Client[]>([]);
   
   // Form State
+  const [name, setName] = useState("");
+  const [targetType, setTargetType] = useState("CLIENT");
+  const [targetValue, setTargetValue] = useState("");
   const [clientId, setClientId] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [time, setTime] = useState("09:00");
   const [messageTemplate, setMessageTemplate] = useState("");
 
+  const [availablePlans, setAvailablePlans] = useState<any[]>([]);
+
   useEffect(() => {
-    // Fetch clients for the dropdown
+    // Fetch clients
     const fetchClients = async () => {
       try {
         const res = await fetch(getBackendUrl('/api/clients'), {
@@ -41,12 +46,31 @@ export function NewAutomationModal({ tenantId, token, onClose, onSuccess }: { te
         console.error("Erro ao carregar clientes", error);
       }
     };
+
+    // Fetch plans
+    const fetchPlans = async () => {
+      try {
+        const res = await fetch(getBackendUrl(`/api/tenant-plans?tenantId=${tenantId}`), {
+          headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setAvailablePlans(data.data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar planos", error);
+      }
+    };
+
     fetchClients();
+    fetchPlans();
   }, [tenantId, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId) return toast.error("Selecione um cliente");
+    if (!name.trim()) return toast.error("Digite um nome para a regra");
+    if (targetType === "CLIENT" && !clientId) return toast.error("Selecione um cliente");
+    if (targetType === "PLAN" && !targetValue) return toast.error("Selecione um plano");
     if (!messageTemplate.trim()) return toast.error("Digite uma mensagem");
     if (!time) return toast.error("Selecione o horário");
 
@@ -60,7 +84,10 @@ export function NewAutomationModal({ tenantId, token, onClose, onSuccess }: { te
           ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          clientId,
+          name,
+          targetType,
+          targetValue: targetType === "PLAN" ? targetValue : null,
+          clientId: targetType === "CLIENT" ? clientId : null,
           dayOfWeek: Number(dayOfWeek),
           time,
           messageTemplate
@@ -94,19 +121,66 @@ export function NewAutomationModal({ tenantId, token, onClose, onSuccess }: { te
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label>Cliente</Label>
+            <Label>Nome da Regra</Label>
+            <Input 
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Ex: Cobrança Plano Pro"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Público-Alvo</Label>
             <select
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={clientId}
-              onChange={e => setClientId(e.target.value)}
+              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              value={targetType}
+              onChange={e => {
+                setTargetType(e.target.value);
+                setClientId("");
+                setTargetValue("");
+              }}
               required
             >
-              <option value="">Selecione um cliente...</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>{c.name || 'Sem nome'} ({c.phone})</option>
-              ))}
+              <option value="CLIENT">Um Cliente Específico</option>
+              <option value="PLAN">Assinantes de um Plano Específico</option>
+              <option value="ALL">Todos os Clientes</option>
             </select>
           </div>
+
+          {targetType === "CLIENT" && (
+            <div className="space-y-2">
+              <Label>Selecionar Cliente</Label>
+              <select
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={clientId}
+                onChange={e => setClientId(e.target.value)}
+                required
+              >
+                <option value="">Selecione um cliente...</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name || 'Sem nome'} ({c.phone})</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {targetType === "PLAN" && (
+            <div className="space-y-2">
+              <Label>Selecionar Plano</Label>
+              <select
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                value={targetValue}
+                onChange={e => setTargetValue(e.target.value)}
+                required
+              >
+                <option value="">Selecione um plano...</option>
+                {availablePlans.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

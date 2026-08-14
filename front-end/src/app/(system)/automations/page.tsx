@@ -14,7 +14,10 @@ const DAYS_OF_WEEK = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta
 
 interface Automation {
   id: string;
-  clientId: string;
+  name: string;
+  targetType: string;
+  targetValue: string | null;
+  clientId: string | null;
   clientName: string | null;
   clientPhone: string | null;
   automationType: string;
@@ -157,8 +160,11 @@ export default function AutomationsPage() {
                   </div>
                 </div>
                 
-                <h4 className="font-semibold">{auto.clientName || "Cliente Desconhecido"}</h4>
-                <p className="text-xs text-muted-foreground mb-4">{auto.clientPhone}</p>
+                <h4 className="font-semibold">{auto.name || "Regra"}</h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {auto.targetType === 'CLIENT' ? (auto.clientName ? `${auto.clientName} (${auto.clientPhone})` : 'Cliente Desconhecido') :
+                   auto.targetType === 'PLAN' ? 'Assinantes de um Plano' : 'Todos os Clientes'}
+                </p>
 
                 <div className="flex items-center gap-2 text-sm text-foreground/80 mb-1">
                   <CalendarDays className="w-4 h-4 text-primary" />

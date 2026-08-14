@@ -103,11 +103,16 @@ export function FunilWrapper({ tenantId, token }: FunilWrapperProps) {
     let items = board[stageKey] || [];
     if (filterOnline) items = items.filter(it => it.status === 'online');
     if (search) {
-      const lowerSearch = search.toLowerCase();
-      items = items.filter(it => 
-        (it.name && it.name.toLowerCase().includes(lowerSearch)) || 
-        it.phone.includes(search)
-      );
+      const searchLower = search.toLowerCase().trim();
+      const normalizedSearch = searchLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      items = items.filter(it => {
+        const name = (it.name || "").toLowerCase();
+        const normalizedName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const phone = String(it.phone || "").toLowerCase();
+        
+        return normalizedName.includes(normalizedSearch) || phone.includes(searchLower);
+      });
     }
     return items;
   };

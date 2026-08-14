@@ -21,12 +21,19 @@ export function AppointmentsWrapper({ tenantId, token }: AppointmentsWrapperProp
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const searchLower = searchTerm.toLowerCase();
+  const searchLower = searchTerm.toLowerCase().trim();
+  const normalizedSearch = searchLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   const filtered = appointments.filter((apt: any) => {
+    const clientName = (apt.client?.name || "").toLowerCase();
+    const normalizedClientName = clientName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    const serviceName = (apt.serviceName || "").toLowerCase();
+    const normalizedServiceName = serviceName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     const matchSearch =
-      apt.client?.name?.toLowerCase().includes(searchLower) ||
-      apt.serviceName?.toLowerCase().includes(searchLower);
+      normalizedClientName.includes(normalizedSearch) ||
+      normalizedServiceName.includes(normalizedSearch);
     
     if (currentTab === "todos" && apt.status === "CANCELADO") return false;
     if (currentTab === "pendentes" && apt.status !== "PENDENTE") return false;
