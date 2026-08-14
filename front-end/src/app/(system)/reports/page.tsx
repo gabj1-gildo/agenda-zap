@@ -53,7 +53,7 @@ export default function ReportsPage() {
     Promise.all([
       fetch(getBackendUrl(`/api/services?tenantId=${tenantId}`), { headers }).then(res => res.json()),
       fetch(getBackendUrl(`/api/professionals?tenantId=${tenantId}`), { headers }).then(res => res.json()),
-      fetch(getBackendUrl(`/api/clients?tenantId=${tenantId}`), { headers }).then(res => res.json())
+      fetch(getBackendUrl(`/api/dashboard/clients?tenantId=${tenantId}`), { headers }).then(res => res.json())
     ]).then(([svcs, profs, clis]) => {
       if (svcs.success) setServices(svcs.data || []);
       if (profs.success) setProfessionals(profs.data || []);

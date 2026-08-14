@@ -32,7 +32,7 @@ export function NewAutomationModal({ tenantId, token, onClose, onSuccess }: { te
     // Fetch clients
     const fetchClients = async () => {
       try {
-        const res = await fetch(getBackendUrl('/api/clients'), {
+        const res = await fetch(getBackendUrl(`/api/dashboard/clients?tenantId=${tenantId}`), {
           headers: {
             'tenant-id': tenantId,
             ...(token ? { 'Authorization': `Bearer ${token}`, 'x-authorization': `Bearer ${token}` } : {})
@@ -41,6 +41,8 @@ export function NewAutomationModal({ tenantId, token, onClose, onSuccess }: { te
         const data = await res.json();
         if (data.success && data.data) {
           setClients(data.data);
+        } else if (Array.isArray(data)) {
+          setClients(data); // caso a API retorne o array direto
         }
       } catch (error) {
         console.error("Erro ao carregar clientes", error);
