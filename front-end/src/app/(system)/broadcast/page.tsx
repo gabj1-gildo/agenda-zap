@@ -457,27 +457,56 @@ export default function BroadcastPage() {
           <div className="sticky top-6">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Preview (Visão do Cliente)</h3>
             
-            {/* Simulador de Celular */}
-            <div className="relative w-[320px] h-[640px] border-[8px] border-zinc-800 dark:border-zinc-900 bg-[#efeae2] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
-              
-              {/* Phone Notch/Camera */}
-              <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50">
-                <div className="w-24 h-5 bg-zinc-800 dark:bg-zinc-900 rounded-b-xl"></div>
-              </div>
+            {/* Simulador de Celular - Tela Curva Premium */}
+            <div className="relative w-[340px] h-[680px]">
+              {/* Chassi do Celular */}
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-900 to-black rounded-[3rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),_0_0_0_1px_rgba(255,255,255,0.1)_inset] p-[3px] box-border">
+                
+                {/* Botões Físicos */}
+                {/* Volume Up */}
+                <div className="absolute top-[120px] -left-[4px] w-[5px] h-[40px] bg-gradient-to-r from-zinc-600 to-zinc-800 rounded-l-md border-y border-l border-zinc-900/50"></div>
+                {/* Volume Down */}
+                <div className="absolute top-[170px] -left-[4px] w-[5px] h-[40px] bg-gradient-to-r from-zinc-600 to-zinc-800 rounded-l-md border-y border-l border-zinc-900/50"></div>
+                {/* Power */}
+                <div className="absolute top-[150px] -right-[4px] w-[5px] h-[55px] bg-gradient-to-l from-zinc-600 to-zinc-800 rounded-r-md border-y border-r border-zinc-900/50"></div>
 
-              {/* Header do Zap */}
-              <div className="bg-[#00a884] px-4 pt-7 pb-3 text-white flex items-center gap-3 shadow-sm z-10 shrink-0">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <div className="font-semibold text-sm truncate">{tenant?.name || 'Sua Empresa'}</div>
-                  <div className="text-[10px] opacity-80 truncate">Conta Comercial</div>
-                </div>
-              </div>
+                {/* Tela Interna */}
+                <div className="relative w-full h-full bg-[#efeae2] rounded-[2.8rem] overflow-hidden flex flex-col border-[4px] border-black ring-1 ring-white/10">
+                  
+                  {/* Dynamic Island / Punch Hole Notch */}
+                  <div className="absolute top-2 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
+                    <div className="w-20 h-6 bg-black rounded-full flex items-center justify-between px-2.5 shadow-md">
+                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-white/10 relative overflow-hidden">
+                        <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-blue-500/30 rounded-full blur-[1px]"></div>
+                      </div>
+                      <div className="w-1 h-1 rounded-full bg-emerald-500/80 shadow-[0_0_4px_#10b981]"></div>
+                    </div>
+                  </div>
 
-              {/* Corpo das mensagens */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'contain', backgroundRepeat: 'repeat' }}>
+                  {/* Header do Zap */}
+                  <div className="bg-[#00a884] px-4 pt-10 pb-3 text-white flex items-center gap-3 shadow-sm z-10 shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className="font-semibold text-sm truncate">{tenant?.name || 'Sua Empresa'}</div>
+                      <div className="text-[10px] opacity-80 truncate">Conta Comercial</div>
+                    </div>
+                  </div>
+
+                  {/* Corpo das mensagens */}
+                  <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative pb-8" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'contain', backgroundRepeat: 'repeat' }}>
+                    
+                    {/* Efeito de Vidro Curvo (Reflexos Laterais) */}
+                    <div className="absolute inset-0 pointer-events-none z-20 flex justify-between mix-blend-overlay">
+                      {/* Reflexo Esquerdo */}
+                      <div className="w-4 h-full bg-gradient-to-r from-white/30 via-white/5 to-transparent"></div>
+                      {/* Reflexo Direito */}
+                      <div className="w-4 h-full bg-gradient-to-l from-white/30 via-white/5 to-transparent"></div>
+                    </div>
+                    
+                    {/* Gradiente de Borda Inferior/Superior da Tela (Profundidade) */}
+                    <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_10px_20px_-10px_rgba(0,0,0,0.5),_inset_0_-10px_20px_-10px_rgba(0,0,0,0.5)]"></div>
                 
                 {/* Balão do Sistema / Aviso de Criptografia */}
                 <div className="bg-[#ffeecd] text-[#54656f] text-[10px] text-center p-1.5 rounded-lg max-w-[90%] mx-auto shadow-sm">
@@ -526,6 +555,7 @@ export default function BroadcastPage() {
                   </div>
                 )}
               </div>
+            </div>
             </div>
             {/* Sombra de Reflexo */}
             <div className="absolute -bottom-8 left-4 right-4 h-8 bg-black/20 blur-xl rounded-[100%] opacity-50 -z-10 pointer-events-none"></div>
