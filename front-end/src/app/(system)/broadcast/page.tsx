@@ -369,6 +369,7 @@ export default function BroadcastPage() {
                     </div>
 
                     <Textarea 
+                      id="message-textarea"
                       value={message}
                       onChange={e => setMessage(e.target.value)}
                       placeholder="Olá {nome}, temos uma oferta especial..."
@@ -481,11 +482,11 @@ export default function BroadcastPage() {
                 <div className="relative w-full flex-1 bg-[#efeae2] rounded-[2.4rem] overflow-hidden flex flex-col ring-1 ring-black/10">
                   
                   {/* Status Bar */}
-                  <div className="absolute top-0 inset-x-0 h-9 flex justify-between px-7 items-center z-50 pointer-events-none bg-black/20 backdrop-blur-md">
-                    <span className="text-[11px] font-medium text-white tracking-tight mt-0.5">
+                  <div className="absolute top-0 inset-x-0 h-7 flex justify-between px-6 items-center z-50 pointer-events-none bg-black/20 backdrop-blur-md">
+                    <span className="text-[10px] font-medium text-white tracking-tight">
                       {currentTime ? currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00'}
                     </span>
-                    <div className="flex gap-1.5 items-center mt-0.5">
+                    <div className="flex gap-1.5 items-center">
                       <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.3 3 3.1 5.1 0 8.3L12 21L24 8.3C20.9 5.1 16.7 3 12 3Z"/></svg>
                       <div className="w-5 h-2.5 border border-white/80 rounded-[3px] p-[1px] flex relative">
                         <div className="bg-white w-full h-full rounded-[1.5px]"></div>
@@ -495,7 +496,7 @@ export default function BroadcastPage() {
                   </div>
 
                   {/* Dynamic Island / Punch Hole Notch */}
-                  <div className="absolute top-2.5 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
+                  <div className="absolute top-1 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
                     <div className="w-24 h-6 bg-black rounded-full flex items-center justify-between px-2.5 shadow-md ring-1 ring-white/10">
                       <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-white/10 relative overflow-hidden">
                         <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-blue-500/30 rounded-full blur-[1px]"></div>
@@ -571,7 +572,10 @@ export default function BroadcastPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-xs text-muted-foreground/50 bg-white/50 p-3 rounded-xl mt-4 backdrop-blur-sm">
+                  <div 
+                    className="text-center text-xs text-muted-foreground/60 bg-white/50 p-3 rounded-xl mt-4 backdrop-blur-sm cursor-pointer hover:bg-white/70 transition-colors pointer-events-auto"
+                    onClick={() => document.getElementById('message-textarea')?.focus()}
+                  >
                     Digite algo para visualizar
                   </div>
                 )}
