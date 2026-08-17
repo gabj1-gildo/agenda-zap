@@ -42,6 +42,13 @@ export default function BroadcastPage() {
   
   // Template Save State
   const [templateName, setTemplateName] = useState("");
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -457,26 +464,28 @@ export default function BroadcastPage() {
           <div className="sticky top-6">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Preview (Visão do Cliente)</h3>
             
-            {/* Simulador de Celular - Tela Curva Infinita Prateada */}
+            {/* Simulador de Celular - Tela Curva Dinâmica */}
             <div className="relative w-[340px] h-[680px]">
-              {/* Chassi do Celular Prata */}
-              <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-300 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),_0_0_0_1px_rgba(255,255,255,0.5)_inset] flex flex-col p-[3px] box-border overflow-visible">
+              {/* Chassi do Celular (Escuro no Light Mode, Prata no Dark Mode) */}
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-900 to-black dark:from-zinc-200 dark:via-zinc-400 dark:to-zinc-300 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),_0_0_0_1px_rgba(255,255,255,0.1)_inset] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),_0_0_0_1px_rgba(255,255,255,0.5)_inset] flex flex-col p-[3px] box-border overflow-visible transition-colors duration-300">
                 
-                {/* Botões Físicos Prateados */}
+                {/* Botões Físicos */}
                 {/* Volume Up */}
-                <div className="absolute top-[120px] -left-[3px] w-[4px] h-[40px] bg-gradient-to-r from-zinc-300 to-zinc-400 rounded-l-md border-y border-l border-zinc-400/50"></div>
+                <div className="absolute top-[120px] -left-[3px] w-[4px] h-[40px] bg-gradient-to-r from-zinc-600 to-zinc-800 dark:from-zinc-300 dark:to-zinc-400 rounded-l-md border-y border-l border-zinc-900/50 dark:border-zinc-400/50 transition-colors duration-300"></div>
                 {/* Volume Down */}
-                <div className="absolute top-[170px] -left-[3px] w-[4px] h-[40px] bg-gradient-to-r from-zinc-300 to-zinc-400 rounded-l-md border-y border-l border-zinc-400/50"></div>
+                <div className="absolute top-[170px] -left-[3px] w-[4px] h-[40px] bg-gradient-to-r from-zinc-600 to-zinc-800 dark:from-zinc-300 dark:to-zinc-400 rounded-l-md border-y border-l border-zinc-900/50 dark:border-zinc-400/50 transition-colors duration-300"></div>
                 {/* Power */}
-                <div className="absolute top-[150px] -right-[3px] w-[4px] h-[55px] bg-gradient-to-l from-zinc-300 to-zinc-400 rounded-r-md border-y border-r border-zinc-400/50"></div>
+                <div className="absolute top-[150px] -right-[3px] w-[4px] h-[55px] bg-gradient-to-l from-zinc-600 to-zinc-800 dark:from-zinc-300 dark:to-zinc-400 rounded-r-md border-y border-r border-zinc-900/50 dark:border-zinc-400/50 transition-colors duration-300"></div>
 
                 {/* Tela Interna Infinita */}
                 <div className="relative w-full flex-1 bg-[#efeae2] rounded-[2.4rem] overflow-hidden flex flex-col ring-1 ring-black/10">
                   
                   {/* Status Bar */}
-                  <div className="absolute top-0 inset-x-0 h-8 flex justify-between px-7 items-center z-50 pointer-events-none">
-                    <span className="text-[11px] font-medium text-white tracking-tight mt-1">09:41</span>
-                    <div className="flex gap-1.5 items-center mt-1">
+                  <div className="absolute top-0 inset-x-0 h-9 flex justify-between px-7 items-center z-50 pointer-events-none bg-black/20 backdrop-blur-md">
+                    <span className="text-[11px] font-medium text-white tracking-tight mt-0.5">
+                      {currentTime ? currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00'}
+                    </span>
+                    <div className="flex gap-1.5 items-center mt-0.5">
                       <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.3 3 3.1 5.1 0 8.3L12 21L24 8.3C20.9 5.1 16.7 3 12 3Z"/></svg>
                       <div className="w-5 h-2.5 border border-white/80 rounded-[3px] p-[1px] flex relative">
                         <div className="bg-white w-full h-full rounded-[1.5px]"></div>
@@ -507,7 +516,7 @@ export default function BroadcastPage() {
                   </div>
 
                   {/* Corpo das mensagens */}
-                  <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative pb-8" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'contain', backgroundRepeat: 'repeat' }}>
+                  <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative pb-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'contain', backgroundRepeat: 'repeat' }}>
                     
                     {/* Efeito de Vidro Curvo (Reflexos Laterais Escuros estilo Imagem) */}
                     <div className="absolute inset-0 pointer-events-none z-20 flex justify-between mix-blend-multiply">
@@ -567,9 +576,14 @@ export default function BroadcastPage() {
                   </div>
                 )}
               </div>
+              
+              {/* Barra de Navegação por Gestos (Samsung Style) */}
+              <div className="absolute bottom-1.5 inset-x-0 h-4 flex justify-center items-center pointer-events-none z-50">
+                <div className="w-28 h-1 bg-zinc-800/40 backdrop-blur-md rounded-full shadow-sm"></div>
+              </div>
             </div>
-            </div>
-            {/* Sombra de Reflexo */}
+          </div>
+          {/* Sombra de Reflexo */}
             <div className="absolute -bottom-8 left-4 right-4 h-8 bg-black/20 blur-xl rounded-[100%] opacity-50 -z-10 pointer-events-none"></div>
           </div>
         </div>
