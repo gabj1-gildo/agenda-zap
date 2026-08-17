@@ -562,6 +562,7 @@ export default function BroadcastPage() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
