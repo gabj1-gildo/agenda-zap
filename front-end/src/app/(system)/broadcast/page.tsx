@@ -457,29 +457,42 @@ export default function BroadcastPage() {
           <div className="sticky top-6">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Preview (Visão do Cliente)</h3>
             
-            {/* Simulador de Celular - Tela Curva Premium */}
+            {/* Simulador de Celular - Tela Curva Referência */}
             <div className="relative w-[340px] h-[680px]">
               {/* Chassi do Celular */}
-              <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-900 to-black rounded-[3rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),_0_0_0_1px_rgba(255,255,255,0.1)_inset] p-[3px] box-border">
+              <div className="absolute inset-0 bg-[#1a2634] rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),_0_0_0_2px_rgba(255,255,255,0.05)_inset] flex flex-col justify-between py-5 px-[3px] box-border overflow-hidden">
                 
-                {/* Botões Físicos */}
-                {/* Volume Up */}
-                <div className="absolute top-[120px] -left-[4px] w-[5px] h-[40px] bg-gradient-to-r from-zinc-600 to-zinc-800 rounded-l-md border-y border-l border-zinc-900/50"></div>
-                {/* Volume Down */}
-                <div className="absolute top-[170px] -left-[4px] w-[5px] h-[40px] bg-gradient-to-r from-zinc-600 to-zinc-800 rounded-l-md border-y border-l border-zinc-900/50"></div>
-                {/* Power */}
-                <div className="absolute top-[150px] -right-[4px] w-[5px] h-[55px] bg-gradient-to-l from-zinc-600 to-zinc-800 rounded-r-md border-y border-r border-zinc-900/50"></div>
-
                 {/* Tela Interna */}
-                <div className="relative w-full h-full bg-[#efeae2] rounded-[2.8rem] overflow-hidden flex flex-col border-[4px] border-black ring-1 ring-white/10">
+                <div className="relative w-full flex-1 bg-[#efeae2] rounded-[2rem] overflow-hidden flex flex-col">
                   
-                  {/* Dynamic Island / Punch Hole Notch */}
-                  <div className="absolute top-2 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
-                    <div className="w-20 h-6 bg-black rounded-full flex items-center justify-between px-2.5 shadow-md">
-                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-white/10 relative overflow-hidden">
-                        <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-blue-500/30 rounded-full blur-[1px]"></div>
+                  {/* U-Shaped Notch & Status Bar Wrapper */}
+                  <div className="absolute top-0 inset-x-0 h-6 flex justify-between px-5 items-center z-50 pointer-events-none">
+                    {/* Status Bar Left */}
+                    <div className="flex gap-1.5 items-center mt-1">
+                      <div className="flex gap-0.5 items-end h-2.5">
+                        <div className="w-[2px] h-1 bg-white rounded-full"></div>
+                        <div className="w-[2px] h-1.5 bg-white rounded-full"></div>
+                        <div className="w-[2px] h-2 bg-white rounded-full"></div>
+                        <div className="w-[2px] h-2.5 bg-white rounded-full"></div>
                       </div>
-                      <div className="w-1 h-1 rounded-full bg-emerald-500/80 shadow-[0_0_4px_#10b981]"></div>
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.3 3 3.1 5.1 0 8.3L12 21L24 8.3C20.9 5.1 16.7 3 12 3Z"/></svg>
+                    </div>
+
+                    {/* The U Notch */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-5 bg-[#1a2634] rounded-b-[1.2rem] flex items-end justify-center pb-0.5">
+                      {/* Camera Lens */}
+                      <div className="w-3 h-3 bg-zinc-900 rounded-full border border-white/5 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-blue-900/40 rounded-full blur-[0.5px]"></div>
+                      </div>
+                    </div>
+
+                    {/* Status Bar Right */}
+                    <div className="flex gap-1.5 items-center mt-1 text-[9px] font-bold text-white tracking-wider">
+                      100%
+                      <div className="w-5 h-2.5 border border-white rounded-[2px] p-[1px] flex relative">
+                        <div className="bg-white w-full h-full rounded-[1px]"></div>
+                        <div className="absolute -right-1 top-[2px] w-[2px] h-1 bg-white rounded-r-sm"></div>
+                      </div>
                     </div>
                   </div>
 
@@ -497,12 +510,12 @@ export default function BroadcastPage() {
                   {/* Corpo das mensagens */}
                   <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative pb-8" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'contain', backgroundRepeat: 'repeat' }}>
                     
-                    {/* Efeito de Vidro Curvo (Reflexos Laterais) */}
-                    <div className="absolute inset-0 pointer-events-none z-20 flex justify-between mix-blend-overlay">
+                    {/* Efeito de Vidro Curvo (Reflexos Laterais Escuros estilo Imagem) */}
+                    <div className="absolute inset-0 pointer-events-none z-20 flex justify-between mix-blend-multiply">
                       {/* Reflexo Esquerdo */}
-                      <div className="w-4 h-full bg-gradient-to-r from-white/30 via-white/5 to-transparent"></div>
+                      <div className="w-4 h-full bg-gradient-to-r from-black/40 to-transparent"></div>
                       {/* Reflexo Direito */}
-                      <div className="w-4 h-full bg-gradient-to-l from-white/30 via-white/5 to-transparent"></div>
+                      <div className="w-4 h-full bg-gradient-to-l from-black/40 to-transparent"></div>
                     </div>
                     
                     {/* Gradiente de Borda Inferior/Superior da Tela (Profundidade) */}
