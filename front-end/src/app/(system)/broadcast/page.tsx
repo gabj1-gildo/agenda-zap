@@ -457,42 +457,41 @@ export default function BroadcastPage() {
           <div className="sticky top-6">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Preview (Visão do Cliente)</h3>
             
-            {/* Simulador de Celular - Tela Curva Referência */}
+            {/* Simulador de Celular - Tela Curva Infinita Prateada */}
             <div className="relative w-[340px] h-[680px]">
-              {/* Chassi do Celular */}
-              <div className="absolute inset-0 bg-[#1a2634] rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),_0_0_0_2px_rgba(255,255,255,0.05)_inset] flex flex-col justify-between py-5 px-[3px] box-border overflow-hidden">
+              {/* Chassi do Celular Prata */}
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-300 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5),_0_0_0_1px_rgba(255,255,255,0.5)_inset] flex flex-col p-[3px] box-border overflow-visible">
                 
-                {/* Tela Interna */}
-                <div className="relative w-full flex-1 bg-[#efeae2] rounded-[2rem] overflow-hidden flex flex-col">
+                {/* Botões Físicos Prateados */}
+                {/* Volume Up */}
+                <div className="absolute top-[120px] -left-[3px] w-[4px] h-[40px] bg-gradient-to-r from-zinc-300 to-zinc-400 rounded-l-md border-y border-l border-zinc-400/50"></div>
+                {/* Volume Down */}
+                <div className="absolute top-[170px] -left-[3px] w-[4px] h-[40px] bg-gradient-to-r from-zinc-300 to-zinc-400 rounded-l-md border-y border-l border-zinc-400/50"></div>
+                {/* Power */}
+                <div className="absolute top-[150px] -right-[3px] w-[4px] h-[55px] bg-gradient-to-l from-zinc-300 to-zinc-400 rounded-r-md border-y border-r border-zinc-400/50"></div>
+
+                {/* Tela Interna Infinita */}
+                <div className="relative w-full flex-1 bg-[#efeae2] rounded-[2.4rem] overflow-hidden flex flex-col ring-1 ring-black/10">
                   
-                  {/* U-Shaped Notch & Status Bar Wrapper */}
-                  <div className="absolute top-0 inset-x-0 h-6 flex justify-between px-5 items-center z-50 pointer-events-none">
-                    {/* Status Bar Left */}
+                  {/* Status Bar */}
+                  <div className="absolute top-0 inset-x-0 h-8 flex justify-between px-7 items-center z-50 pointer-events-none">
+                    <span className="text-[11px] font-medium text-white tracking-tight mt-1">09:41</span>
                     <div className="flex gap-1.5 items-center mt-1">
-                      <div className="flex gap-0.5 items-end h-2.5">
-                        <div className="w-[2px] h-1 bg-white rounded-full"></div>
-                        <div className="w-[2px] h-1.5 bg-white rounded-full"></div>
-                        <div className="w-[2px] h-2 bg-white rounded-full"></div>
-                        <div className="w-[2px] h-2.5 bg-white rounded-full"></div>
-                      </div>
-                      <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.3 3 3.1 5.1 0 8.3L12 21L24 8.3C20.9 5.1 16.7 3 12 3Z"/></svg>
-                    </div>
-
-                    {/* The U Notch */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-5 bg-[#1a2634] rounded-b-[1.2rem] flex items-end justify-center pb-0.5">
-                      {/* Camera Lens */}
-                      <div className="w-3 h-3 bg-zinc-900 rounded-full border border-white/5 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-blue-900/40 rounded-full blur-[0.5px]"></div>
+                      <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.3 3 3.1 5.1 0 8.3L12 21L24 8.3C20.9 5.1 16.7 3 12 3Z"/></svg>
+                      <div className="w-5 h-2.5 border border-white/80 rounded-[3px] p-[1px] flex relative">
+                        <div className="bg-white w-full h-full rounded-[1.5px]"></div>
+                        <div className="absolute -right-1 top-[2.5px] w-[2px] h-1 bg-white/80 rounded-r-sm"></div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Status Bar Right */}
-                    <div className="flex gap-1.5 items-center mt-1 text-[9px] font-bold text-white tracking-wider">
-                      100%
-                      <div className="w-5 h-2.5 border border-white rounded-[2px] p-[1px] flex relative">
-                        <div className="bg-white w-full h-full rounded-[1px]"></div>
-                        <div className="absolute -right-1 top-[2px] w-[2px] h-1 bg-white rounded-r-sm"></div>
+                  {/* Dynamic Island / Punch Hole Notch */}
+                  <div className="absolute top-2.5 inset-x-0 h-6 flex justify-center z-50 pointer-events-none">
+                    <div className="w-24 h-6 bg-black rounded-full flex items-center justify-between px-2.5 shadow-md ring-1 ring-white/10">
+                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 border border-white/10 relative overflow-hidden">
+                        <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-blue-500/30 rounded-full blur-[1px]"></div>
                       </div>
+                      <div className="w-1 h-1 rounded-full bg-emerald-500/80 shadow-[0_0_4px_#10b981]"></div>
                     </div>
                   </div>
 
