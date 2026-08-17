@@ -519,16 +519,7 @@ export default function BroadcastPage() {
                   {/* Corpo das mensagens */}
                   <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 relative pb-10" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: 'contain', backgroundRepeat: 'repeat' }}>
                     
-                    {/* Efeito de Vidro Curvo (Reflexos Laterais Escuros estilo Imagem) */}
-                    <div className="absolute inset-0 pointer-events-none z-20 flex justify-between mix-blend-multiply">
-                      {/* Reflexo Esquerdo */}
-                      <div className="w-4 h-full bg-gradient-to-r from-black/40 to-transparent"></div>
-                      {/* Reflexo Direito */}
-                      <div className="w-4 h-full bg-gradient-to-l from-black/40 to-transparent"></div>
-                    </div>
-                    
-                    {/* Gradiente de Borda Inferior/Superior da Tela (Profundidade) */}
-                    <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_10px_20px_-10px_rgba(0,0,0,0.5),_inset_0_-10px_20px_-10px_rgba(0,0,0,0.5)]"></div>
+
                 
                 {/* Balão do Sistema / Aviso de Criptografia */}
                 <div className="bg-[#ffeecd] text-[#54656f] text-[10px] text-center p-1.5 rounded-lg max-w-[90%] mx-auto shadow-sm">
@@ -585,6 +576,17 @@ export default function BroadcastPage() {
               <div className="absolute bottom-1.5 inset-x-0 h-4 flex justify-center items-center pointer-events-none z-50">
                 <div className="w-28 h-1 bg-zinc-800/40 backdrop-blur-md rounded-full shadow-sm"></div>
               </div>
+
+              {/* Efeito de Vidro Curvo Global (Reflexos Laterais Escuros estilo Imagem) */}
+              <div className="absolute inset-0 pointer-events-none z-[60] flex justify-between mix-blend-multiply">
+                {/* Reflexo Esquerdo */}
+                <div className="w-4 h-full bg-gradient-to-r from-black/40 to-transparent"></div>
+                {/* Reflexo Direito */}
+                <div className="w-4 h-full bg-gradient-to-l from-black/40 to-transparent"></div>
+              </div>
+              
+              {/* Gradiente de Borda Inferior/Superior da Tela Global (Profundidade) */}
+              <div className="absolute inset-0 pointer-events-none z-[60] shadow-[inset_0_10px_20px_-10px_rgba(0,0,0,0.5),_inset_0_-10px_20px_-10px_rgba(0,0,0,0.5)]"></div>
             </div>
           </div>
           {/* Sombra de Reflexo */}
