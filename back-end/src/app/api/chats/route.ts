@@ -20,6 +20,25 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
+    // Fecha chats expirados dinamicamente antes de retornar os dados
+    const { subHours } = await import('date-fns');
+    const { lt, and } = await import('drizzle-orm');
+    const { tenants } = await import('@/db/schema');
+    
+    const tenant = await db.query.tenants.findFirst({ where: eq(tenants.id, tenantId) });
+    const thresholdHours = tenant?.autoCloseHours || 24;
+    const updatedThreshold = subHours(new Date(), thresholdHours);
+
+    await db.update(chatSessions)
+      .set({ status: 'CLOSED' })
+      .where(
+        and(
+          eq(chatSessions.tenantId, tenantId),
+          eq(chatSessions.status, 'ACTIVE'),
+          lt(chatSessions.updatedAt, updatedThreshold)
+        )
+      );
+
     const sessions = await db.query.chatSessions.findMany({
       where: eq(chatSessions.tenantId, tenantId),
       with: {

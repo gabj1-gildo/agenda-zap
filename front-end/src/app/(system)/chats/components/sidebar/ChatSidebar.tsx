@@ -14,7 +14,7 @@ interface ChatSidebarProps {
 
 export function ChatSidebar({ sessions, isLoading, selectedSessionId, onSelectSession, onNewChat }: ChatSidebarProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [readFilter, setReadFilter] = useState<"all" | "unread">("all");
+  const [readFilter, setReadFilter] = useState<"all" | "unread" | "closed">("all");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const filteredSessions = sessions.filter(session => {
@@ -27,7 +27,11 @@ export function ChatSidebar({ sessions, isLoading, selectedSessionId, onSelectSe
 
     let matchesRead = true;
     if (readFilter === "unread") {
-      matchesRead = session.hasUnread === true;
+      matchesRead = session.hasUnread === true && session.status !== "CLOSED";
+    } else if (readFilter === "closed") {
+      matchesRead = session.status === "CLOSED";
+    } else {
+      matchesRead = session.status !== "CLOSED";
     }
 
     return matchesSearch && matchesRead;
@@ -115,6 +119,16 @@ export function ChatSidebar({ sessions, isLoading, selectedSessionId, onSelectSe
               }`}
             >
               Não lidas
+            </button>
+            <button
+              onClick={() => setReadFilter('closed')}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                readFilter === 'closed' 
+                  ? 'bg-blue-600/10 text-blue-500 border border-blue-500/30' 
+                  : 'border border-muted text-muted-foreground hover:bg-muted/50'
+              }`}
+            >
+              Finalizados
             </button>
           </div>
         </div>
