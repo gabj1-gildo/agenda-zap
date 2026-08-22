@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Settings, Save, AlertCircle, Smartphone, RefreshCw } from "lucide-react";
+import { Settings, Save, AlertCircle, Smartphone, RefreshCw, Cpu, Key, Radio } from "lucide-react";
 import { getBackendUrl } from "@/lib/api";
 import { SystemPhoneModal } from "@/components/SystemPhoneModal";
 
@@ -102,7 +102,7 @@ export default function AdminSettingsPage() {
       const resKey = await fetch(getBackendUrl("/api/admin/system-settings"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ key: "whatsapp_default_api_key", value: instanceKey, description: "Token da instância padrão" })
+        body: JSON.stringify({ key: "whatsapp_default_api_key", value: instanceKey, description: "Token da instância do sistema" })
       });
 
       const resAiProvider = await fetch(getBackendUrl("/api/admin/system-settings"), {
@@ -114,7 +114,7 @@ export default function AdminSettingsPage() {
       const resAiModel = await fetch(getBackendUrl("/api/admin/system-settings"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ key: "global_ai_model", value: globalAiModel, description: "Modelo global de IA padrão (ex: gemini-2.5-flash)" })
+        body: JSON.stringify({ key: "global_ai_model", value: globalAiModel, description: "Modelo global de IA padrão" })
       });
 
       if (resName.ok && resKey.ok && resAiProvider.ok && resAiModel.ok) {
@@ -130,139 +130,157 @@ export default function AdminSettingsPage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Carregando configurações...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Carregando configurações do sistema...</div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
+      
+      <form onSubmit={handleSave} className="space-y-8">
 
-
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-border bg-muted/30">
-          <div className="flex justify-between items-start">
+        {/* Card 1: Instância de WhatsApp do Sistema */}
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-border bg-muted/20 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                WhatsApp Padrão
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Radio className="w-5 h-5 text-emerald-500" />
+                Instância WhatsApp do Sistema
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Esta instância da Evolution API será usada para envios do sistema (ex: recuperação de senha, avisos globais).
+              <p className="text-xs text-muted-foreground mt-1">
+                Instância utilizada para disparos, avisos de sistema e notificações operacionais.
               </p>
             </div>
             
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Status:</span>
                 {connectionStatus === "OPEN" ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     Conectado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
                     Desconectado
                   </span>
                 )}
                 <button
+                  type="button"
                   onClick={checkLiveStatus}
                   disabled={checkingStatus}
-                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted"
                   title="Atualizar Status"
                 >
                   <RefreshCw className={`w-4 h-4 ${checkingStatus ? "animate-spin" : ""}`} />
                 </button>
               </div>
               <button
+                type="button"
                 onClick={() => setShowPhoneModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md bg-[#25D366] text-white hover:bg-[#25D366]/90 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-[#25D366] text-white hover:bg-[#25D366]/90 transition-colors shadow-sm"
               >
                 <Smartphone className="w-4 h-4" />
                 Conectar WhatsApp
               </button>
             </div>
           </div>
+
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5" /> Nome da Instância
+              </label>
+              <input
+                type="text"
+                value={instanceName}
+                onChange={(e) => setInstanceName(e.target.value)}
+                placeholder="Ex: sistema-agenda-zap"
+                required
+                className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-primary" /> Token da Instância
+              </label>
+              <input
+                type="text"
+                value={instanceKey}
+                onChange={(e) => setInstanceKey(e.target.value)}
+                placeholder="Ex: B6254EF1-9A32-4781-..."
+                required
+                className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background font-mono text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Token API da instância comum do WhatsApp configurada na Evolution API.
+              </p>
+            </div>
+          </div>
         </div>
-        
-        <div className="p-6">
-          <form onSubmit={handleSave} className="space-y-6">
+
+        {/* Card 2: Inteligência Artificial Global */}
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-border bg-muted/20">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-primary" />
+              Inteligência Artificial Global
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Defina o provedor e o modelo padrão que atenderão as automações globais.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Nome da Instância</label>
-                <input
-                  type="text"
-                  value={instanceName}
-                  onChange={(e) => setInstanceName(e.target.value)}
-                  placeholder="Ex: whatsapp-vendas"
-                  required
-                  className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:ring-1 focus:ring-primary outline-none"
-                />
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Provedor de IA Padrão</label>
+                <select
+                  value={globalAiProvider}
+                  onChange={(e) => setGlobalAiProvider(e.target.value)}
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                >
+                  <option value="gemini">Google Gemini (SDK Nativo)</option>
+                  <option value="groq">Groq (OpenAI Compatible)</option>
+                  <option value="deepseek">DeepSeek (OpenAI Compatible)</option>
+                </select>
+                <p className="text-[11px] text-muted-foreground">
+                  A chave de API correspondente deve estar no arquivo .env do servidor.
+                </p>
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Global API Key (Token)</label>
-                <input
-                  type="text"
-                  value={instanceKey}
-                  onChange={(e) => setInstanceKey(e.target.value)}
-                  placeholder="Ex: 665D125A-..."
-                  required
-                  className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:ring-1 focus:ring-primary outline-none"
-                />
-              </div>
-            </div>
-            
-            <div className="pt-6 border-t border-border mt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5" /> Inteligência Artificial Global
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold">Provedor de IA Padrão</label>
-                  <select
-                    value={globalAiProvider}
-                    onChange={(e) => setGlobalAiProvider(e.target.value)}
-                    className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:ring-1 focus:ring-primary outline-none"
-                  >
-                    <option value="gemini">Google Gemini (SDK Nativo)</option>
-                    <option value="groq">Groq (OpenAI Compatible)</option>
-                    <option value="deepseek">DeepSeek (OpenAI Compatible)</option>
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">A chave de API correspondente (ex: GROQ_API_KEY) deve estar configurada no arquivo .env</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold">Modelo de IA Específico</label>
-                  <select
-                    value={globalAiModel}
-                    onChange={(e) => setGlobalAiModel(e.target.value)}
-                    className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:ring-1 focus:ring-primary outline-none"
-                  >
-                    <option value="">Selecione um modelo...</option>
-                    {availableAiModels.filter(m => m.provider === globalAiProvider).map(m => (
-                      <option key={m.id} value={m.modelId}>{m.name} {m.isActive ? '' : '(Inativo)'}</option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Os modelos disponíveis são gerenciados abaixo.
-                  </p>
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Modelo de IA Padrão</label>
+                <select
+                  value={globalAiModel}
+                  onChange={(e) => setGlobalAiModel(e.target.value)}
+                  className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                >
+                  <option value="">Selecione um modelo...</option>
+                  {availableAiModels.filter(m => m.provider === globalAiProvider).map(m => (
+                    <option key={m.id} value={m.modelId}>{m.name} {m.isActive ? '' : '(Inativo)'}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-border mt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Settings className="w-5 h-5" /> Gerenciar Modelos de IA
-                </h3>
-              </div>
-              <div className="space-y-4">
+            {/* Gerenciamento de Modelos */}
+            <div className="pt-6 border-t border-border space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                Modelos de IA Cadastrados
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {availableAiModels.map(model => (
-                  <div key={model.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-md border border-border">
+                  <div key={model.id} className="p-4 bg-muted/20 border border-border rounded-xl flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-semibold">{model.name} <span className="text-xs text-muted-foreground ml-2">({model.modelId})</span></p>
-                      <p className="text-xs text-muted-foreground">Provedor: {model.provider} | Status: {model.isActive ? 'Ativo' : 'Inativo'}</p>
+                      <p className="font-bold text-sm text-foreground">{model.name}</p>
+                      <p className="text-xs font-mono text-muted-foreground">{model.modelId}</p>
+                      <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded ${model.isActive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                        Provedor: {model.provider} | {model.isActive ? 'Ativo' : 'Inativo'}
+                      </span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-1.5">
                       <button 
                         type="button"
                         onClick={async () => {
@@ -276,7 +294,7 @@ export default function AdminSettingsPage() {
                             toast.success("Status atualizado!");
                           }
                         }}
-                        className="text-xs px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                        className="text-xs px-3 py-1 rounded-lg border border-border font-semibold hover:bg-muted transition-colors"
                       >
                         {model.isActive ? 'Desativar' : 'Ativar'}
                       </button>
@@ -293,76 +311,80 @@ export default function AdminSettingsPage() {
                             toast.success("Excluído com sucesso!");
                           }
                         }}
-                        className="text-xs px-3 py-1 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90"
+                        className="text-xs px-3 py-1 rounded-lg border border-red-500/20 text-red-500 font-semibold hover:bg-red-500/10 transition-colors"
                       >
                         Excluir
                       </button>
                     </div>
                   </div>
                 ))}
-                
-                <div className="p-4 border border-dashed border-border rounded-lg bg-card mt-4">
-                  <h4 className="text-sm font-semibold mb-3">Adicionar Novo Modelo</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <select id="newProvider" className="border border-input rounded-md px-3 py-1.5 text-sm">
-                      <option value="gemini">Google Gemini</option>
-                      <option value="groq">Groq</option>
-                      <option value="deepseek">DeepSeek</option>
-                    </select>
-                    <input id="newModelId" placeholder="ID (ex: llama-3.1-8b-instant)" className="border border-input rounded-md px-3 py-1.5 text-sm" />
-                    <input id="newName" placeholder="Nome (ex: Llama 3.1 8B)" className="border border-input rounded-md px-3 py-1.5 text-sm" />
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={async () => {
-                      const provider = (document.getElementById('newProvider') as HTMLSelectElement).value;
-                      const modelId = (document.getElementById('newModelId') as HTMLInputElement).value;
-                      const name = (document.getElementById('newName') as HTMLInputElement).value;
-                      if(!modelId || !name) return toast.error("Preencha todos os campos");
-                      
-                      const res = await fetch(getBackendUrl("/api/admin/ai-models"), {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                        body: JSON.stringify({ provider, modelId, name })
-                      });
-                      if(res.ok) {
-                        const newModels = await (await fetch(getBackendUrl("/api/admin/ai-models"), { headers: { "Authorization": `Bearer ${token}` }})).json();
-                        setAvailableAiModels(newModels.data);
-                        (document.getElementById('newModelId') as HTMLInputElement).value = '';
-                        (document.getElementById('newName') as HTMLInputElement).value = '';
-                        toast.success("Modelo adicionado!");
-                      } else {
-                        toast.error("Erro ao adicionar modelo");
-                      }
-                    }}
-                    className="mt-3 text-sm px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 w-full md:w-auto"
-                  >
-                    Adicionar Modelo
-                  </button>
+              </div>
+
+              {/* Form Novo Modelo */}
+              <div className="p-4 border border-dashed border-border rounded-xl bg-card">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Adicionar Novo Modelo</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <select id="newProvider" className="border border-border rounded-xl px-3 py-2 text-sm bg-background">
+                    <option value="gemini">Google Gemini</option>
+                    <option value="groq">Groq</option>
+                    <option value="deepseek">DeepSeek</option>
+                  </select>
+                  <input id="newModelId" placeholder="ID (ex: llama-3.1-8b-instant)" className="border border-border rounded-xl px-3 py-2 text-sm bg-background font-mono" />
+                  <input id="newName" placeholder="Nome (ex: Llama 3.1 8B)" className="border border-border rounded-xl px-3 py-2 text-sm bg-background" />
                 </div>
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    const provider = (document.getElementById('newProvider') as HTMLSelectElement).value;
+                    const modelId = (document.getElementById('newModelId') as HTMLInputElement).value;
+                    const name = (document.getElementById('newName') as HTMLInputElement).value;
+                    if(!modelId || !name) return toast.error("Preencha todos os campos");
+                    
+                    const res = await fetch(getBackendUrl("/api/admin/ai-models"), {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                      body: JSON.stringify({ provider, modelId, name })
+                    });
+                    if(res.ok) {
+                      const newModels = await (await fetch(getBackendUrl("/api/admin/ai-models"), { headers: { "Authorization": `Bearer ${token}` }})).json();
+                      setAvailableAiModels(newModels.data);
+                      (document.getElementById('newModelId') as HTMLInputElement).value = '';
+                      (document.getElementById('newName') as HTMLInputElement).value = '';
+                      toast.success("Modelo adicionado!");
+                    } else {
+                      toast.error("Erro ao adicionar modelo");
+                    }
+                  }}
+                  className="mt-3 text-xs font-bold px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-xl transition-colors"
+                >
+                  Adicionar Modelo
+                </button>
               </div>
             </div>
-
-            <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg flex items-start gap-3 mt-6">
-              <AlertCircle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-orange-800">
-                Atenção: Modificar estes valores impactará o envio de mensagens de sistema para todos os usuários. Certifique-se de que a instância esteja conectada na Evolution API.
-              </p>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={saving}
-                className="bg-primary text-primary-foreground px-6 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {saving ? "Salvando..." : "Salvar Configurações"}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
+
+        {/* Warning Alert */}
+        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3 text-amber-600 dark:text-amber-400">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <p className="text-xs font-medium leading-relaxed">
+            Atenção: Modificar o Token da Instância ou as configurações de IA afetará diretamente a entrega das mensagens do sistema. Verifique a conectividade com a Evolution API.
+          </p>
+        </div>
+
+        {/* Submit */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+            className="px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? "Salvando..." : "Salvar Configurações"}
+          </button>
+        </div>
+      </form>
 
       {showPhoneModal && (
         <SystemPhoneModal 

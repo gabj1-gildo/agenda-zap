@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Wand2 } from "lucide-react";
 import { AdvancedPreset } from "../types";
 
 interface AdvancedPresetsTabProps {
@@ -38,54 +38,72 @@ export function AdvancedPresetsTab({ fieldId, fieldName, presets, setAdvancedPre
 
   return (
     <div className="space-y-6 outline-none">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-semibold">{fieldName}</h2>
-          <p className="text-sm text-muted-foreground">Estes modelos aparecerão como opções prontas para este campo.</p>
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Wand2 className="w-5 h-5 text-primary" />
+            {fieldName}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Estes modelos aparecerão como opções prontas de sugestão para o campo {fieldName}.
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleAdd} className="gap-2">
+        <Button size="sm" onClick={handleAdd} className="gap-2 shrink-0">
           <Plus className="w-4 h-4" /> Adicionar Modelo
         </Button>
       </div>
       
       {(!presets || presets.length === 0) ? (
-        <div className="text-center p-8 border border-dashed rounded-lg text-muted-foreground">
+        <div className="text-center p-12 border border-dashed rounded-2xl text-muted-foreground bg-card">
           Nenhum modelo configurado para este campo.
         </div>
       ) : (
-        presets.map((item, idx) => (
-          <div key={idx} className="relative bg-muted/30 border rounded-lg p-4 space-y-4">
-            <div className="absolute top-4 right-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => handleRemove(idx)}
-                className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+        /* Grid de 2 cards por linha */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {presets.map((item, idx) => (
+            <div key={idx} className="relative bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm hover:border-primary/40 transition-all flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pr-10">
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-md">
+                    Modelo #{idx + 1}
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => handleRemove(idx)}
+                    className="absolute top-4 right-4 text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-xl"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Nome do Modelo (Exibido no Menu)
+                  </Label>
+                  <Input 
+                    value={item.label || ""} 
+                    onChange={(e) => handleUpdate(idx, 'label', e.target.value)} 
+                    placeholder="Ex: Padrão, Rígido, Descontraído..."
+                    className="bg-background text-sm font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Texto do Template (Conteúdo Injetado)
+                  </Label>
+                  <Textarea 
+                    value={item.text || ""} 
+                    onChange={(e) => handleUpdate(idx, 'text', e.target.value)} 
+                    placeholder="Ex: Instrução de como a IA deve agir..."
+                    className="min-h-[120px] bg-background font-mono text-xs resize-y"
+                  />
+                </div>
+              </div>
             </div>
-            
-            <div className="space-y-2 pr-12">
-              <Label>Nome do Modelo (Exibido no Menu)</Label>
-              <Input 
-                value={item.label || ""} 
-                onChange={(e) => handleUpdate(idx, 'label', e.target.value)} 
-                placeholder="Ex: Padrão, Rígido, Descontraído..."
-                className="bg-background"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Texto do Template (Conteúdo Injetado)</Label>
-              <Textarea 
-                value={item.text || ""} 
-                onChange={(e) => handleUpdate(idx, 'text', e.target.value)} 
-                placeholder="Ex: Instrução de como a IA deve agir..."
-                className="min-h-[100px] bg-background font-mono text-sm"
-              />
-            </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );
