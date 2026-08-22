@@ -83,9 +83,10 @@ const NAV_STRUCTURE: NavCategory[] = [
     label: "Admin",
     roles: ["SUPERADMIN"],
     items: [
-      { href: "/admin/tenants",   label: "Empresas",     icon: Building2 },
-      { href: "/admin/settings",  label: "Sistema",      icon: Server },
-      { href: "/admin/ai-presets",label: "Templates IA", icon: Wand2 },
+      { href: "/admin/tenants",   label: "Empresas",         icon: Building2 },
+      { href: "/admin/broadcast", label: "Disparos Globais", icon: Megaphone },
+      { href: "/admin/settings",  label: "Sistema",          icon: Server },
+      { href: "/admin/ai-presets",label: "Templates IA",     icon: Wand2 },
     ],
   },
 ];
