@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     const tokenHash = crypto.createHash('sha256').update(plainRefreshToken).digest('hex');
     
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30); // 30 dias
+    expiresAt.setHours(expiresAt.getHours() + 20); // 20 horas
 
     await db.insert(refreshTokens).values({
       id: crypto.randomUUID(),
