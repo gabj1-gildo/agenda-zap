@@ -8,10 +8,10 @@ interface Props {
 
 export function AdminStatCards({ tenants, adminMetrics }: Props) {
   const stats = [
-    { label: "Empresas cadastradas", value: tenants.length.toString(), icon: Building2, colorClass: "bg-blue-500/10", textClass: "text-blue-600 dark:text-blue-400" },
-    { label: "Faturamento (MRR)", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(adminMetrics?.mrr || 0), icon: TrendingUp, colorClass: "bg-emerald-500/10", textClass: "text-emerald-600 dark:text-emerald-400" },
-    { label: "Volume PIX", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(adminMetrics?.pixVolume || 0), icon: DollarSign, colorClass: "bg-green-500/10", textClass: "text-green-600 dark:text-green-400" },
-    { label: "Tokens IA Utilizados", value: (adminMetrics?.totalTokens || 0).toLocaleString('pt-BR'), icon: Database, colorClass: "bg-indigo-500/10", textClass: "text-indigo-600 dark:text-indigo-400" },
+    { label: "Empresas cadastradas", value: tenants.length.toString(), icon: Building2, colorClass: "bg-sage/10", textClass: "text-sage" },
+    { label: "Faturamento (MRR)", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(adminMetrics?.mrr || 0), icon: TrendingUp, colorClass: "bg-sage/10", textClass: "text-sage" },
+    { label: "Volume PIX", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(adminMetrics?.pixVolume || 0), icon: DollarSign, colorClass: "bg-sand", textClass: "text-ink" },
+    { label: "Tokens IA Utilizados", value: (adminMetrics?.totalTokens || 0).toLocaleString('pt-BR'), icon: Database, colorClass: "bg-primary/10", textClass: "text-primary" },
   ];
 
   return (

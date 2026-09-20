@@ -2,8 +2,7 @@
 
 import { Bell, Search, Building2, ChevronDown, Menu, LayoutDashboard, Calendar, CalendarDays, CalendarCheck, MessageSquare, CreditCard, Settings, Building2 as Building2Icon, Users, Server, Contact, Filter, Megaphone, UserCircle, Wand2, Package, UserCheck, FileText, Briefcase } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { PaletteToggle } from "@/components/PaletteToggle";
+
 import { usePathname } from "next/navigation";
 import { hasRouteAccess } from "@/lib/routePermissions";
 import { useSession, signOut } from "next-auth/react";
@@ -112,7 +111,7 @@ export function Header() {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-md"
+      className="h-[68px] flex items-center justify-between px-4 sm:px-6 border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-md"
     >
       {/* Left: title */}
       <div className="flex items-center gap-3 sm:gap-5">
@@ -260,11 +259,7 @@ export function Header() {
 
       {/* Right: search + actions */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Palette toggle */}
-        <PaletteToggle />
 
-        {/* Theme toggle */}
-        <ThemeToggle />
 
         {/* Bell */}
         <DropdownMenu>

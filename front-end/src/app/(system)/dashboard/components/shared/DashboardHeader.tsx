@@ -13,8 +13,8 @@ export function DashboardHeader({ role, userName, dateRange, setDateRange, isRef
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isRefreshing ? "animate-spin" : "animate-pulse"}`}></span> 
+          <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-sage/15 text-sage">
+            <span className={`w-2 h-2 rounded-full bg-sage ${isRefreshing ? "animate-spin" : "animate-pulse"}`}></span>
             {isRefreshing ? "Atualizando" : "Dashboard Ao vivo"}
           </span>
         </p>

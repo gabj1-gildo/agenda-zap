@@ -1,7 +1,7 @@
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { AuthProvider } from "@/components/AuthProvider";
-import { PaletteProvider } from "@/components/PaletteProvider";
+
 
 export default function SystemLayout({
   children,
@@ -10,7 +10,7 @@ export default function SystemLayout({
 }>) {
   return (
     <AuthProvider>
-      <PaletteProvider>
+
         <div className="flex h-screen w-full overflow-hidden">
           <Sidebar />
           <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -20,7 +20,7 @@ export default function SystemLayout({
             </main>
           </div>
         </div>
-      </PaletteProvider>
+
     </AuthProvider>
   );
 }

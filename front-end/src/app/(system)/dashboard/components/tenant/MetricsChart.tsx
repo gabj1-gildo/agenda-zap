@@ -30,8 +30,8 @@ export function MetricsChart({ metrics, role }: Props) {
                 contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)', fontWeight: 'bold', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} 
               />
               <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
-              {role !== "ATTENDANT" && <Bar yAxisId="left" name="Faturamento (R$)" dataKey="faturamento" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={50} />}
-              <Bar yAxisId="right" name="Qtd. Atendimentos" dataKey="atendimentos" fill="#6366f1" radius={[6, 6, 0, 0]} maxBarSize={50} />
+              {role !== "ATTENDANT" && <Bar yAxisId="left" name="Faturamento (R$)" dataKey="faturamento" fill="var(--chart-1)" radius={[6, 6, 0, 0]} maxBarSize={50} />}
+              <Bar yAxisId="right" name="Qtd. Atendimentos" dataKey="atendimentos" fill="var(--chart-2)" radius={[6, 6, 0, 0]} maxBarSize={50} />
             </BarChart>
           </ResponsiveContainer>
         </div>
