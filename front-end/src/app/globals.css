@@ -221,17 +221,6 @@
   --sidebar-accent-foreground:  #ffffff;
   --sidebar-border:             rgba(255,255,255,0.10);
   --sidebar-ring:               var(--sage);
-
-  /* New palette aliases */
-  --sage-soft: var(--sage-soft);
-  --sage-muted: var(--sage-muted);
-  --sand: var(--sand);
-  --sand-muted: var(--sand-muted);
-  --ink: var(--ink);
-  --canvas: var(--canvas);
-  --surface: var(--surface);
-  --side: var(--side);
-  --line: var(--line);
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -347,7 +336,6 @@
   --wash-2: rgba(245, 165, 36, .05);
 
   --bg: var(--background);
-  --surface: var(--card);
   --surface-2: var(--secondary);
   --surface-3: var(--muted);
   --border-soft: rgba(15, 23, 42, .05);
@@ -362,7 +350,6 @@
   --wash-2: rgba(245, 165, 36, .07);
 
   --bg: var(--background);
-  --surface: var(--card);
   --surface-2: var(--secondary);
   --surface-3: var(--muted);
   --border-soft: rgba(255, 255, 255, .04);
