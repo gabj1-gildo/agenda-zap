@@ -320,7 +320,7 @@
   box-shadow: 0 0 0 3px rgba(34,197,94,.18);
 }
 
-/* ---- IA Card ---- */
+/* ---- IA Card (legado) ---- */
 .aiCard {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--sidebar-border);
@@ -331,21 +331,17 @@
 }
 
 .aiCard .row {
-  display: flex;50%;
-  flex-shrink: 0;
-  background: #d3a66d;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 11px;
-  color: #503c29;
-  overflow: hidden;
+  gap: 8px;
+  margin-bottom: 5px;
 }
 
-.userMeta {
-  flex: 1;
-  min-width: 0--sidebar-primary);
+.aiCard .bot {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--sidebar-primary);
   color: var(--sidebar-primary-foreground);
   display: flex;
   align-items: center;
@@ -357,6 +353,11 @@
 .aiCard .bot svg {
   width: 13px;
   height: 13px;
+}
+
+.userMeta {
+  flex: 1;
+  min-width: 0;
 }
 
 .aiCard .statusDot {
@@ -454,16 +455,15 @@
 .av {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
-  background: var(--sidebar-primary);
+  background: #d3a66d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11px;
-  color: var(--sidebar-primary-foreground);
-  font-family: 'Space Grotesk', sans-serif;
+  color: #503c29;
   overflow: hidden;
 }
 
@@ -482,7 +482,11 @@
   text-overflow: ellipsis;
   color: var(--sidebar-foreground);
 }
-;
+
+.role {
+  font-size: 10px;
+  color: var(--sidebar-foreground);
+  opacity: 0.6;
 }
 
 /* ---- Recolhimento para ícones (1040px) ---- */
@@ -503,8 +507,4 @@
   .sideUserFooter { justify-content: center; }
   .sideUserInfo { border: none; background: transparent; justify-content: center; padding: 6px; }
   .logoutBtn { display: none; }
-.role {
-  font-size: 10px;
-  color: var(--sidebar-foreground);
-  opacity: 0.65;
 }
