@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
+import useSWR from "swr";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { NewAppointmentModal } from "@/components/NewAppointmentModal";
 import { getBackendUrl } from "@/lib/api";
+import { useProfessionals, useRooms } from "@/lib/hooks/useShared";
 import { Appointment } from "../types/calendar.types";
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 8); // 08h–18h
@@ -52,81 +54,51 @@ interface Props {
 }
 
 export function CalendarClient({ tenantId, token, initialAppointments, initialMode }: Props) {
-  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [baseDate, setBaseDate] = useState(new Date());
-  const [view, setView] = useState<"day" | "week" | "month">("month");
-  const [loading, setLoading] = useState(false);
+  const [view, setView] = useState<"day" | "week" | "month">("week");
 
   const [schedulingMode, setSchedulingMode] = useState(initialMode || "GERAL");
-  const [professionals, setProfessionals] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
   const [selectedProfId, setSelectedProfId] = useState<string>("ALL");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("ALL");
 
   const [showNewApptModal, setShowNewApptModal] = useState(false);
 
-  const fetchAgenda = useCallback(async (isInitial = false) => {
-    if (isInitial && initialAppointments.length > 0) return; // Skip fetch if we just mounted and have SSR data
-    
-    setLoading(true);
-    try {
-      let startStr = "";
-      let endStr = "";
-      
-      if (view === "month") {
-        const days = getMonthDays(baseDate);
-        startStr = days[0].toISOString();
-        endStr = days[days.length - 1].toISOString();
-      } else if (view === "week") {
-        const days = getWeekDays(baseDate);
-        startStr = days[0].toISOString();
-        endStr = days[days.length - 1].toISOString();
-      } else {
-        startStr = baseDate.toISOString();
-        const end = new Date(baseDate);
-        end.setDate(end.getDate() + 1);
-        endStr = end.toISOString();
-      }
+  const { data: professionals = [] as any[] } = useProfessionals(tenantId);
+  const { data: rooms = [] as any[] } = useRooms(tenantId);
 
-      const res = await fetch(getBackendUrl(`/api/tenants/${tenantId}/agenda?start=${startStr}&end=${endStr}`), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAppointments(data.data);
-        if (data.schedulingMode) setSchedulingMode(data.schedulingMode);
-      }
-    } catch {
-      // fail silently
-    } finally {
-      setLoading(false);
+  const range = useMemo(() => {
+    if (view === "month") {
+      const days = getMonthDays(baseDate);
+      return [days[0], days[days.length - 1]] as const;
     }
-  }, [tenantId, baseDate, view, token, initialAppointments]);
+    if (view === "week") {
+      const days = getWeekDays(baseDate);
+      return [days[0], days[days.length - 1]] as const;
+    }
+    const end = new Date(baseDate);
+    end.setDate(end.getDate() + 1);
+    return [baseDate, end] as const;
+  }, [view, baseDate]);
 
-  const loadResources = useCallback(async () => {
-    if (!tenantId) return;
-    try {
-      const headers = { 'tenant-id': tenantId, Authorization: `Bearer ${token}` };
-      const [profRes, roomRes] = await Promise.all([
-        fetch(getBackendUrl('/api/settings/professionals'), { headers }),
-        fetch(getBackendUrl('/api/settings/rooms'), { headers })
-      ]);
-      const pData = await profRes.json();
-      const rData = await roomRes.json();
-      if (pData.success) setProfessionals(pData.data);
-      if (rData.success) setRooms(rData.data);
-    } catch (e) { }
-  }, [tenantId, token]);
+  const agendaUrl = `/api/tenants/${tenantId}/agenda?start=${range[0].toISOString()}&end=${range[1].toISOString()}`;
 
-  // Initial load effect
-  useEffect(() => { 
-    loadResources();
-  }, [loadResources]);
+  const { data, isValidating, mutate } = useSWR(
+    token ? [agendaUrl, token] : null,
+    async ([url, jwt]: [string, string]) => {
+      const res = await fetch(getBackendUrl(url), {
+        headers: { Authorization: `Bearer ${jwt}` }
+      });
+      const json = await res.json();
+      if (json.success) {
+        if (json.schedulingMode) setSchedulingMode(json.schedulingMode);
+        return json.data as Appointment[];
+      }
+      throw new Error("Falha ao carregar agenda");
+    },
+    { keepPreviousData: true, revalidateOnFocus: false }
+  );
 
-  // Fetch data when date/view changes
-  useEffect(() => {
-    fetchAgenda();
-  }, [fetchAgenda]);
+  const appointments = data ?? initialAppointments;
 
   const prevRange = () => { 
     const d = new Date(baseDate); 
@@ -191,7 +163,7 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
           onClose={() => setShowNewApptModal(false)}
           onSuccess={() => {
             setShowNewApptModal(false);
-            fetchAgenda();
+            mutate();
           }}
         />
       )}
@@ -207,7 +179,7 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
                 onChange={e => setSelectedProfId(e.target.value)}
               >
                 <option value="ALL">Todos os Profissionais</option>
-                {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                {professionals.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             )}
 
@@ -218,7 +190,7 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
                 onChange={e => setSelectedRoomId(e.target.value)}
               >
                 <option value="ALL">Todas as Salas</option>
-                {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                {rooms.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             )}
           </div>
@@ -283,9 +255,9 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
 
       {/* Calendar Grid */}
       <div className="flex-1 min-h-0 overflow-hidden relative">
-        {loading && (
+        {isValidating && (
           <div className="absolute inset-0 bg-background/50 z-20 flex items-center justify-center">
-            <div className="px-4 py-2 bg-card border border-border rounded-xl shadow-sm text-sm font-medium">Carregando...</div>
+            <div className="px-4 py-2 bg-card border border-border rounded-xl shadow-sm text-sm font-medium">Atualizando...</div>
           </div>
         )}
         
@@ -369,11 +341,11 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
                   const today = new Date();
                   const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
                   return (
-                    <div key={d.toISOString()} className="text-center py-3 border-l border-border">
+                    <div key={d.toISOString()} className="text-center py-2.5 border-l border-border">
                       <div className={`text-[10px] font-bold uppercase tracking-wider ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {view === "day" ? FULL_DAY_LABELS[d.getDay()] : DAY_LABELS[d.getDay()]}
+                        {view === "day" ? FULL_DAY_LABELS[d.getDay()].slice(0, 3) : DAY_LABELS[d.getDay()]}
                       </div>
-                      <div className={`font-display font-extrabold text-xl leading-tight ${isToday ? 'text-primary' : 'text-foreground'}`}>
+                      <div className={`mx-auto mt-0.5 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold ${isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'}`}>
                         {d.getDate()}
                       </div>
                     </div>
@@ -391,17 +363,16 @@ export function CalendarClient({ tenantId, token, initialAppointments, initialMo
                     const st = slot ? statusStyle[slot.status] ?? statusStyle.PENDENTE : null;
                     return (
                       <div key={day.toISOString()} className="border-l border-border p-1">
-                        {slot && st && (
+                        {slot && st ? (
                           <div
-                            style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}
-                            className="h-full rounded-lg p-1.5 cursor-pointer hover:opacity-80 transition-opacity text-[11px] font-semibold leading-tight flex flex-col gap-0.5"
+                            style={{ borderLeft: `3px solid ${st.color}`, background: st.bg, color: st.color }}
+                            className="h-full rounded-md px-2 py-1.5 cursor-pointer hover:opacity-80 transition-opacity text-[11px] font-semibold leading-tight"
                           >
-                            <span className="font-mono-custom text-[9px] opacity-70">
-                              {new Date(slot.date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                            <span className="truncate">{slot.clientName || "Cliente"}</span>
-                            {slot.serviceName && <span className="text-[9px] opacity-70 truncate">{slot.serviceName}</span>}
+                            <span className="block text-[10px] font-bold truncate">{slot.clientName || "Cliente"}</span>
+                            {slot.serviceName && <span className="block text-[9px] opacity-70 truncate">{slot.serviceName}</span>}
                           </div>
+                        ) : (
+                          <div className="h-full flex items-center px-2 text-[10px] text-muted-foreground/60">Livre</div>
                         )}
                       </div>
                     );

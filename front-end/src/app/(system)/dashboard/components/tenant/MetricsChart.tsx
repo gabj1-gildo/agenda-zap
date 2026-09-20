@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, TrendingUp } from "lucide-react";
+import { Activity } from "lucide-react";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Legend, Bar } from "recharts";
 import { DashboardMetrics } from "../../types/dashboard.types";
 
@@ -11,10 +11,10 @@ interface Props {
 
 export function MetricsChart({ metrics, role }: Props) {
   return (
-    <div style={{ borderColor: "var(--border)" }} className="bg-card border rounded-2xl p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <TrendingUp className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display font-extrabold text-lg text-foreground">Evolução no Período</h2>
+    <div style={{ borderColor: "var(--line)" }} className="bg-card border rounded-xl p-5">
+      <div className="mb-5">
+        <h2 className="section-title">Agendamentos no período</h2>
+        <p className="section-sub">Evolução de faturamento e atendimentos</p>
       </div>
       
       {metrics.chartData && metrics.chartData.length > 0 ? (

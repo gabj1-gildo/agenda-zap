@@ -1,6 +1,8 @@
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { AuthProvider } from "@/components/AuthProvider";
+import { SWRConfig } from "swr";
+import { swrConfig } from "@/lib/swr-config";
 
 
 export default function SystemLayout({
@@ -10,7 +12,7 @@ export default function SystemLayout({
 }>) {
   return (
     <AuthProvider>
-
+      <SWRConfig value={swrConfig}>
         <div className="flex h-screen w-full overflow-hidden">
           <Sidebar />
           <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -20,7 +22,7 @@ export default function SystemLayout({
             </main>
           </div>
         </div>
-
+      </SWRConfig>
     </AuthProvider>
   );
 }

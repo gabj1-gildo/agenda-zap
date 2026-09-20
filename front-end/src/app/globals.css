@@ -49,6 +49,111 @@
 }
 
 /* ══════════════════════════════════════════════════════════
+   REMAPEAMENTO DE CORES LEGADAS → paleta pinho/linho/argila
+   (verde/esmeralda → pinho; âmbar/laranja → ocre;
+    vermelho/rosa → argila-avermelhada; roxo/índigo/violeta → argila)
+   ══════════════════════════════════════════════════════════ */
+@theme {
+  /* pinho (sage) — sucesso */
+  --color-emerald-50: #eef4f0;
+  --color-emerald-100: #dcebe2;
+  --color-emerald-200: #bcd7c8;
+  --color-emerald-300: #93bca6;
+  --color-emerald-400: #679b83;
+  --color-emerald-500: #3f7569;
+  --color-emerald-600: #346457;
+  --color-emerald-700: #2b5146;
+  --color-emerald-800: #223f38;
+  --color-emerald-900: #1a302a;
+  --color-green-50: #eef4f0;
+  --color-green-100: #dcebe2;
+  --color-green-200: #bcd7c8;
+  --color-green-300: #93bca6;
+  --color-green-400: #679b83;
+  --color-green-500: #3f7569;
+  --color-green-600: #346457;
+  --color-green-700: #2b5146;
+  --color-green-800: #223f38;
+  --color-green-900: #1a302a;
+
+  /* ocre — aviso/atenção */
+  --color-amber-50: #fbf6ec;
+  --color-amber-100: #f5ecd7;
+  --color-amber-200: #e9d6ab;
+  --color-amber-300: #ddc180;
+  --color-amber-400: #d0ad61;
+  --color-amber-500: #c99b4d;
+  --color-amber-600: #a67e3b;
+  --color-amber-700: #80622e;
+  --color-amber-800: #5f4822;
+  --color-amber-900: #443319;
+  --color-orange-50: #fbf6ec;
+  --color-orange-100: #f5ecd7;
+  --color-orange-200: #e9d6ab;
+  --color-orange-300: #ddc180;
+  --color-orange-400: #d0ad61;
+  --color-orange-500: #c99b4d;
+  --color-orange-600: #a67e3b;
+  --color-orange-700: #80622e;
+  --color-orange-800: #5f4822;
+  --color-orange-900: #443319;
+
+  /* argila avermelhada — erro/destrutivo */
+  --color-red-50: #f9efee;
+  --color-red-100: #f2dddb;
+  --color-red-200: #e6bbb8;
+  --color-red-300: #d4938f;
+  --color-red-400: #c67670;
+  --color-red-500: #b85b57;
+  --color-red-600: #9a4b47;
+  --color-red-700: #7b3d3a;
+  --color-red-800: #5c2e2c;
+  --color-red-900: #422120;
+  --color-rose-50: #f9efee;
+  --color-rose-100: #f2dddb;
+  --color-rose-200: #e6bbb8;
+  --color-rose-300: #d4938f;
+  --color-rose-400: #c67670;
+  --color-rose-500: #b85b57;
+  --color-rose-600: #9a4b47;
+  --color-rose-700: #7b3d3a;
+  --color-rose-800: #5c2e2c;
+  --color-rose-900: #422120;
+
+  /* argila — destaque/conversão */
+  --color-purple-50: #f7efe9;
+  --color-purple-100: #efded1;
+  --color-purple-200: #dfbea3;
+  --color-purple-300: #cc9a76;
+  --color-purple-400: #bc825c;
+  --color-purple-500: #ad684f;
+  --color-purple-600: #905642;
+  --color-purple-700: #734635;
+  --color-purple-800: #563428;
+  --color-purple-900: #3e251d;
+  --color-indigo-50: #f7efe9;
+  --color-indigo-100: #efded1;
+  --color-indigo-200: #dfbea3;
+  --color-indigo-300: #cc9a76;
+  --color-indigo-400: #bc825c;
+  --color-indigo-500: #ad684f;
+  --color-indigo-600: #905642;
+  --color-indigo-700: #734635;
+  --color-indigo-800: #563428;
+  --color-indigo-900: #3e251d;
+  --color-violet-50: #f7efe9;
+  --color-violet-100: #efded1;
+  --color-violet-200: #dfbea3;
+  --color-violet-300: #cc9a76;
+  --color-violet-400: #bc825c;
+  --color-violet-500: #ad684f;
+  --color-violet-600: #905642;
+  --color-violet-700: #734635;
+  --color-violet-800: #563428;
+  --color-violet-900: #3e251d;
+}
+
+/* ══════════════════════════════════════════════════════════
    PALETA CORPORATIVA — Pinho, Linho e Argila
    ══════════════════════════════════════════════════════════ */
 :root {
@@ -317,5 +422,56 @@
 
 body.dragging-card, body.dragging-card * {
   cursor: grabbing !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   COMPONENTES VISUAIS DA PRÉVIA (títulos, seções, chips)
+   ══════════════════════════════════════════════════════════ */
+.eyebrow {
+  font-size: 11px;
+  color: var(--sage);
+  font-weight: 750;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 750;
+  margin: 0;
+  color: var(--ink);
+}
+
+.section-sub {
+  font-size: 11px;
+  color: var(--muted-text);
+  margin: 2px 0 0;
+}
+
+/* Chips de status (prévia) */
+.chip-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.chip-status.ok { color: var(--success); background: var(--success-bg); }
+.chip-status.warn { color: #8b6721; background: var(--sand); }
+.chip-status.danger { color: var(--destructive); background: color-mix(in srgb, var(--destructive) 12%, transparent); }
+.chip-status.info { color: var(--info); background: var(--info-bg); }
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVIDADE (prévia: 1040 / 760 / 520)
+   ────────────────────────────────────────────────────────── */
+.page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+@media (max-width: 520px) {
+  .page-actions { width: 100%; }
+  .page-actions > * { flex: 1 1 100%; }
 }
 

@@ -2,9 +2,9 @@ import { AppointmentActions } from "@/components/AppointmentActions";
 import { Countdown } from "@/components/Countdown";
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  PAGO:      { label: "Confirmado",      cls: "stamp stamp-paid"      },
-  PENDENTE:  { label: "Aguardando Pagto",  cls: "stamp stamp-pending"   },
-  CANCELADO: { label: "Cancelado (Falta de Pagto)", cls: "stamp stamp-late line-through opacity-80"      },
+  PAGO:      { label: "Confirmado",          cls: "chip-status ok"    },
+  PENDENTE:  { label: "Aguardando Pagto",    cls: "chip-status warn"  },
+  CANCELADO: { label: "Cancelado",           cls: "chip-status danger" },
 };
 
 function formatDate(d: string) {

@@ -1,6 +1,6 @@
 /* ============ SIDEBAR ============ */
 .sidebar {
-  width: 236px;
+  width: 244px;
   flex-shrink: 0;
   background: var(--sidebar);
   border-right: 1px solid var(--sidebar-border);
@@ -11,6 +11,13 @@
   top: 0;
   padding: 20px 14px 16px;
   transition: background-color .25s, border-color .25s;
+}
+
+@media (max-width: 1040px) {
+  .sidebar {
+    width: 66px;
+    padding: 18px 9px;
+  }
 }
 
 @media (max-width: 860px) {
@@ -24,34 +31,34 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 6px 18px;
+  padding: 4px 8px 22px;
   flex-shrink: 0;
 }
 
 .sideLogo .mark {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   flex-shrink: 0;
-  background: #ffffff;
-  border: 1px solid var(--sidebar-border);
+  background: #d9a858;
+  color: #263830;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  transform: rotate(-5deg);
   overflow: hidden;
 }
 
 .sideLogo .mark svg {
-  width: 22px;
-  height: 22px;
+  width: 17px;
+  height: 17px;
 }
 
 .sideLogo .word {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: .2px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -.3px;
   color: var(--sidebar-foreground);
 }
 
@@ -96,13 +103,23 @@
   opacity: 0.95;
 }
 
+/* ---- Nav plana ---- */
+.navGroup {
+  margin-bottom: 16px;
+}
+
 .navLabel {
-  font-size: 10.5px;
-  letter-spacing: 1.2px;
+  font-size: 10px;
+  letter-spacing: .09em;
   text-transform: uppercase;
   color: var(--sidebar-foreground);
-  opacity: 0.65;
-  font-weight: 600;
+  opacity: .55;
+  font-weight: 700;
+  margin: 0 10px 6px;
+}
+
+.navText {
+  flex: 1;
 }
 
 .accordionChevron {
@@ -173,15 +190,134 @@
 .badge {
   font-size: 9px;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 1px 6px;
   border-radius: 999px;
-  background: #f43f5e;
-  color: white;
+  background: #d9a858;
+  color: #263830;
 }
 
 .badge.activeBadge {
   background: rgba(255, 255, 255, 0.2);
-  color: white;
+  color: #ffffff;
+}
+
+/* ---- Empresa ativa ---- */
+.company {
+  margin: 0 4px 18px;
+  padding: 9px 10px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.055);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.companyLabel {
+  display: block;
+  font-size: 10px;
+  color: var(--sidebar-foreground);
+  opacity: .62;
+}
+
+.companyRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.companyName {
+  font-size: 12.5px;
+  color: #fff;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.companyToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--sidebar-foreground);
+  opacity: .7;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0;
+}
+
+.companyToggle:hover {
+  background: rgba(255,255,255,.1);
+  opacity: 1;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.tenantList {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--sidebar);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+}
+
+.tenantItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--sidebar-foreground);
+  opacity: .8;
+  font-size: 12px;
+  padding: 9px 12px;
+}
+
+.tenantItem:hover {
+  background: rgba(255,255,255,.08);
+  opacity: 1;
+}
+
+.tenantItemActive {
+  background: rgba(255,255,255,.12);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* ---- IA status sutil ---- */
+.aiStatus {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 9px;
+  font-size: 11px;
+  color: var(--sidebar-foreground);
+  opacity: .8;
+  flex-shrink: 0;
+}
+
+.aiDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.18);
 }
 
 /* ---- IA Card ---- */
@@ -195,17 +331,21 @@
 }
 
 .aiCard .row {
+  display: flex;50%;
+  flex-shrink: 0;
+  background: #d3a66d;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 5px;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+  color: #503c29;
+  overflow: hidden;
 }
 
-.aiCard .bot {
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
-  background: var(--sidebar-primary);
+.userMeta {
+  flex: 1;
+  min-width: 0--sidebar-primary);
   color: var(--sidebar-primary-foreground);
   display: flex;
   align-items: center;
@@ -342,7 +482,27 @@
   text-overflow: ellipsis;
   color: var(--sidebar-foreground);
 }
+;
+}
 
+/* ---- Recolhimento para ícones (1040px) ---- */
+@media (max-width: 1040px) {
+  .sideLogo { justify-content: center; padding: 4px 0 20px; }
+  .sideLogo .word,
+  .companyLabel,
+  .companyName,
+  .companyToggle,
+  .navLabel,
+  .navText,
+  .badge,
+  .aiStatus span:last-child,
+  .userMeta { display: none; }
+  .company { padding: 8px; }
+  .navItem { justify-content: center; padding: 10px; }
+  .aiStatus { justify-content: center; padding: 8px; }
+  .sideUserFooter { justify-content: center; }
+  .sideUserInfo { border: none; background: transparent; justify-content: center; padding: 6px; }
+  .logoutBtn { display: none; }
 .role {
   font-size: 10px;
   color: var(--sidebar-foreground);

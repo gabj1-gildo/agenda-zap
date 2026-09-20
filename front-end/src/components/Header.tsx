@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, Building2, ChevronDown, Menu, LayoutDashboard, Calendar, CalendarDays, CalendarCheck, MessageSquare, CreditCard, Settings, Building2 as Building2Icon, Users, Server, Contact, Filter, Megaphone, UserCircle, Wand2, Package, UserCheck, FileText, Briefcase } from "lucide-react";
+import { Bell, Building2, ChevronDown, Menu, LayoutDashboard, CalendarDays, CalendarCheck, MessageSquare, CreditCard, Settings, Users, Server, Contact, Filter, Megaphone, UserCircle, Wand2, Package, UserCheck, FileText, Briefcase } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { usePathname } from "next/navigation";
@@ -99,6 +99,17 @@ export function Header() {
     k === "/dashboard" ? pathname === "/dashboard" || pathname === "/" : pathname.startsWith(k)
   );
   const pageInfo = current?.[1] ?? { title: "Painel", sub: "" };
+
+  const pageCategory =
+    pathname.startsWith("/admin") ? "Administração" :
+    pathname.startsWith("/calendar") || pathname.startsWith("/appointments") ? "Visão geral" :
+    pathname.startsWith("/clients") || pathname.startsWith("/funil") || pathname.startsWith("/chats") ||
+    pathname.startsWith("/broadcast") || pathname.startsWith("/automations") ? "Relacionamento" :
+    pathname.startsWith("/payments") || pathname.startsWith("/reports") || pathname.startsWith("/planos") ||
+    pathname.startsWith("/assinantes") || pathname.startsWith("/billing") ? "Financeiro" :
+    pathname.startsWith("/settings") || pathname.startsWith("/team") || pathname.startsWith("/services") ||
+    pathname.startsWith("/profile") || pathname.startsWith("/empresas") ? "Gestão" :
+    "Visão geral";
 
   // Item 15 — browser tab title
   useEffect(() => {
@@ -205,20 +216,12 @@ export function Header() {
           </SheetContent>
         </Sheet>
 
-        {/* Page title */}
-        <div className="flex items-center gap-3">
-          {pageInfo.icon && (
-            <div className="hidden sm:flex w-9 h-9 items-center justify-center rounded-xl bg-muted/50 border border-border/50 text-foreground">
-              <pageInfo.icon className="w-5 h-5 opacity-80" />
-            </div>
-          )}
-          <div>
-            <h1 className="font-display font-extrabold text-lg sm:text-[22px] leading-none text-foreground truncate max-w-[150px] sm:max-w-none tracking-tight">
-              {pageInfo.title}
-            </h1>
-            <p className="text-[10px] sm:text-[13px] text-muted-foreground mt-0.5 hidden sm:block tracking-tight font-medium opacity-80">{pageInfo.sub}</p>
-          </div>
-        </div>
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 min-w-0">
+          <span className="hidden sm:inline text-muted-foreground text-sm whitespace-nowrap">{pageCategory}</span>
+          <span className="hidden sm:inline text-muted-foreground/60 text-sm">/</span>
+          <b className="text-foreground text-sm font-semibold truncate">{pageInfo.title}</b>
+        </nav>
 
         {/* Tenant selector */}
         {tenants.length > 0 && (

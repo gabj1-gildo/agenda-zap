@@ -5,6 +5,7 @@ import { useAppointments } from "../hooks/useAppointments";
 import { AppointmentsHeader } from "./AppointmentsHeader";
 import { AppointmentsTable } from "./AppointmentsTable";
 import { NewAppointmentModal } from "@/components/NewAppointmentModal";
+import { PageHeading } from "@/components/PageHeading";
 import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/ExportButton";
 import Link from "next/link";
@@ -64,32 +65,32 @@ export function AppointmentsWrapper({ tenantId, token }: AppointmentsWrapperProp
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
-        <div className="flex-1 w-full">
-          <AppointmentsHeader 
-            currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            tabs={tabs}
-            stats={stats}
-            filteredAppointments={filtered}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end shrink-0">
-          <ExportButton data={filtered} />
-          <Link href="/calendar">
-            <Button variant="outline" className="border-border">
-              <Calendar className="w-4 h-4 mr-2"/>
-              Ver no Calendário
-            </Button>
-          </Link>
-          <Button onClick={() => setIsModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Agendamento
+      <PageHeading
+        title="Agendamentos"
+        description="Histórico, status e acompanhamento dos atendimentos."
+      >
+        <ExportButton data={filtered} />
+        <Link href="/calendar">
+          <Button variant="outline" className="border-border">
+            <Calendar className="w-4 h-4 mr-2" />
+            Ver no Calendário
           </Button>
-        </div>
-      </div>
+        </Link>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Agendamento
+        </Button>
+      </PageHeading>
+
+      <AppointmentsHeader
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        tabs={tabs}
+        stats={stats}
+        filteredAppointments={filtered}
+      />
 
       <AppointmentsTable 
         appointments={filtered}

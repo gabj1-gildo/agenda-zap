@@ -56,8 +56,8 @@ export function useDashboardMetrics(tenantId: string, initialMetrics: DashboardM
     fetcher,
     {
       fallbackData: initialMetrics,
-      refreshInterval: 30000, 
-      revalidateOnFocus: true
+      refreshInterval: 30000,
+      revalidateOnFocus: false
     }
   );
 
